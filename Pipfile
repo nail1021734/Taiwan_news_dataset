@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+tqdm = "*"
+bs4 = "*"
+torch = "*"
+ckip-transformers = "*"
+python-dateutil = "*"
+
+[dev-packages]
+flake8 = "*"
+isort = "*"
+autopep8 = "*"
+
+[requires]
+python_version = "3.8"
