@@ -21,12 +21,12 @@ def get_news_list(
     debug: bool = False,
 ):
     news_list: List[News] = []
-    fail_count = 0
     logger = Counter()
 
     date = current_datetime
 
     while date > past_datetime:
+        fail_count = 0
         date_str = date.strftime('%Y%m%d')
 
         # Only show progress bar in debug mode.
@@ -90,54 +90,6 @@ def get_news_list(
 
     return news_list
 
-    # # Only first 10 pages have content.
-    # for i in range(10):
-    #     url = f'https://www.chinatimes.com/{api}/total?page={i+1}&chdtv'
-    #     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    #     section_tag = soup.find('section', class_='article-list')
-    #     ul_tag = section_tag.find('ul', class_='vertical-list list-style-none')
-    #     li_tags = ul_tag.find_all('li')
-    #     for li_tag in li_tags:
-    #         div_tag = li_tag.find('div', class_='col')
-    #         datetime_tag = div_tag.find('div', class_='meta-info').find('time')
-    #         h3_tag = div_tag.find('h3', class_='title')
-    #         a_tag = h3_tag.find('a')
-    #         news_date = datetime_tag['datetime'].split(' ')[0].split('-')
-    #         news_time = datetime_tag['datetime'].split(' ')[1].split(':')
-    #         news_datetime = datetime(
-    #             year=int(news_date[0]),
-    #             month=int(news_date[1]),
-    #             day=int(news_date[2]),
-    #             hour=int(news_time[0]),
-    #             minute=int(news_time[1]),
-    #         )
-    #         # Convert to UTC.
-    #         news_datetime = datetime.utcfromtimestamp(
-    #             news_datetime.timestamp()
-    #         ).replace(tzinfo=timezone.utc)
-
-    #         # Only consider news which datetime is within `datetime_bound`.
-    #         if news_datetime < datetime_bound:
-    #             break
-
-    #         # News url.
-    #         news_url = 'https://www.chinatimes.com' + a_tag['href']
-
-    #         # Raw html.
-    #         raw_xml = requests.get(news_url).text
-    #         raw_xml = re.sub(r'\s+', ' ', raw_xml)
-
-    #         news_list.append(News(
-    #             category=category,
-    #             company='中時',
-    #             datetime=news_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-    #             raw_xml=raw_xml,
-    #             title=a_tag.text,
-    #             url=news_url,
-    #         ))
-
-    return news_list
-
 
 def main(
     current_datetime: datetime,
@@ -146,23 +98,6 @@ def main(
     *,
     debug: bool = False,
 ):
-    # categories = {
-    #     '政治': 'politic',
-    #     '言論': 'opinion',
-    #     '生活': 'life',
-    #     '娛樂': 'star',
-    #     '財經': 'money',
-    #     '國際': 'world',
-    #     '兩岸': 'chinese',
-    #     '社會': 'society',
-    #     '軍事': 'armament',
-    #     '科技': 'technologynews',
-    #     '體育': 'sports',
-    #     '網推': 'hottopic',
-    #     '健康': 'health',
-    #     '運勢': 'fortune',
-    #     '寶島': 'taiwan',
-    # }
     categories = {
         '政治': '260407',
         '中時社論': '262101',

@@ -55,7 +55,7 @@ def parse(ori_news: News) -> News:
             .find_all('p', class_=article_class_)
         )
         article = ' '.join([article_tag.text for article_tag in article_tags])
-        article = unicodedata.normalize('NFKC', article)
+        article = unicodedata.normalize('NFKC', article).strip()
     except Exception:
         raise ValueError('Fail to parse apple news article.')
 
@@ -65,7 +65,7 @@ def parse(ori_news: News) -> News:
         None
     )
     if category is not None:
-        category = categories[unicodedata.normalize('NFKC', category)]
+        category = categories[unicodedata.normalize('NFKC', category)].strip()
 
     # News reporter.
     reporter = None
@@ -74,11 +74,11 @@ def parse(ori_news: News) -> News:
         for paragraph in paragraphs[-2:]:
             possible_reporter = reporter_pattern.findall(paragraph)
             if possible_reporter:
-                reporter = possible_reporter[-1]
+                reporter = possible_reporter[-1].strip()
                 break
     except Exception:
         # There may not have reporter.
-        pass
+        reporter = None
 
     # News title.
     title = None
@@ -87,7 +87,7 @@ def parse(ori_news: News) -> News:
             soup.find('div', id='article-header').find('header')
             .find('h1', class_='text_medium').find('span').text
         )
-        title = unicodedata.normalize('NFKC', title)
+        title = unicodedata.normalize('NFKC', title).strip()
     except Exception:
         raise ValueError('Fail to parse apple news title.')
 

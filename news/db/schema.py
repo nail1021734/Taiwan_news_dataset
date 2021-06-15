@@ -3,14 +3,14 @@ from dataclasses import dataclass
 
 @dataclass
 class News:
-    article: str = None
-    category: str = None
-    company: str = None
-    datetime: str = None
-    raw_xml: str = None
-    reporter: str = None
-    title: str = None
-    url: str = None
+    article: str = ''
+    category: str = ''
+    company: str = ''
+    datetime: str = ''
+    raw_xml: str = ''
+    reporter: str = ''
+    title: str = ''
+    url: str = ''
 
     def __iter__(self):
         yield self.article

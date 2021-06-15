@@ -31,13 +31,19 @@ def parse(ori_news: News) -> News:
     # News article.
     article = None
     try:
-        article_tags = soup.select('div.article_body > p')
-        # Remove empty tags.
-        article = ' '.join(filter(
-            bool,
-            map(lambda tag: tag.text.strip(), article_tags)
-        ))
-        article = unicodedata.normalize('NFKC', article)
+        article_tags = soup.select('div.article-body > p')
+
+        if article_tags:
+            # Remove empty tags.
+            article = ' '.join(filter(
+                bool,
+                map(lambda tag: tag.text.strip(), article_tags)
+            ))
+        # One line only news. Chinatime is trash.
+        else:
+            article = soup.select('div.article-body')[0].text
+
+        article = unicodedata.normalize('NFKC', article).strip()
     except Exception:
         raise ValueError('Fail to parse chinatimes news article.')
 
@@ -47,7 +53,7 @@ def parse(ori_news: News) -> News:
         category = soup.select(
             'nav.breadcrumb-wrapper > ol > li > a > span'
         )[-1].text
-        category = unicodedata.normalize('NFKC', category)
+        category = unicodedata.normalize('NFKC', category).strip()
     except Exception:
         # There may not have category.
         pass
@@ -56,7 +62,7 @@ def parse(ori_news: News) -> News:
     news_datetime = None
     try:
         news_datetime = datetime.strptime(
-            soup.select('header.article-header time[datetime]')['datetime'],
+            soup.select('header.article-header time[datetime]')[0]['datetime'],
             '%Y-%m-%d %H:%M',
         )
         # Convert to UTC.
@@ -70,8 +76,13 @@ def parse(ori_news: News) -> News:
     # News reporter.
     reporter = None
     try:
-        reporter = soup.select('div.author > a')[0].text
-        reporter = unicodedata.normalize('NFKC', reporter)
+        reporter_tag = soup.select('div.author')[0]
+        format_1 = reporter_tag.select('a')
+        if format_1:
+            reporter = format_1[0].text
+        else:
+            reporter = reporter_tag.text
+        reporter = unicodedata.normalize('NFKC', reporter).strip()
     except Exception:
         # There may not have reporter.
         reporter = None
@@ -80,7 +91,7 @@ def parse(ori_news: News) -> News:
     title = None
     try:
         title = soup.select('h1.article-title')[0].text
-        title = unicodedata.normalize('NFKC', title)
+        title = unicodedata.normalize('NFKC', title).strip()
     except Exception:
         raise ValueError('Fail to parse chinatimes news title.')
 
