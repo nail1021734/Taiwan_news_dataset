@@ -2,6 +2,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 from typing import List
 
+import dateutil.parser
 import requests
 from tqdm import tqdm
 
@@ -37,7 +38,6 @@ def get_news_list(
         for i in iter_range:
             # No more news to crawl.
             if fail_count >= CONTINUE_FAIL_COUNT:
-                fail_count = 0
                 break
 
             url = f'https://www.chinatimes.com/realtimenews/{date_str}{i:06d}-{api}?chdtv'
@@ -50,7 +50,7 @@ def get_news_list(
                 fail_count += 1
                 continue
 
-            # Some id is not matched.
+            # Missing news or no news.
             if response.status_code == 404:
                 logger.update(['News not found.'])
                 fail_count += 1
@@ -76,11 +76,17 @@ def get_news_list(
                     logger.update([err.args[0]])
                 continue
 
+            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
+            if past_datetime > news_datetime or news_datetime > current_datetime:
+                logger.update(['Time constraint violated.'])
+                continue
+
             news_list.append(parsed_news)
 
             # Sleep to avoid banned.
             news.crawlers.util.before_banned_sleep()
 
+        # Go back 1 day.
         date = date - timedelta(days=1)
 
     # Only show error stats in debug mode.

@@ -42,7 +42,7 @@ def parse(ori_news: News) -> News:
         raise ValueError('Invalid html format.')
 
     # News article.
-    article = None
+    article = ''
     try:
         article_class_ = [
             'text--desktop',
@@ -62,13 +62,13 @@ def parse(ori_news: News) -> News:
     # News category.
     category = next(
         iter(i for i in parsed_news.url.split('/') if i in categories.keys()),
-        None
+        ''
     )
-    if category is not None:
+    if category:
         category = categories[unicodedata.normalize('NFKC', category)].strip()
 
     # News reporter.
-    reporter = None
+    reporter = ''
     try:
         paragraphs = article.split(' ')
         for paragraph in paragraphs[-2:]:
@@ -78,10 +78,10 @@ def parse(ori_news: News) -> News:
                 break
     except Exception:
         # There may not have reporter.
-        reporter = None
+        reporter = ''
 
     # News title.
-    title = None
+    title = ''
     try:
         title = (
             soup.find('div', id='article-header').find('header')
