@@ -39,51 +39,35 @@ def get_news_list(
                 break
 
             url = f'https://www.cna.com.tw/news/aipl/{date_str}{i:04d}.aspx'
-            response = requests.get(url)
-
-            # Got banned.
-            if response.status_code == 403:
-                logger.update(['Got banned.'])
-                news.crawlers.util.after_banned_sleep()
-                fail_count += 1
-                continue
-
-            # Missing news or no news.
-            if response.status_code == 404:
-                logger.update(['News not found.'])
-                fail_count += 1
-                continue
-
-            # Something weird happend.
-            if response.status_code != 200:
-                logger.update(['Weird.'])
-                fail_count += 1
-                continue
-
-            # If `status_code == 200`, reset `fail_count`.
-            fail_count = 0
-
             try:
+                response = requests.get(
+                    url,
+                    timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                )
+                response.close()
+
+                # Raise exception if status code is not 200.
+                news.crawlers.util.check_status_code(response=response)
+
+                # If `status_code == 200`, reset `fail_count`.
+                fail_count = 0
+
                 parsed_news = news.preprocess.cna.parse(ori_news=News(
                     raw_xml=response.text,
                     url=url,
                 ))
+
+                news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
+                if past_datetime > news_datetime or news_datetime > current_datetime:
+                    raise Exception('Time constraint violated.')
+
+                news_list.append(parsed_news)
             except Exception as err:
-                # Skip parsing if error.
+                fail_count += 1
+
                 if err.args:
                     logger.update([err.args[0]])
                 continue
-
-            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-            if past_datetime > news_datetime or \
-                    news_datetime > current_datetime:
-                logger.update(['Time constraint violated.'])
-                continue
-
-            news_list.append(parsed_news)
-
-            # Sleep to avoid banned.
-            news.crawlers.util.before_banned_sleep()
 
         # Go back 1 day.
         date = date - timedelta(days=1)
@@ -103,6 +87,9 @@ def main(
     *,
     debug: bool = False,
 ):
+    if past_datetime > current_datetime:
+        raise ValueError('Must have `past_datetime <= current_datetime`.')
+
     # Get database connection.
     conn = news.db.util.get_conn(db_name=db_name)
     cur = conn.cursor()

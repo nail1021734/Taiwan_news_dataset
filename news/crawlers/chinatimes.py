@@ -41,50 +41,34 @@ def get_news_list(
                 break
 
             url = f'https://www.chinatimes.com/realtimenews/{date_str}{i:06d}-{api}?chdtv'
-            response = requests.get(url)
-
-            # Got banned.
-            if response.status_code == 403:
-                logger.update(['Got banned.'])
-                news.crawlers.util.after_banned_sleep()
-                fail_count += 1
-                continue
-
-            # Missing news or no news.
-            if response.status_code == 404:
-                logger.update(['News not found.'])
-                fail_count += 1
-                continue
-
-            # Something weird happend.
-            if response.status_code != 200:
-                logger.update(['Weird.'])
-                fail_count += 1
-                continue
-
-            # If `status_code == 200`, reset `fail_count`.
-            fail_count = 0
-
             try:
+                response = requests.get(
+                    url,
+                    timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                )
+                response.close()
+
+                # Raise exception if status code is not 200.
+                news.crawlers.util.check_status_code(response=response)
+
+                # If `status_code == 200`, reset `fail_count`.
+                fail_count = 0
+
                 parsed_news = news.preprocess.chinatimes.parse(ori_news=News(
                     raw_xml=response.text,
                     url=url,
                 ))
+
+                news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
+                if past_datetime > news_datetime or news_datetime > current_datetime:
+                    raise Exception('Time constraint violated.')
+
+                news_list.append(parsed_news)
             except Exception as err:
-                # Skip parsing if error.
+                fail_count += 1
+
                 if err.args:
                     logger.update([err.args[0]])
-                continue
-
-            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-            if past_datetime > news_datetime or news_datetime > current_datetime:
-                logger.update(['Time constraint violated.'])
-                continue
-
-            news_list.append(parsed_news)
-
-            # Sleep to avoid banned.
-            news.crawlers.util.before_banned_sleep()
 
         # Go back 1 day.
         date = date - timedelta(days=1)
@@ -97,6 +81,41 @@ def get_news_list(
     return news_list
 
 
+CATEGORIES = {
+    '政治': '260407',
+    '中時社論': '262101',
+    '旺報社評': '262102',
+    '工商社論': '262113',
+    '快評': '262103',
+    '時論廣場': '262104',
+    '尚青論壇': '262114',
+    '兩岸徵文': '262106',
+    '兩岸史話': '262107',
+    '海納百川': '262110',
+    '玩食': '260405',
+    '消費': '260113',
+    '時尚': '260405',
+    '新消息': '262301',
+    '華人星光': '262404',
+    '哈燒日韓、西洋熱門': '260404',
+    '財經': '260410',
+    '國際': '260408',
+    '兩岸': '260409',
+    '社會': '260402',
+    '軍事': '260417',
+    '科技': '260412',
+    '高爾夫': '260111',
+    '球類': '260403',
+    '萌寵': '260819',
+    '搜奇': '260809',
+    '歷史': '260812',
+    '健康': '260418',
+    '時人真話': '260102',
+    '運勢': '260423',
+    '寶島': '260421'
+}
+
+
 def main(
     current_datetime: datetime,
     db_name: str,
@@ -104,46 +123,16 @@ def main(
     *,
     debug: bool = False,
 ):
-    categories = {
-        '政治': '260407',
-        '中時社論': '262101',
-        '旺報社評': '262102',
-        '工商社論': '262113',
-        '快評': '262103',
-        '時論廣場': '262104',
-        '尚青論壇': '262114',
-        '兩岸徵文': '262106',
-        '兩岸史話': '262107',
-        '海納百川': '262110',
-        '玩食': '260405',
-        '消費': '260113',
-        '時尚': '260405',
-        '新消息': '262301',
-        '華人星光': '262404',
-        '哈燒日韓、西洋熱門': '260404',
-        '財經': '260410',
-        '國際': '260408',
-        '兩岸': '260409',
-        '社會': '260402',
-        '軍事': '260417',
-        '科技': '260412',
-        '高爾夫': '260111',
-        '球類': '260403',
-        '萌寵': '260819',
-        '搜奇': '260809',
-        '歷史': '260812',
-        '健康': '260418',
-        '時人真話': '260102',
-        '運勢': '260423',
-        '寶島': '260421'
-    }
+
+    if past_datetime > current_datetime:
+        raise ValueError('Must have `past_datetime <= current_datetime`.')
 
     # Get database connection.
     conn = news.db.util.get_conn(db_name=db_name)
     cur = conn.cursor()
     news.db.create.create_table(cur=cur)
 
-    for category, api in categories.items():
+    for category, api in CATEGORIES.items():
         news.db.write.write_new_records(
             cur=cur,
             news_list=get_news_list(

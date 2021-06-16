@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 from news.db.schema import News
 
-categories = {
+CATEGORIES = {
     'entertainment': unicodedata.normalize('NFKC', '娛樂'),
     'local': unicodedata.normalize('NFKC', '社會'),
     'life': unicodedata.normalize('NFKC', '生活'),
@@ -18,7 +18,7 @@ categories = {
     'forum': unicodedata.normalize('NFKC', '蘋評理'),
 }
 
-reporter_pattern = re.compile(r'\((.*?)/.*?報導\)')
+REPORTER_PATTERN = re.compile(r'\((.*?)/.*?報導\)')
 
 
 def parse(ori_news: News) -> News:
@@ -61,18 +61,18 @@ def parse(ori_news: News) -> News:
 
     # News category.
     category = next(
-        iter(i for i in parsed_news.url.split('/') if i in categories.keys()),
+        iter(i for i in parsed_news.url.split('/') if i in CATEGORIES.keys()),
         ''
     )
     if category:
-        category = categories[unicodedata.normalize('NFKC', category)].strip()
+        category = CATEGORIES[unicodedata.normalize('NFKC', category)].strip()
 
     # News reporter.
     reporter = ''
     try:
         paragraphs = article.split(' ')
         for paragraph in paragraphs[-2:]:
-            possible_reporter = reporter_pattern.findall(paragraph)
+            possible_reporter = REPORTER_PATTERN.findall(paragraph)
             if possible_reporter:
                 reporter = possible_reporter[-1].strip()
                 break

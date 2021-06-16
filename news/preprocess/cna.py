@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 from news.db.schema import News
 
-reporter_pattern = re.compile(r'\((.*?)\)')
+REPORTER_PATTERN = re.compile(r'\((.*?)\)')
 
 
 def parse(ori_news: News) -> News:
@@ -69,7 +69,7 @@ def parse(ori_news: News) -> News:
     # News reporter.
     reporter = ''
     try:
-        match = reporter_pattern.match(article)
+        match = REPORTER_PATTERN.match(article)
         reporter = article[match.start() + 1: match.end() - 1]
         article = article[match.end():]
     except Exception:
