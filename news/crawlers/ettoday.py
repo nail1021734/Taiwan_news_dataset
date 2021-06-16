@@ -1,78 +1,96 @@
-import json
-import os
-from datetime import datetime, timedelta
-from time import sleep
+from collections import Counter
+from typing import List
 
 import requests
-from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+import news.crawlers
+from news.db.schema import News
 
-def get_links(time_bound):
-    now_date = datetime.now()
-    url = 'https://www.ettoday.net/show_roll.php'
-    while now_date > time_bound:
-        result = []
-        print(now_date)
-        for offset in tqdm(range(1, 151)):
-            data_date = f'{now_date.year}{now_date.month:02}{now_date.day:02}.xml'
-            data = {'offset': offset, 'tPage': 3, 'tFile': data_date, 'tOt': 0, 'tSi': 100, 'tAr': 0}
-            response = requests.post(url, data=data)
-            soup = BeautifulSoup(response.text, 'html.parser')
-            for link in soup.find_all('h3'):
-                try:
-                    time = link.find('span', class_='date').text
-                    label = link.find('em').text
-                    title = link.find('a').text
-                except:
-                    continue
-                data_dic = {
-                    'url': 'https://www.ettoday.net' + link.find('a')['href'],
-                    'time': time,
-                    'company': 'ettoday',
-                    'label': label,
-                    'reporter': None,
-                    'title': title,
-                    'article': None,
-                    'raw_xml': None
-                }
-                result.append(data_dic)
-        filename = f'{now_date.year}{now_date.month:02}{now_date.day:02}'
-        last_time = result[-1]['time'].split(' ')[0].split('/')
-        now_date = datetime(year=int(last_time[0]), month=int(last_time[1]), day=int(last_time[2]))
-        data = get_data(result)
-        json.dump(data, open(f'crawlers/data/ettoday/{filename}.json', 'w', encoding='utf8'))
+RECORD_PER_COMMIT = 1000
 
-def get_data(links):
-    result = []
-    for link in tqdm(links):
-        url = link['url']
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
+
+def get_news_list(
+    first_idx: int,
+    latest_idx: int,
+    *,
+    debug: bool = True,
+) -> List[News]:
+    news_list: List[News] = []
+    logger = Counter()
+
+    iter_range = range(first_idx, latest_idx)
+    if debug:
+        iter_range = tqdm(iter_range)
+
+    for idx in iter_range:
+        url = f'https://star.ettoday.net/news/{idx}'
+
         try:
-            p_tags = soup.find('article').find('div', {'class': 'story', 'itemprop': 'articleBody'}).find_all('p')
-            article = ""
-            for p in p_tags:
-                for s in p.find_all('span'):
-                    s.extract()
-                for s in p.find_all('strong'):
-                    s.extract()
-                article += p.text
-        except:
-            continue
-        data_dic = {
-            'url': url,
-            'time': link['time'],
-            'company': 'ettoday',
-            'label': link['label'],
-            'reporter': None,
-            'title': link['title'],
-            'article': article,
-            'raw_xml': response.text
-        }
-        result.append(data_dic)
-    return result
+            response = requests.get(
+                url,
+                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+            )
+            response.close()
 
-if __name__ == '__main__':
-    time_bound = datetime.now() - timedelta(days=1)
-    get_links(time_bound)
+            # Raise exception if status code is not 200.
+            news.crawlers.util.check_status_code(response=response)
+
+            parsed_news = news.preprocess.ettoday.parse(ori_news=News(
+                raw_xml=response.text,
+                url=url,
+            ))
+
+            news_list.append(parsed_news)
+        except Exception as err:
+            if err.args:
+                logger.update([err.args[0]])
+
+    # Only show error stats in debug mode.
+    if debug:
+        for k, v in logger.items():
+            print(f'{k}: {v}')
+
+    return news_list
+
+
+def main(
+    db_name: str,
+    first_idx: int,
+    latest_idx: int,
+    *,
+    debug: bool = False,
+):
+    if first_idx > latest_idx and latest_idx != -1:
+        raise ValueError(
+            'Must have `first_idx <= latest_idx` or `latest_idx == -1`'
+        )
+
+    # Get database connection.
+    conn = news.db.util.get_conn(db_name=db_name)
+    cur = conn.cursor()
+    news.db.create.create_table(cur=cur)
+
+    while first_idx <= latest_idx or latest_idx == -1:
+        cur_latest_idx = first_idx + RECORD_PER_COMMIT
+        if latest_idx != -1:
+            cur_latest_idx = min(cur_latest_idx, latest_idx)
+
+        news_list = get_news_list(
+            debug=debug,
+            first_idx=first_idx,
+            latest_idx=cur_latest_idx,
+        )
+
+        if not news_list:
+            # No more news to crawl.
+            break
+
+        news.db.write.write_new_records(cur=cur, news_list=news_list)
+
+        conn.commit()
+
+        first_idx += RECORD_PER_COMMIT
+
+    # Close database connection.
+    conn.close()

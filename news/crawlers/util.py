@@ -23,7 +23,7 @@ def check_status_code(response: Response) -> None:
         raise Exception('Got banned.')
 
     # Missing news or no news.
-    if response.status_code == 404:
+    if response.status_code in [404, 410]:
         raise Exception('News not found.')
 
     # Something weird happend.
