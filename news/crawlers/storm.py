@@ -1,121 +1,99 @@
-import json
-from datetime import date, datetime, timedelta
+from collections import Counter
+from typing import List
 
 import requests
-from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+import news.crawlers
+from news.db.schema import News
 
-def get_links(board, time_bound):
-    result = []
-    check = False
-    for page in range(1, 101):
-        url = f'https://www.storm.mg/category/{board[1]}/{page}'
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        div_tags = soup.find_all(
-            'div', class_='category_card card_thumbs_left')
-        for div in div_tags:
-            try:
-                link = div.find('a', class_='card_link link_title')['href']
-            except:
-                continue
+RECORD_PER_COMMIT = 1000
 
-            try:
-                time = div.find('p', class_='card_info right').find(
-                    'span', class_='info_time').text
-                year = time.split(' ')[0].split('-')[0]
-                month = time.split(' ')[0].split('-')[1]
-                day = time.split(' ')[0].split('-')[2]
-                date = datetime(year=int(year), month=int(month), day=int(day))
-                if time_bound >= date:
-                    print(date)
-                    check = True
-                    break
-            except:
-                time = None
-            company = '風傳媒'
-            label = board[0]
-            try:
-                reporter = div.find('span', class_='info_author').text
-            except:
-                reporter = None
 
-            try:
-                title = div.find('a', class_='card_link link_title').find(
-                    'h3', class_='card_title').text
-            except:
-                continue
+def get_news_list(
+    first_idx: int,
+    latest_idx: int,
+    *,
+    debug: bool = True,
+) -> List[News]:
+    news_list: List[News] = []
+    logger = Counter()
 
-            data_dic = {
-                'url': link,
-                'time': time,
-                'company': company,
-                'label': label,
-                'reporter': reporter,
-                'title': title,
-                'article': None,
-                'raw_xml': None
-            }
-            result.append(data_dic)
-        if check:
+    iter_range = range(first_idx, latest_idx)
+    if debug:
+        iter_range = tqdm(iter_range)
+
+    for idx in iter_range:
+        url = f'https://www.storm.mg/article/{idx}'
+
+        try:
+            response = requests.get(
+                url,
+                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+            )
+            response.close()
+
+            # Raise exception if status code is not 200.
+            news.crawlers.util.check_status_code(
+                company='storm',
+                response=response
+            )
+
+            parsed_news = news.preprocess.storm.parse(ori_news=News(
+                raw_xml=response.text,
+                url=url,
+            ))
+
+            news_list.append(parsed_news)
+        except Exception as err:
+            if err.args:
+                logger.update([err.args[0]])
+
+    # Only show error stats in debug mode.
+    if debug:
+        for k, v in logger.items():
+            print(f'{k}: {v}')
+
+    return news_list
+
+
+def main(
+    db_name: str,
+    first_idx: int,
+    latest_idx: int,
+    *,
+    debug: bool = False,
+):
+    if first_idx > latest_idx and latest_idx != -1:
+        raise ValueError(
+            'Must have `first_idx <= latest_idx` or `latest_idx == -1`'
+        )
+
+    # Get database connection.
+    conn = news.db.util.get_conn(db_name=db_name)
+    cur = conn.cursor()
+    news.db.create.create_table(cur=cur)
+
+    while first_idx <= latest_idx or latest_idx == -1:
+        cur_latest_idx = first_idx + RECORD_PER_COMMIT
+        if latest_idx != -1:
+            cur_latest_idx = min(cur_latest_idx, latest_idx)
+
+        news_list = get_news_list(
+            debug=debug,
+            first_idx=first_idx,
+            latest_idx=cur_latest_idx,
+        )
+
+        if not news_list:
+            # No more news to crawl.
             break
-    return result
 
+        news.db.write.write_new_records(cur=cur, news_list=news_list)
 
-def get_data(links):
-    result = []
-    for link in links:
-        url = link['url']
-        try:
-            response = requests.get(url)
-        except:
-            continue
-        soup = BeautifulSoup(response.text, 'html.parser')
-        try:
-            p_tags = soup.find('div', id='article_inner_wrapper').find('article').find_all('p')
-            article = ''
-            for p in p_tags:
-                for a in p.find_all('a', {'class': 'notify_wordings'}):
-                    a.extract()
-                for s in p.find_all('span', {'class': 'related_copy_content'}):
-                    s.extract()
-                for s in p.find_all('strong'):
-                    s.extract()
-                article += p.text
-        except:
-            continue
-        raw_xml = response.text
-        data_dic = {
-            'url': link['url'],
-            'time': link['time'],
-            'company': link['company'],
-            'label': link['label'],
-            'reporter': link['reporter'],
-            'title': link['title'],
-            'article': article,
-            'raw_xml': raw_xml
-        }
-        result.append(data_dic)
-    return result
+        conn.commit()
 
+        first_idx += RECORD_PER_COMMIT
 
-if __name__ == '__main__':
-    board = [
-        ['政治', 118],
-        ['軍事', 26644],
-        ['中港澳', 121],
-        ['國際', 117],
-        ['國內', 22172],
-        ['重磅專訪', 171151],
-        ['調查', 24667],
-        ['風數據', 36948],
-        ['運動', 118606],
-        ['公民運動', 965],
-        ['公共政策', 22168]
-    ]
-    for b in tqdm(board):
-        time_bound = datetime.now() - timedelta(days=1)
-        links = get_links(b, time_bound)
-        data = get_data(links)
-        json.dump(data, open(f'crawlers/data/storm/{b[0]}_{time_bound.strftime("%Y%m%d")}.json', 'w', encoding='utf8'))
+    # Close database connection.
+    conn.close()

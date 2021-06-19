@@ -85,6 +85,7 @@ def parse(ori_news: News) -> News:
     try:
         time_tag = soup.select('time.page-date')[0]
         news_datetime = datetime.strptime(time_tag.text, '%Y/%m/%d %H:%M:%S')
+        # Convert to UTC.
         news_datetime = news_datetime - timedelta(hours=8)
         news_datetime = news_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         news_datetime = unicodedata.normalize('NFKC', news_datetime)
