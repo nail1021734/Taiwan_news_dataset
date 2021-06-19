@@ -6,11 +6,6 @@ from bs4 import BeautifulSoup
 
 from news.db.schema import News
 
-REPORTER_PATTERNS = [
-    re.compile(r'^記者(.*?)/.*?報導$'),
-    re.compile(r'^.*?/(.*?)報導$'),
-]
-
 
 def parse(ori_news: News) -> News:
     """Parse SET news from raw HTML.

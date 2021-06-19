@@ -20,6 +20,7 @@ def get_news_list(
     logger = Counter()
 
     iter_range = range(first_idx, latest_idx)
+    # Only show progress bar in debug mode.
     if debug:
         iter_range = tqdm(iter_range)
 
