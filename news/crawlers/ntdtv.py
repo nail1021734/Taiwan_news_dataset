@@ -1,15 +1,16 @@
-import json
-from datetime import datetime, timedelta
 import re
-import requests
+from collections import Counter
+from datetime import datetime
+from typing import List
+
 import dateutil
+import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-from typing import List
-from news.db.schema import News
-import news.preprocess
-from collections import Counter
+
 import news.crawlers
+import news.preprocess
+from news.db.schema import News
 
 FIRST_PAGE = 1
 URL_PATTERN = re.compile(

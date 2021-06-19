@@ -1,6 +1,7 @@
 import re
 import unicodedata
 from datetime import datetime, timedelta
+
 from bs4 import BeautifulSoup
 
 from news.db.schema import News
@@ -48,6 +49,7 @@ def parse(ori_news: News) -> News:
     article = ''
     try:
         article_tags = []
+        # Drop p tags if they are related news.
         for tag in soup.select('div[itemprop=articleBody].post_content > p'):
             if '【熱門話題】' in tag.text:
                 break

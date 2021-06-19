@@ -57,6 +57,7 @@ def parse(ori_news: News) -> News:
         article_tags = soup.select(
             'div[itemprop=articleBody] div.boxText.text.boxTitle > p:not([class])'
         )
+        # Drop all p tags after related news.
         related_news_tag = list(filter(
             lambda tag: isinstance(tag.previous_sibling, bs4.element.Tag) and
             '相關新聞' in tag.previous_sibling.text,

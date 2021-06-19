@@ -1,6 +1,6 @@
 from collections import Counter
-from datetime import datetime
 from typing import List
+
 import requests
 from tqdm import tqdm
 

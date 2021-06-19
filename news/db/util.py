@@ -2,8 +2,6 @@ import os
 import sqlite3
 from typing import Final
 
-import news.db.create
-
 PROJECT_ROOT: Final[str] = os.path.abspath(os.path.join(
     os.path.abspath(__file__),
     os.pardir,

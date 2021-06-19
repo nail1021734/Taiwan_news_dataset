@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 
 from news.db.schema import News
 
-
 FILTER_WORDS = [
     '▲', '●', '▼', '★', '►', '※', '【更多新聞】', '以上言論不代表本網立場。', '圖一、',
     '圖二、', '圖三、', '圖四、', '圖五、', '圖六、', '圖七、', '圖八、', '圖九、',
