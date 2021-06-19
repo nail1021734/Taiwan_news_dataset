@@ -3,33 +3,33 @@ import time
 
 from requests import Response
 
-# Times (in seconds) to sleep for each request. Currently set to 0 since no
-# website is blocking us.
+# Times (in seconds) to sleep for each request. Set to 0 if the website is not
+# blocking us. Note that LTN and SET will ban us.
 BEFORE_BANNED_SLEEP_SECS = {
     'apple': 0.0,
     'chinatimes': 0.0,
     'cna': 0.0,
     'epochtimes': 0.0,
     'ettoday': 0.0,
-    'ltn': 1.0,
+    'ltn': 60.0,
     'ntdtv': 0.0,
-    'setn': 0.0,
+    'setn': 60.0,
     'storm': 0.0,
     'tvbs': 0.0,
     'uni': 0.0,
     'yahoo': 0.0,
 }
-# Times (in seconds) to sleep when crawler get banned. Currently set to 0 since
-# no website is blocking us. Note that ltn will ban us.
+# Times (in seconds) to sleep when crawler get banned. Set to 0 if the website
+# is not blocking us. Note that LTN and SET will ban us.
 AFTER_BANNED_SLEEP_SECS = {
     'apple': 0.0,
     'chinatimes': 0.0,
     'cna': 0.0,
     'epochtimes': 0.0,
     'ettoday': 0.0,
-    'ltn': 0.0,
+    'ltn': 86400.0,
     'ntdtv': 0.0,
-    'setn': 0.0,
+    'setn': 86400.0,
     'storm': 0.0,
     'tvbs': 0.0,
     'uni': 0.0,
@@ -39,11 +39,25 @@ REQUEST_TIMEOUT = 60
 
 
 def after_banned_sleep(company: str) -> None:
-    time.sleep(AFTER_BANNED_SLEEP_SECS[company])
+    secs = AFTER_BANNED_SLEEP_SECS[company]
+    if secs != 0.0:
+        rand_secs = random.guass(mu=1, sigma=2)
+        # Avoid negative random.
+        while rand_secs < 0:
+            rand_secs = random.guass(mu=1, sigma=2)
+        secs += rand_secs
+    time.sleep(secs)
 
 
 def before_banned_sleep(company: str) -> None:
-    time.sleep(BEFORE_BANNED_SLEEP_SECS[company])
+    secs = BEFORE_BANNED_SLEEP_SECS[company]
+    if secs != 0.0:
+        rand_secs = random.guass(mu=1, sigma=2)
+        # Avoid negative random.
+        while rand_secs < 0:
+            rand_secs = random.guass(mu=1, sigma=2)
+        secs += rand_secs
+    time.sleep(secs[company])
 
 
 def check_status_code(company: str, response: Response) -> None:

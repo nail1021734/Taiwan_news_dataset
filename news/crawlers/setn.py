@@ -1,116 +1,99 @@
-import json
-import os
-from datetime import date, datetime, timedelta
+from collections import Counter
+from typing import List
 
 import requests
-from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+import news.crawlers
+from news.db.schema import News
 
-def get_links(page_group_id):
-    result = []
-    for i in range(20):
-        url = f"https://www.setn.com/ViewAll.aspx?PageGroupID={page_group_id}&p={i+1}"
-        raw_xml = requests.get(url)
-        soup = BeautifulSoup(raw_xml.text, 'html.parser')
-        div_tags = soup.find_all('div', class_='col-sm-12 newsItems')
-        for tag in div_tags:
-            temp = tag.find_all('a')
-            result.append(
-                {
-                    'label': temp[0].text,
-                    'link': temp[1]['href']
-                }
+RECORD_PER_COMMIT = 1000
+
+
+def get_news_list(
+    first_idx: int,
+    latest_idx: int,
+    *,
+    debug: bool = True,
+) -> List[News]:
+    news_list: List[News] = []
+    logger = Counter()
+
+    iter_range = range(first_idx, latest_idx)
+    if debug:
+        iter_range = tqdm(iter_range)
+
+    for idx in iter_range:
+        url = f'https://www.setn.com/News.aspx?NewsID={idx}'
+
+        try:
+            response = requests.get(
+                url,
+                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+            )
+            response.close()
+
+            # Raise exception if status code is not 200.
+            news.crawlers.util.check_status_code(
+                company='setn',
+                response=response
             )
 
-    return result
+            parsed_news = news.preprocess.setn.parse(ori_news=News(
+                raw_xml=response.text,
+                url=url,
+            ))
+
+            news_list.append(parsed_news)
+        except Exception as err:
+            if err.args:
+                logger.update([err.args[0]])
+
+    # Only show error stats in debug mode.
+    if debug:
+        for k, v in logger.items():
+            print(f'{k}: {v}')
+
+    return news_list
 
 
-def get_data(links_dict, last_time):
-    result = []
-    base_url = "https://www.setn.com"
-
-    for news in links_dict:
-        url = f'{base_url}{news["link"]}'
-        try:
-            raw_xml = requests.get(url)
-        except:
-            continue
-        try:
-            soup = BeautifulSoup(raw_xml.text, 'html.parser')
-        except:
-            continue
-
-        try:
-            reporter = soup.find('article').find('p').text.split('／')[0][2:]
-        except:
-            reporter = None
-
-        try:
-            title = soup.find('h1', class_="news-title-3").text
-        except:
-            title = None
-
-        try:
-            label = news['label']
-            company = '三立'
-            for p in soup.find_all('p', {'style': 'text-align: center;'}):
-                p.extract()
-            for p in soup.find_all('p', {'style': 'text-align:center'}):
-                p.extract()
-            p_tags = soup.find('article').find_all('p')[1:]
-            article = ''.join([i.text for i in p_tags])
-        except:
-            continue
-
-        try:
-            time = soup.find('time', class_='page-date').text
-            y = time.split(' ')[0].split('/')[0]
-            m = time.split(' ')[0].split('/')[1]
-            d = time.split(' ')[0].split('/')[2]
-            this_date = datetime(year=int(y), month=int(m), day=int(d))
-            if last_time > this_date:
-                break
-        except:
-            time = None
-
-        result.append(
-            {
-                'url': url,
-                'time': time,
-                'company': company,
-                'label': label,
-                'reporter': reporter,
-                'title': title,
-                'article': article,
-                'raw_xml': raw_xml.text
-            }
+def main(
+    db_name: str,
+    first_idx: int,
+    latest_idx: int,
+    *,
+    debug: bool = False,
+):
+    if first_idx > latest_idx and latest_idx != -1:
+        raise ValueError(
+            'Must have `first_idx <= latest_idx` or `latest_idx == -1`'
         )
 
-    return result
+    # Get database connection.
+    conn = news.db.util.get_conn(db_name=db_name)
+    cur = conn.cursor()
+    news.db.create.create_table(cur=cur)
 
+    while first_idx <= latest_idx or latest_idx == -1:
+        cur_latest_idx = first_idx + RECORD_PER_COMMIT
+        if latest_idx != -1:
+            cur_latest_idx = min(cur_latest_idx, latest_idx)
 
-if __name__ == "__main__":
-    group_id = {
-        '政治': 6,
-        '社會': 41,
-        '國際': 5,
-        '生活': 4,
-        '健康': 65,
-        '運動': 34,
-        '汽車': 12,
-        '地方': 97,
-        '名家': 9,
-        '新奇': 42,
-        '科技': 7,
-        '財經': 2,
-        '寵物': 47
-    }
-    data_path = os.path.join('crawlers', 'data', 'setn')
-    for file_name, _id in tqdm(list(group_id.items())):
-        links = get_links(page_group_id=_id)
-        time_bound = datetime.now() - timedelta(days=1)
-        result = get_data(links, time_bound)
-        file_path = os.path.join(data_path, f'{file_name}.json')
-        with open(file_path, 'w', encoding='utf8') as output_file:
-            json.dump(result, output_file)
+        news_list = get_news_list(
+            debug=debug,
+            first_idx=first_idx,
+            latest_idx=cur_latest_idx,
+        )
+
+        if not news_list:
+            # No more news to crawl.
+            break
+
+        news.db.write.write_new_records(cur=cur, news_list=news_list)
+
+        conn.commit()
+
+        first_idx += RECORD_PER_COMMIT
+
+    # Close database connection.
+    conn.close()
