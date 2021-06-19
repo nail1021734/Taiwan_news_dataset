@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 import re
 import requests
+import dateutil
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from typing import List
@@ -10,9 +11,9 @@ import news.preprocess
 from collections import Counter
 import news.crawlers
 
-FIRST_PAGE = 2
+FIRST_PAGE = 1
 URL_PATTERN = re.compile(
-    r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm'
+    r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a\d+.html'
 )
 
 
@@ -29,7 +30,7 @@ def get_news_list(
 
     # Get max page of this category.
     try:
-        url = f'https://www.epochtimes.com/b5/{api}_2.htm'
+        url = f'https://www.ntdtv.com/b5/prog{api}/1'
         response = requests.get(
             url,
             timeout=news.crawlers.util.REQUEST_TIMEOUT,
@@ -37,7 +38,10 @@ def get_news_list(
         response.close()
 
         # Raise exception if status code is not 200.
-        news.crawlers.util.check_status_code(response=response)
+        news.crawlers.util.check_status_code(
+            company='ntdtv',
+            response=response
+        )
 
         soup = BeautifulSoup(response.text, 'html.parser')
         max_page = soup.select('div.pagination > a.page-numbers')[-2].text
@@ -58,9 +62,9 @@ def get_news_list(
         iter_range = tqdm(iter_range, desc='Find start page loop')
 
     # Find start page loop.
-    start_page = 2
+    start_page = 1
     for page in iter_range:
-        page_url = f'https://www.epochtimes.com/b5/{api}_{page}.htm'
+        page_url = f'https://www.ntdtv.com/b5/prog{api}/{page}'
 
         try:
             response = requests.get(
@@ -70,12 +74,15 @@ def get_news_list(
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(response=response)
+            news.crawlers.util.check_status_code(
+                company='ntdtv',
+                response=response
+            )
 
             # Parse date in this page.
             soup = BeautifulSoup(response.text, 'html.parser')
             a_tags = soup.select(
-                'div.post_list.left_col > div.one_post div.text > div.title > a'
+                'div.post_list > div.list_wrapper > div.one_post div.title > a'
             )
             matches = filter(
                 bool,
@@ -91,7 +98,7 @@ def get_news_list(
             )
             news_datetimes = list(map(
                 lambda n: dateutil.parser.isoparse(
-                    f"20{n['year']:02d}-{n['month']:02d}-{n['day']:02d}T00:00:00Z"
+                    f"{n['year']:04d}-{n['month']:02d}-{n['day']:02d}T00:00:00Z"
                 ),
                 news_datetimes,
             ))
@@ -119,7 +126,7 @@ def get_news_list(
         if not is_datetime_valid:
             break
 
-        page_url = f'https://www.epochtimes.com/b5/{api}_{page}.htm'
+        page_url = f'https://www.ntdtv.com/b5/prog{api}/{page}'
 
         try:
             response = requests.get(
@@ -129,12 +136,15 @@ def get_news_list(
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(response=response)
+            news.crawlers.util.check_status_code(
+                company='ntdtv',
+                response=response
+            )
 
             # If `status_code == 200`, parse links in this page.
             soup = BeautifulSoup(response.text, 'html.parser')
             a_tags = soup.select(
-                'div.post_list.left_col > div.one_post div.text > div.title > a'
+                'div.post_list > div.list_wrapper > div.one_post div.title > a'
             )
         except Exception as err:
             if err.args:
@@ -152,14 +162,16 @@ def get_news_list(
                 response.close()
 
                 # Raise exception if status code is not 200.
-                news.crawlers.util.check_status_code(response=response)
+                news.crawlers.util.check_status_code(
+                    company='ntdtv',
+                    response=response
+                )
 
                 # Parse news in this page.
-                parsed_news = news.preprocess.epochtimes.parse(ori_news=News(
+                parsed_news = news.preprocess.ntdtv.parse(ori_news=News(
                     raw_xml=response.text,
                     url=news_url,
                 ))
-
                 news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
                 if past_datetime > news_datetime or news_datetime > current_datetime:
                     is_datetime_valid = False
@@ -185,7 +197,8 @@ CATEGORIES = {
     '健康': 1255,
     '體育': 211,
     '美國': 203,
-    '大陸': 204
+    '大陸': 204,
+    '文史': 647,
 }
 
 
@@ -221,84 +234,3 @@ def main(
 
     # Close database connection.
     conn.close()
-
-
-# def get_links(board, start_page, end_page):
-#     result = []
-#     for i in range(start_page, end_page):
-#         url = f'https://www.ntdtv.com/b5/prog{board[1]}/{i}'
-#         try:
-#             response = requests.get(url)
-#             soup = BeautifulSoup(response.text, 'html.parser')
-#         except:
-#             break
-#         try:
-#             all_post = soup.find('div', class_='post_list').find_all('div', class_='one_post')
-#         except:
-#             continue
-#         for post in all_post:
-#             try:
-#                 title_a = post.find('div', class_='title').find('a')
-#             except:
-#                 continue
-#             data_dic = {
-#                 'url': title_a['href'],
-#                 'time': None,
-#                 'company': '新唐人',
-#                 'label': board[0],
-#                 'reporter': None,
-#                 'title': title_a.text,
-#                 'article': None,
-#                 'raw_xml': None
-#             }
-#             # print(data_dic)
-#             result.append(data_dic)
-#     return result
-
-# def get_data(link, time_bound):
-#     result = []
-#     for link in tqdm(links):
-#         url = link['url']
-#         response = requests.get(url)
-#         soup = BeautifulSoup(response.text, 'html.parser')
-#         try:
-#             time = soup.find('div', class_='article_info').find('div', class_='time').find('span').text
-#         except:
-#             time = None
-#         date = time.split(' ')[0].split('-')
-#         date = datetime(year=int(date[0]), month=int(date[1]), day=int(date[2]))
-#         if date < time_bound:
-#             break
-#         try:
-#             article = ''.join([i.text for i in soup.find('div', class_='article_content').find('div', class_='post_content').find_all('p')])
-#         except:
-#             continue
-#         data_dic = {
-#             'url': url,
-#             'time': time,
-#             'company': '新唐人',
-#             'label': link['label'],
-#             'reporter': None,
-#             'title': link['title'],
-#             'article': article,
-#             'raw_xml': response.text
-#         }
-#         result.append(data_dic)
-#     return result
-
-# if __name__ == "__main__":
-#     board = [
-#         ['國際', 202],
-#         ['港澳', 205],
-#         ['財經', 208],
-#         ['健康', 1255],
-#         ['體育', 211],
-#         ['美國', 203],
-#         ['大陸', 204]
-#     ]
-#     for b in tqdm(board):
-#         for page in tqdm(range(1, 501, 50)):
-#             time_bound = datetime.now() - timedelta(days=1)
-#             links = get_links(b, page, page+50)
-#             data = get_data(links, time_bound)
-#             json.dump(data, open(f'crawlers/data/ntdtv/{b[0]}_p{page}-p{page+50}_{time_bound.strftime("%Y%m%d")}.json', 'w', encoding='utf8'))
