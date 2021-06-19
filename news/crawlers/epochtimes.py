@@ -39,7 +39,10 @@ def get_news_list(
         response.close()
 
         # Raise exception if status code is not 200.
-        news.crawlers.util.check_status_code(response=response)
+        news.crawlers.util.check_status_code(
+            company='epochtimes',
+            response=response
+        )
 
         soup = BeautifulSoup(response.text, 'html.parser')
         max_page = soup.select('div.pagination > a.page-numbers')[-2].text
@@ -72,7 +75,10 @@ def get_news_list(
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(response=response)
+            news.crawlers.util.check_status_code(
+                company='epochtimes',
+                response=response
+            )
 
             # Parse date in this page.
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -131,7 +137,10 @@ def get_news_list(
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(response=response)
+            news.crawlers.util.check_status_code(
+                company='epochtimes',
+                response=response
+            )
 
             # If `status_code == 200`, parse links in this page.
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -154,7 +163,10 @@ def get_news_list(
                 response.close()
 
                 # Raise exception if status code is not 200.
-                news.crawlers.util.check_status_code(response=response)
+                news.crawlers.util.check_status_code(
+                    company='epochtimes',
+                    response=response
+                )
 
                 # Parse news in this page.
                 parsed_news = news.preprocess.epochtimes.parse(ori_news=News(

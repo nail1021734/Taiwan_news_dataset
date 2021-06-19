@@ -31,7 +31,10 @@ def get_news_list(
         api_response.close()
 
         # Raise exception if status code is not 200.
-        news.crawlers.util.check_status_code(response=api_response)
+        news.crawlers.util.check_status_code(
+            company='apple',
+            response=api_response
+        )
 
         links = api_response.json()['content_elements']
     except Exception as err:
@@ -67,7 +70,10 @@ def get_news_list(
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(response=api_response)
+            news.crawlers.util.check_status_code(
+                company='apple',
+                response=api_response
+            )
 
             parsed_news = news.preprocess.apple.parse(ori_news=News(
                 datetime=news_datetime_str,

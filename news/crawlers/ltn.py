@@ -1,89 +1,126 @@
-import json
-import os
-from datetime import datetime, timedelta
-
+from collections import Counter
+from datetime import datetime
+from typing import List
 import requests
-from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+import news.crawlers
+import news.db
+from news.db.schema import News
 
-def get_links(board):
-    result = []
-    for page in range(1, 26):
-        url = f'https://news.ltn.com.tw/ajax/breakingnews/{board}/{page}'
+FIRST_PAGE = 1
+MAX_PAGE = 26
+
+
+def get_news_list(
+    category: str,
+    api: str,
+    *,
+    debug: bool = False,
+) -> List[News]:
+    news_list: List[News] = []
+    logger = Counter()
+
+    # Only show progress bar in debug mode.
+    iter_range = range(FIRST_PAGE, MAX_PAGE)
+    if debug:
+        iter_range = tqdm(iter_range, desc='Crawling loop.')
+
+    # Crawling loop.
+    for page in iter_range:
+
+        page_url = f'https://news.ltn.com.tw/ajax/breakingnews/{api}/{page}'
+
         try:
-            response = requests.get(url)
-        except:
-            break
-        try:
-            data = json.loads(response.text)
-        except:
+            response = requests.get(
+                page_url,
+                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+            )
+            response.close()
+
+            # Raise exception if status code is not 200.
+            news.crawlers.util.check_status_code(
+                company='ltn',
+                response=response
+            )
+
+            # If `status_code == 200`, parse links in this page.
+            api_json = response.json()['data']
+            # Inconsistent api format.
+            if page != 1:
+                api_json = api_json.values()
+        except Exception as err:
+            if err.args:
+                logger.update([err.args[0]])
             continue
-        data = data['data']
-        if page != 1:
-            data = list(data.values())
-        for link in data:
-            data_dic = {
-                'url': link['url'],
-                'time': None,
-                'company': '自由時報',
-                'label': board,
-                'reporter': None,
-                'title': link['title'],
-                'article': None,
-                'raw_xml': None
-            }
-            result.append(data_dic)
-    return result
+
+        for news_dict in api_json:
+            try:
+                news_url = news_dict['url']
+
+                response = requests.get(
+                    news_url,
+                    timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                )
+                response.close()
+
+                # Raise exception if status code is not 200.
+                news.crawlers.util.check_status_code(
+                    company='ltn',
+                    response=response
+                )
+
+                # Parse news in this page.
+                parsed_news = news.preprocess.ltn.parse(ori_news=News(
+                    raw_xml=response.text,
+                    url=news_url,
+                ))
+
+                news_list.append(parsed_news)
+            except Exception as err:
+                if err.args:
+                    logger.update([err.args[0]])
+
+    # Only show error stats in debug mode.
+    if debug:
+        for k, v in logger.items():
+            print(f'{k}: {v}')
+
+    return news_list
 
 
-def get_data(links, time_bound):
-    result = []
-    for link in links:
-        try:
-            response = requests.get(link['url'])
-            soup = BeautifulSoup(response.text, 'html.parser')
-            time = soup.find('span', class_="time").text
-            for ap in soup.find_all('p', class_='appE1121'):
-                ap.extract()
-            for s in soup.find_all('span', class_='ph_d'):
-                s.extract()
-            for d in soup.find_all('div', {'class': 'photo boxTitle', 'data-desc':'圖片'}):
-                d.extract()
-            p_tags = soup.find('div', {'class': 'text boxTitle boxText', 'data-desc': '內容頁'}).find_all('p')
-            article = ''.join([i.text for i in p_tags])
-        except:
-            continue
-        date = time.strip().split(' ')[0].split('/')
-        date = datetime(year=int(date[0]), month=int(date[1]), day=int(date[2]))
-        if date < time_bound:
-            break
-        data_dic = {
-            'url': link['url'],
-            'time': time.strip(),
-            'company': '自由時報',
-            'label': link['label'],
-            'reporter': None,
-            'title': link['title'],
-            'article': article,
-            'raw_xml': response.text
-        }
-        result.append(data_dic)
-    return result
+CATEGORIES = {
+    '政治': 'politics',
+    '社會': 'society',
+    '生活': 'life',
+    '國際': 'world',
+    '地方': 'local',
+    '蒐奇': 'novelty',
+}
 
 
-if __name__ == '__main__':
-    boards = [
-        'politics',
-        'society',
-        'life',
-        'world',
-        'local',
-        'novelty',
-    ]
-    for board in tqdm(boards):
-        time_bound = datetime.now() - timedelta(days=1)
-        links = get_links(board)
-        result = get_data(links, time_bound)
-        file_path = os.path.join('crawlers', 'data', 'ltn', f'{board}.json')
-        json.dump(result, open(file_path, 'w', encoding='utf8'))
+def main(
+    db_name: str,
+    *,
+    debug: bool = False,
+):
+
+    # Get database connection.
+    conn = news.db.util.get_conn(db_name=db_name)
+    cur = conn.cursor()
+    news.db.create.create_table(cur=cur)
+
+    for category, api in CATEGORIES.items():
+        news.db.write.write_new_records(
+            cur=cur,
+            news_list=get_news_list(
+                api=api,
+                category=category,
+                debug=debug,
+            ),
+        )
+
+        conn.commit()
+
+    # Close database connection.
+    conn.close()

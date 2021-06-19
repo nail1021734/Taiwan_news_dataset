@@ -47,7 +47,10 @@ def get_news_list(
                 response.close()
 
                 # Raise exception if status code is not 200.
-                news.crawlers.util.check_status_code(response=response)
+                news.crawlers.util.check_status_code(
+                    company='cna',
+                    response=response
+                )
 
                 # If `status_code == 200`, reset `fail_count`.
                 fail_count = 0

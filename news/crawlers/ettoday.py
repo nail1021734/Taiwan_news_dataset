@@ -34,7 +34,10 @@ def get_news_list(
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(response=response)
+            news.crawlers.util.check_status_code(
+                company='ettoday',
+                response=response
+            )
 
             parsed_news = news.preprocess.ettoday.parse(ori_news=News(
                 raw_xml=response.text,
