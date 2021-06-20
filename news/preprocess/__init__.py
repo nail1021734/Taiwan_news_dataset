@@ -1,5 +1,5 @@
 from news.preprocess import (apple, chinatimes, cna, epochtimes, ettoday, ltn,
-                             ntdtv, setn, storm, tvbs, uni, yahoo)
+                             ntdtv, setn, storm, tvbs, udn, yahoo)
 
 __all__ = [
     apple,
@@ -12,6 +12,6 @@ __all__ = [
     setn,
     storm,
     tvbs,
-    uni,
+    udn,
     yahoo,
 ]

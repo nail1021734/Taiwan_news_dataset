@@ -18,7 +18,7 @@ BEFORE_BANNED_SLEEP_SECS = {
     # Storm response bad request with status 200.
     'storm': 1.0,
     'tvbs': 0.0,
-    'uni': 0.0,
+    'udn': 0.0,
     'yahoo': 0.0,
 }
 # Times (in seconds) to sleep when crawler get banned. Set to 0 if the website
@@ -35,7 +35,7 @@ AFTER_BANNED_SLEEP_SECS = {
     'setn': 86400.0,
     'storm': 86400.0,
     'tvbs': 86400.0,
-    'uni': 86400.0,
+    'udn': 86400.0,
     'yahoo': 86400.0,
 }
 REQUEST_TIMEOUT = 60

@@ -1,9 +1,9 @@
 import re
 import unicodedata
 from datetime import timedelta
-import dateutil.parser
 
 import bs4
+import dateutil.parser
 from bs4 import BeautifulSoup
 
 from news.db.schema import News
