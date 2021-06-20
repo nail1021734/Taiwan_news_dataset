@@ -19,7 +19,6 @@ BEFORE_BANNED_SLEEP_SECS = {
     'storm': 1.0,
     'tvbs': 0.0,
     'udn': 0.0,
-    'yahoo': 0.0,
 }
 # Times (in seconds) to sleep when crawler get banned. Set to 0 if the website
 # is not blocking us. Note that LTN, SET, storm, TVBS use cloudfront services.
@@ -36,7 +35,6 @@ AFTER_BANNED_SLEEP_SECS = {
     'storm': 86400.0,
     'tvbs': 86400.0,
     'udn': 86400.0,
-    'yahoo': 86400.0,
 }
 REQUEST_TIMEOUT = 60
 

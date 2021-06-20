@@ -1,5 +1,5 @@
 from news.crawlers import (apple, chinatimes, cna, epochtimes, ettoday, ltn,
-                           ntdtv, setn, storm, tvbs, udn, util, yahoo)
+                           ntdtv, setn, storm, tvbs, udn, util)
 
 __all__ = [
     apple,
@@ -14,5 +14,4 @@ __all__ = [
     tvbs,
     udn,
     util,
-    yahoo,
 ]
