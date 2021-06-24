@@ -60,13 +60,13 @@ def parse_argument():
     parser.add_argument(
         '--first_idx',
         type=int,
-        default=None,
+        default=1,
         help='Specify first index id. (smallest)',
     )
     parser.add_argument(
         '--latest_idx',
         type=int,
-        default=None,
+        default=-1,
         help='Specify latest index id. (largest)',
     )
     args = parser.parse_args()
