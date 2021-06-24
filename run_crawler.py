@@ -11,7 +11,7 @@ CRAWLER_DICT = {
     'cna': news.crawlers.cna.main,
     'epochtimes': news.crawlers.epochtimes.main,
     'ettoday': news.crawlers.ettoday.main,
-    'ftv': news.crawlers.ftv.main,
+    # 'ftv': news.crawlers.ftv.main,
     'ltn': news.crawlers.ltn.main,
     'ntdtv': news.crawlers.ntdtv.main,
     'setn': news.crawlers.setn.main,
