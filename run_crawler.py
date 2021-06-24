@@ -1,6 +1,9 @@
 import argparse
+from datetime import datetime, timedelta, timezone
+
+import dateutil.parser
+
 import news.crawlers
-from datetime import datetime, timezone, timedelta
 
 CRAWLER_DICT = {
     'apple': news.crawlers.apple.main,
@@ -27,44 +30,44 @@ def parse_argument():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--crawler_name',
-        choices=CRAWLER_DICT.keys()
+        choices=CRAWLER_DICT.keys(),
         type=str,
         help='Select crawler.',
     )
     parser.add_argument(
         '--db_name',
         type=str,
-        help='Assign database to store news.'
+        help='Assign database to store news.',
     )
     parser.add_argument(
         '--debug',
         type=bool,
         default=False,
-        help='Select whether use debug mode.'
+        help='Select whether use debug mode.',
     )
     parser.add_argument(
         '--current_datetime',
         type=str,
         default=None,
-        help='Specify the upper bound of the news release time. (latest)'
+        help='Specify the upper bound of the news release time. (latest)',
     )
     parser.add_argument(
         '--past_datetime',
         type=str,
         default=None,
-        help='Specify the lower bound of the news release time. (oldest)'
+        help='Specify the lower bound of the news release time. (oldest)',
     )
     parser.add_argument(
         '--first_idx',
         type=int,
         default=None,
-        help='Specify first index id. (smallest)'
+        help='Specify first index id. (smallest)',
     )
     parser.add_argument(
         '--latest_idx',
         type=int,
         default=None,
-        help='Specify latest index id. (largest)'
+        help='Specify latest index id. (largest)',
     )
     args = parser.parse_args()
     return args
@@ -75,7 +78,7 @@ if __name__ == '__main__':
     args = parse_argument()
 
     # Defaule `current_datetime` now.
-    if args.current_datetime == None:
+    if not args.current_datetime:
         args.current_datetime = datetime.now(timezone.utc)
     else:
         args.current_datetime = dateutil.parser.isoparse(
@@ -83,7 +86,7 @@ if __name__ == '__main__':
         )
 
     # Default crawl one day news.
-    if args.past_datetime == None:
+    if not args.past_datetime:
         args.past_datetime = args.current_datetime - timedelta(days=1)
     else:
         args.past_datetime = dateutil.parser.isoparse(
