@@ -163,7 +163,9 @@ def parse(ori_news: News) -> News:
     # News title.
     title = ''
     try:
-        title = soup.select('h1.title, h1.title_article')[0].text
+        title = soup.select(
+            'h1.title, h1.title_article, div.subject_article > header > h1'
+        )[0].text
         title = unicodedata.normalize('NFKC', title).strip()
     except Exception:
         raise ValueError('Fail to parse ETtoday news title.')
