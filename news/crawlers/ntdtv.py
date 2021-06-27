@@ -103,6 +103,8 @@ def get_news_list(
                 ),
                 news_datetimes,
             ))
+            if news_datetimes[0] < past_datetime:
+                break
             # If this page contains valid news, we start crawling from this page.
             news_datetimes = filter(bool, map(
                 lambda n: past_datetime <= n <= current_datetime,
@@ -176,7 +178,12 @@ def get_news_list(
                 news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
                 news_datetime = news_datetime.replace(
                     hour=0, minute=0, second=0)
-                if past_datetime > news_datetime or news_datetime > current_datetime:
+
+                # If `news_datetime > current_datetime` just continue.
+                if news_datetime > current_datetime:
+                    continue
+                # If `past_datetime > news_datetime` stop crawler next news.
+                if past_datetime > news_datetime:
                     is_datetime_valid = False
                     break
 

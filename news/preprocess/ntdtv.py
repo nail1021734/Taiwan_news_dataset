@@ -61,7 +61,7 @@ def parse(ori_news: News) -> News:
         for pattern in BAD_ARTICLE_PATTERNS:
             article = pattern.sub('', article).strip()
     except Exception:
-        raise ValueError('Fail to parse epochtimes news article.')
+        raise ValueError('Fail to parse ntdtv news article.')
 
     # News category.
     category = ''
@@ -117,7 +117,7 @@ def parse(ori_news: News) -> News:
         for pattern in BAD_TITLE_PATTERNS:
             title = pattern.sub('', title)
     except Exception:
-        raise ValueError('Fail to parse epochtimes news title.')
+        raise ValueError('Fail to parse ntdtv news title.')
 
     parsed_news.article = article
     parsed_news.category = category
