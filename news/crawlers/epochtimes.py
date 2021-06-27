@@ -175,8 +175,8 @@ def get_news_list(
                 ))
 
                 news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-                news_datetime.hour = 0
-                news_datetime.minute = 0
+                news_datetime = news_datetime.replace(
+                    hour=0, minute=0, second=0)
                 if past_datetime > news_datetime or news_datetime > current_datetime:
                     is_datetime_valid = False
                     break
