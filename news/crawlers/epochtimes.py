@@ -109,7 +109,7 @@ def get_news_list(
                 news_datetimes,
             ))
 
-            if news_datetimes:
+            if list(news_datetimes):
                 start_page = page
                 break
         except Exception as err:
