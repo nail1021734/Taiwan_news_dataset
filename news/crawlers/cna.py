@@ -24,56 +24,52 @@ def get_news_list(
 
     date = current_datetime
 
-    while date > past_datetime:
-        fail_count = 0
-        date_str = date.strftime('%Y%m%d')
+    fail_count = 0
+    date_str = date.strftime('%Y%m%d')
 
-        # Only show progress bar in debug mode.
-        iter_range = range(10000)
-        if debug:
-            iter_range = tqdm(iter_range)
+    # Only show progress bar in debug mode.
+    iter_range = range(10000)
+    if debug:
+        iter_range = tqdm(iter_range)
 
-        for i in iter_range:
-            # No more news to crawl.
-            if fail_count >= CONTINUE_FAIL_COUNT:
-                break
+    for i in iter_range:
+        # No more news to crawl.
+        if fail_count >= CONTINUE_FAIL_COUNT:
+            break
 
-            url = f'https://www.cna.com.tw/news/aipl/{date_str}{i:04d}.aspx'
-            try:
-                response = requests.get(
-                    url,
-                    timeout=news.crawlers.util.REQUEST_TIMEOUT,
-                )
-                response.close()
+        url = f'https://www.cna.com.tw/news/aipl/{date_str}{i:04d}.aspx'
+        try:
+            response = requests.get(
+                url,
+                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+            )
+            response.close()
 
-                # Raise exception if status code is not 200.
-                news.crawlers.util.check_status_code(
-                    company='cna',
-                    response=response
-                )
+            # Raise exception if status code is not 200.
+            news.crawlers.util.check_status_code(
+                company='cna',
+                response=response
+            )
 
-                # If `status_code == 200`, reset `fail_count`.
-                fail_count = 0
+            # If `status_code == 200`, reset `fail_count`.
+            fail_count = 0
 
-                parsed_news = news.preprocess.cna.parse(ori_news=News(
-                    raw_xml=response.text,
-                    url=url,
-                ))
+            parsed_news = news.preprocess.cna.parse(ori_news=News(
+                raw_xml=response.text,
+                url=url,
+            ))
 
-                news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-                if past_datetime > news_datetime or news_datetime > current_datetime:
-                    raise Exception('Time constraint violated.')
+            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
+            if past_datetime > news_datetime or news_datetime > current_datetime:
+                raise Exception('Time constraint violated.')
 
-                news_list.append(parsed_news)
-            except Exception as err:
-                fail_count += 1
+            news_list.append(parsed_news)
+        except Exception as err:
+            fail_count += 1
 
-                if err.args:
-                    logger.update([err.args[0]])
-                continue
-
-        # Go back 1 day.
-        date = date - timedelta(days=1)
+            if err.args:
+                logger.update([err.args[0]])
+            continue
 
     # Only show error stats in debug mode.
     if debug:
@@ -98,16 +94,21 @@ def main(
     cur = conn.cursor()
     news.db.create.create_table(cur=cur)
 
-    news.db.write.write_new_records(
-        cur=cur,
-        news_list=get_news_list(
-            current_datetime=current_datetime,
-            debug=debug,
-            past_datetime=past_datetime,
-        ),
-    )
+    date = current_datetime
+    # Commit database once a day.
+    while date > past_datetime:
+        news.db.write.write_new_records(
+            cur=cur,
+            news_list=get_news_list(
+                current_datetime=date,
+                debug=debug,
+                past_datetime=date - timedelta(days=1),
+            ),
+        )
+        # Go back 1 day.
+        date = date - timedelta(days=1)
 
-    conn.commit()
+        conn.commit()
 
     # Close database connection.
     conn.close()
