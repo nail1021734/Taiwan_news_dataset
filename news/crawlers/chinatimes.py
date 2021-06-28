@@ -142,7 +142,7 @@ def main(
                     category=category,
                     current_datetime=date,
                     debug=debug,
-                    past_datetime=date-timedelta(days=1),
+                    past_datetime=date - timedelta(days=1),
                 ),
             )
             # Go back 1 day.

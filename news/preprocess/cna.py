@@ -55,8 +55,8 @@ def parse(ori_news: News) -> News:
     news_datetime = ''
     try:
         news_datetime = datetime.strptime(
-            soup.select('div.centralContent div.updatetime > span')[0].text,
-            '%Y/%m/%d %H:%M',
+            parsed_news.url.split('/')[-1][:8],
+            '%Y%m%d',
         )
         # Convert to UTC.
         news_datetime = news_datetime - timedelta(hours=8)
