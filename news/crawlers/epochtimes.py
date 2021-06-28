@@ -2,7 +2,7 @@
 import re
 from collections import Counter
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 
 import dateutil.parser
 import requests
@@ -18,17 +18,14 @@ URL_PATTERN = re.compile(
 )
 
 
-def get_news_list(
+def find_page_range(
     category: str,
     current_datetime: datetime,
     api: str,
     past_datetime: datetime,
     *,
     debug: bool = False,
-) -> List[News]:
-    news_list: List[News] = []
-    logger = Counter()
-
+) -> Tuple[int, int]:
     # Get max page of this category.
     try:
         url = f'https://www.epochtimes.com/b5/{api}_2.htm'
@@ -48,14 +45,7 @@ def get_news_list(
         max_page = soup.select('div.pagination > a.page-numbers')[-2].text
         max_page = int(max_page.replace(',', ''))
     except Exception as err:
-        if err.args:
-            logger.update([err.args[0]])
-
-        # Only show error stats in debug mode.
-        if debug:
-            for k, v in logger.items():
-                print(f'{k}: {v}')
-        return []
+        raise ValueError('Fail to find max page.')
 
     # Only show progress bar in debug mode.
     iter_range = range(FIRST_PAGE, max_page)
@@ -103,7 +93,6 @@ def get_news_list(
                 ),
                 news_datetimes,
             ))
-
             # Break loop if `news_datetime < past_datetime`.
             if news_datetimes[0] < past_datetime:
                 break
@@ -114,17 +103,31 @@ def get_news_list(
                 news_datetimes,
             ))
 
-            news_datatimes = list(news_datetimes)
+            news_datetimes = list(news_datetimes)
 
             if news_datetimes:
                 start_page = page
                 break
         except Exception as err:
-            if err.args:
-                logger.update([err.args[0]])
+            raise ValueError('Fail to find start page.')
 
+    return start_page, max_page
+
+
+def get_news_list(
+    category: str,
+    current_datetime: datetime,
+    api: str,
+    past_datetime: datetime,
+    page_range: List[int],
+    *,
+    debug: bool = False,
+) -> List[News]:
+    news_list: List[News] = []
+    logger = Counter()
+
+    iter_range = range(page_range[0], page_range[1])
     # Only show progress bar in debug mode.
-    iter_range = range(start_page, max_page)
     if debug:
         iter_range = tqdm(iter_range, desc='Crawling loop.')
 
@@ -186,7 +189,7 @@ def get_news_list(
                 # If `news_datetime > current_datetime` just continue.
                 if news_datetime > current_datetime:
                     continue
-                # If `past_datetime > news_datetime` stop crawler next news.
+                # If `past_datetime > news_datetime` stop crawling loop.
                 if past_datetime > news_datetime:
                     is_datetime_valid = False
                     break
@@ -233,18 +236,39 @@ def main(
     news.db.create.create_table(cur=cur)
 
     for category, api in CATEGORIES.items():
-        news.db.write.write_new_records(
-            cur=cur,
-            news_list=get_news_list(
+        # Find page range that consistent with specified time range.
+        start_page, max_page = find_page_range(
+            category=category,
+            current_datetime=current_datetime,
+            api=api,
+            past_datetime=past_datetime,
+            debug=debug,
+        )
+
+        # Commit database when crawling 10 pages.
+        page_interval = 10
+        for page in range(start_page, max_page, page_interval):
+            page_range = [
+                page,
+                page + page_interval if page + page_interval < max_page else max_page,
+            ]
+            news_list = get_news_list(
                 category=category,
                 current_datetime=current_datetime,
                 debug=debug,
                 api=api,
                 past_datetime=past_datetime,
-            ),
-        )
+                page_range=page_range,
+            )
+            # When news violate `past_datetime` break for loop.
+            if not news_list:
+                break
+            news.db.write.write_new_records(
+                cur=cur,
+                news_list=news_list,
+            )
 
-        conn.commit()
+            conn.commit()
 
     # Close database connection.
     conn.close()

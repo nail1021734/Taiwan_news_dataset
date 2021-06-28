@@ -26,15 +26,15 @@ BEFORE_BANNED_SLEEP_SECS = {
 # services. Note that LTN, ftv and SET will ban us.
 AFTER_BANNED_SLEEP_SECS = {
     'apple': 86400.0,
-    'chinatimes': 86400.0,
-    'cna': 86400.0,
-    'epochtimes': 86400.0,
-    'ettoday': 86400.0,
+    'chinatimes': 0.0,
+    'cna': 0.0,
+    'epochtimes': 0.0,
+    'ettoday': 0.0,
     'ftv': 86400.0,
     'ltn': 86400.0,
-    'ntdtv': 86400.0,
+    'ntdtv': 0.0,
     'setn': 86400.0,
-    'storm': 86400.0,
+    'storm': 0.0,
     'tvbs': 86400.0,
     'udn': 86400.0,
 }

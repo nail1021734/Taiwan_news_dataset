@@ -1,11 +1,15 @@
 import re
 import unicodedata
 
+import dateutil.parser
 from bs4 import BeautifulSoup
 
 from news.db.schema import News
 
 REPORTER_PATTERN = re.compile(r'\(大紀元記者(.*?)報導\)')
+URL_PATTERN = re.compile(
+    r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm'
+)
 
 
 def parse(ori_news: News) -> News:
@@ -48,7 +52,14 @@ def parse(ori_news: News) -> News:
     # News datetime.
     news_datetime = ''
     try:
-        news_datetime = soup.select('time')[0]['datetime']
+        match = URL_PATTERN.match(parsed_news.url)
+        year = int(match.group(1))
+        month = int(match.group(2))
+        day = int(match.group(3))
+        news_datetime = dateutil.parser.isoparse(
+            f"20{year:02d}-{month:02d}-{day:02d}T00:00:00Z"
+        )
+        news_datetime = news_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         news_datetime = unicodedata.normalize('NFKC', news_datetime)
     except Exception:
         # There may not have category.

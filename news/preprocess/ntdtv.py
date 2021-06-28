@@ -2,6 +2,7 @@ import re
 import unicodedata
 from datetime import datetime, timedelta
 
+import dateutil.parser
 from bs4 import BeautifulSoup
 
 from news.db.schema import News
@@ -25,6 +26,9 @@ REPORTER_PATTERNS = [
     re.compile(r'^採訪/(.*?)\s*編輯/(.*?)\s*後製/(.*?)$'),
     re.compile(r'\(責任編輯:(.*?)\)')
 ]
+URL_PATTERN = re.compile(
+    r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a\d+.html'
+)
 
 
 def parse(ori_news: News) -> News:
@@ -75,11 +79,13 @@ def parse(ori_news: News) -> News:
     # News datetime.
     news_datetime = ''
     try:
-        news_datetime = datetime.strptime(
-            soup.select('div.time > span')[0].text,
-            '%Y-%m-%d %H:%M'
+        match = URL_PATTERN.match(parsed_news.url)
+        year = int(match.group(1))
+        month = int(match.group(2))
+        day = int(match.group(3))
+        news_datetime = dateutil.parser.isoparse(
+            f"{year:04d}-{month:02d}-{day:02d}T00:00:00Z"
         )
-        news_datetime = news_datetime - timedelta(hours=8)
         news_datetime = news_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         news_datetime = unicodedata.normalize('NFKC', news_datetime)
     except Exception:
