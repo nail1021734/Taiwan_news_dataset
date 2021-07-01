@@ -246,7 +246,7 @@ def main(
         )
 
         # Commit database when crawling 10 pages.
-        page_interval = 10
+        page_interval = 50
         for page in range(start_page, max_page, page_interval):
             page_range = [
                 page,

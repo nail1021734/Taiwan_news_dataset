@@ -29,3 +29,21 @@ python run_crawler.py --crawler_name ettoday --db_name ettoday.db --debug True -
 ```sh
 python run_crawler.py --crawler_name ntdtv --db_name ntdtv.db --debug True --past_datetime=2002-01-01T00:00:00Z
 ```
+
+## SETN
+
+```sh
+python run_crawler.py --crawler_name setn --db_name setn.db --debug True --first_idx 1
+```
+
+## STORM
+
+```sh
+python run_crawler.py --crawler_name storm --db_name storm.db --debug True --first_idx 1
+```
+
+## TVBS
+
+```sh
+python run_crawler.py --crawler_name tvbs --db_name tvbs.db --debug True --first_idx 1
+```

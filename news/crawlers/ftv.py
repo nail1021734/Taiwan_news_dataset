@@ -43,13 +43,13 @@ CATEGORIES = {
     'F': '財經',
     'I': '國際',
     'J': '美食',
-    'L': '生活',
-    'N': '社會',
-    'P': '政治',
-    'R': '美食',
-    'S': '社會',
-    'U': '社會',
-    'W': '一般',
+    # 'L': '生活',
+    # 'N': '社會',
+    # 'P': '政治',
+    # 'R': '美食',
+    # 'S': '社會',
+    # 'U': '社會',
+    # 'W': '一般',
 }
 
 
@@ -66,65 +66,63 @@ def get_news_list(
 
     date = current_datetime
 
-    while date > past_datetime:
-        fail_count = 0
-        date_str = \
-            f'{date.strftime("%Y")}{int(date.strftime("%m")):x}{date.strftime("%d")}'
+    fail_count = 0
+    date_str = \
+        f'{date.strftime("%Y")}{int(date.strftime("%m")):x}{date.strftime("%d")}'
 
-        # Only show progress bar in debug mode.
+    # Only show progress bar in debug mode.
+    if api == 'W':
+        iter_range = range(10000)
+    else:
+        iter_range = range(30)
+
+    if debug:
+        iter_range = tqdm(iter_range)
+
+    for i in iter_range:
+        # No more news to crawl.
+        if fail_count >= CONTINUE_FAIL_COUNT:
+            break
+
         if api == 'W':
-            iter_range = range(10000)
+            url = f'https://www.ftvnews.com.tw/news/detail/{date_str}{api}{i:04}'
         else:
-            iter_range = range(30)
+            url = f'https://www.ftvnews.com.tw/news/detail/{date_str}{api}{i:02}M1'
 
-        if debug:
-            iter_range = tqdm(iter_range)
+        try:
+            response = requests.get(
+                url,
+                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+            )
+            response.close()
 
-        for i in iter_range:
-            # No more news to crawl.
-            if fail_count >= CONTINUE_FAIL_COUNT:
-                break
+            # Raise exception if status code is not 200.
+            news.crawlers.util.check_status_code(
+                company='ftv',
+                response=response
+            )
 
-            if api == 'W':
-                url = f'https://www.ftvnews.com.tw/news/detail/{date_str}{api}{i:04}'
-            else:
-                url = f'https://www.ftvnews.com.tw/news/detail/{date_str}{api}{i:02}M1'
+            # If `status_code == 200`, reset `fail_count`.
+            fail_count = 0
 
-            try:
-                response = requests.get(
-                    url,
-                    timeout=news.crawlers.util.REQUEST_TIMEOUT,
-                )
-                response.close()
+            parsed_news = news.preprocess.ftv.parse(ori_news=News(
+                raw_xml=response.text,
+                url=url,
+            ))
 
-                # Raise exception if status code is not 200.
-                news.crawlers.util.check_status_code(
-                    company='ftv',
-                    response=response
-                )
-
-                # If `status_code == 200`, reset `fail_count`.
-                fail_count = 0
-
-                parsed_news = news.preprocess.ftv.parse(ori_news=News(
-                    raw_xml=response.text,
-                    url=url,
-                ))
-
-                news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-                if past_datetime > news_datetime or news_datetime > current_datetime:
-                    raise Exception('Time constraint violated.')
-
-                news_list.append(parsed_news)
-            except Exception as err:
-                fail_count += 1
-
-                if err.args:
-                    logger.update([err.args[0]])
+            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
+            if news_datetime > current_datetime:
                 continue
+            if past_datetime > news_datetime:
+                raise Exception('Time constraint violated.')
 
-        # Go back 1 day.
-        date = date - timedelta(days=1)
+            news_list.append(parsed_news)
+        except Exception as err:
+            fail_count += 1
+
+            if err.args:
+                logger.update([err.args[0]])
+            continue
 
     # Only show error stats in debug mode.
     if debug:
@@ -150,18 +148,24 @@ def main(
     news.db.create.create_table(cur=cur)
 
     for api, category in CATEGORIES.items():
-        news.db.write.write_new_records(
-            cur=cur,
-            news_list=get_news_list(
-                category=category,
-                current_datetime=current_datetime,
-                api=api,
-                debug=debug,
-                past_datetime=past_datetime,
-            ),
-        )
+        date = current_datetime
+        # Commit database once a day.
+        while date > past_datetime:
+            news.db.write.write_new_records(
+                cur=cur,
+                news_list=get_news_list(
+                    category=category,
+                    current_datetime=date,
+                    api=api,
+                    debug=debug,
+                    past_datetime=date - timedelta(days=1),
+                ),
+            )
 
-        conn.commit()
+            # Go back 1 day.
+            date = date - timedelta(days=1)
+
+            conn.commit()
 
     # Close database connection.
     conn.close()
