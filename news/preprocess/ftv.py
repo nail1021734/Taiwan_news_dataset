@@ -9,7 +9,8 @@ from news.db.schema import News
 REPORTER_END_PATTERNS = [
     re.compile(r'\(.{0,6}/(.{0,12})\s+.{0,4}(:?報導|編輯)\){0,2}'),
     re.compile(r'.{0,6}/(.{0,12})\s*.{0,4}(:?報導|編輯)'),
-    re.compile(r'\(.{0,6}/(.{0,12})\s+.{0,4}.{0,6}\){0,2}'),# (民視新聞/鄭博暉、林俊明、洪明生 台南-屏東)
+    # (民視新聞/鄭博暉、林俊明、洪明生 台南-屏東)
+    re.compile(r'\(.{0,6}/(.{0,12})\s+.{0,10}\){0,2}'),
 ]
 
 REPORTER_BEGIN_PATTERNS = [
@@ -90,12 +91,12 @@ def parse(ori_news: News) -> News:
     # News datetime.
     news_datetime = ''
     try:
+        url_datetime = parsed_news.url.split('/')[-1][:7]
+        url_datetime = f'{url_datetime[:4]}{int("0x" + url_datetime[4], 0):02}{url_datetime[5:]}'
         news_datetime = datetime.strptime(
-            soup.select('li.date')[0].text.strip(),
-            '%Y/%m/%d %H:%M:%S',
+            url_datetime,
+            '%Y%m%d',
         )
-        # Convert to UTC.
-        news_datetime = news_datetime - timedelta(hours=8)
         news_datetime = news_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         news_datetime = unicodedata.normalize('NFKC', news_datetime)
     except Exception:
