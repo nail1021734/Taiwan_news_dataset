@@ -39,7 +39,8 @@ python run_crawler.py --crawler_name setn --db_name setn.db --debug True --first
 ## STORM
 
 ```sh
-python run_crawler.py --crawler_name storm --db_name storm.db --debug True --first_idx 1
+# The first available index of storm is 21016.
+python run_crawler.py --crawler_name storm --db_name storm.db --debug True --first_idx 21016
 ```
 
 ## TVBS

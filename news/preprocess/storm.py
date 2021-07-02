@@ -8,7 +8,7 @@ from news.db.schema import News
 
 
 def parse(ori_news: News) -> News:
-    """Parse SET news from raw HTML.
+    """Parse STORM news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these
     information cannot be retrieved from `raw_xml`.
@@ -43,7 +43,7 @@ def parse(ori_news: News) -> News:
         ))
         article = unicodedata.normalize('NFKC', article).strip()
     except Exception:
-        raise ValueError('Fail to parse SET news article.')
+        raise ValueError('Fail to parse STORM news article.')
 
     # News category.
     category = ''
@@ -87,7 +87,7 @@ def parse(ori_news: News) -> News:
     except Exception:
         # storm response 404 with status code 200.
         # Thus some pages do not have title since it is 404.
-        raise ValueError('Fail to parse SET news title.')
+        raise ValueError('Fail to parse STORM news title.')
 
     parsed_news.article = article
     parsed_news.category = category

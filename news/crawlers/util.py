@@ -35,7 +35,7 @@ AFTER_BANNED_SLEEP_SECS = {
     'ntdtv': 0.0,
     'setn': 86400.0,
     'storm': 0.0,
-    'tvbs': 86400.0,
+    'tvbs': 0.0,
     'udn': 86400.0,
 }
 REQUEST_TIMEOUT = 60
