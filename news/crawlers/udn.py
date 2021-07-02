@@ -11,11 +11,13 @@ import news.db
 from news.db.schema import News
 
 MAX_PAGE = 2672
+PAGE_INTERVAL = 100
 
 
 def get_news_list(
     current_datetime: datetime,
     past_datetime: datetime,
+    page_range: List[int],
     *,
     debug: bool = False,
 ) -> List[News]:
@@ -24,7 +26,7 @@ def get_news_list(
 
     for channelId in [1, 2]:
         # Only show progress bar in debug mode.
-        iter_range = range(MAX_PAGE)
+        iter_range = range(page_range[0], page_range[1])
         if debug:
             iter_range = tqdm(iter_range)
 
@@ -117,16 +119,27 @@ def main(
     cur = conn.cursor()
     news.db.create.create_table(cur=cur)
 
-    news.db.write.write_new_records(
-        cur=cur,
-        news_list=get_news_list(
+    # Commit database when crawling 10 pages.
+    for page in range(0, MAX_PAGE, PAGE_INTERVAL):
+        page_range = [
+            page,
+            min(page + PAGE_INTERVAL, MAX_PAGE),
+        ]
+        news_list = get_news_list(
             current_datetime=current_datetime,
             debug=debug,
+            page_range=page_range,
             past_datetime=past_datetime,
-        ),
-    )
+        )
+        # When news violate `past_datetime` break for loop.
+        if not news_list:
+            break
+        news.db.write.write_new_records(
+            cur=cur,
+            news_list=news_list,
+        )
 
-    conn.commit()
+        conn.commit()
 
     # Close database connection.
     conn.close()

@@ -7,7 +7,7 @@ from tqdm import tqdm
 import news.crawlers
 from news.db.schema import News
 
-RECORD_PER_COMMIT = 1000
+RECORD_PER_COMMIT = 2000
 
 
 def get_news_list(

@@ -12,7 +12,9 @@ from tqdm import tqdm
 import news.crawlers
 from news.db.schema import News
 
+
 FIRST_PAGE = 2
+PAGE_INTERVAL = 50
 URL_PATTERN = re.compile(
     r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm'
 )
@@ -246,11 +248,10 @@ def main(
         )
 
         # Commit database when crawling 10 pages.
-        page_interval = 50
-        for page in range(start_page, max_page, page_interval):
+        for page in range(start_page, max_page, PAGE_INTERVAL):
             page_range = [
                 page,
-                page + page_interval if page + page_interval < max_page else max_page,
+                min(page + PAGE_INTERVAL, max_page),
             ]
             news_list = get_news_list(
                 category=category,
