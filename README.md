@@ -24,6 +24,12 @@ python run_crawler.py --crawler_name epochtimes --db_name epochtimes.db --debug 
 python run_crawler.py --crawler_name ettoday --db_name ettoday.db --debug True --first_idx=1
 ```
 
+## FTV
+
+```sh
+python run_crawler.py --crawler_name ftv --db_name ftv.db --debug True --past_datetime=2017-09-17T00:00:00Z
+```
+
 ## NTDTV
 
 ```sh
@@ -48,3 +54,5 @@ python run_crawler.py --crawler_name storm --db_name storm.db --debug True --fir
 ```sh
 python run_crawler.py --crawler_name tvbs --db_name tvbs.db --debug True --first_idx 1
 ```
+
+

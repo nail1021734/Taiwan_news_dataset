@@ -45,12 +45,12 @@ def get_news_list(
     date_str = \
         f'{date.strftime("%Y")}{int(date.strftime("%m")):x}{date.strftime("%d")}'
 
-    # Only show progress bar in debug mode.
     if api == 'W':
         iter_range = range(10000)
     else:
         iter_range = range(30)
 
+    # Only show progress bar in debug mode.
     if debug:
         iter_range = tqdm(iter_range)
 
@@ -77,19 +77,16 @@ def get_news_list(
                 response=response
             )
 
-            # If `status_code == 200`, reset `fail_count`.
-            fail_count = 0
-
             parsed_news = news.preprocess.ftv.parse(ori_news=News(
                 raw_xml=response.text,
                 url=url,
             ))
 
+            # If `status_code == 200` and successfully parsed (only happend when
+            # such news is not missing), reset `fail_count`.
+            fail_count = 0
+
             news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-            if news_datetime > current_datetime:
-                continue
-            if past_datetime > news_datetime:
-                raise Exception('Time constraint violated.')
 
             news_list.append(parsed_news)
         except Exception as err:
