@@ -206,10 +206,6 @@ def main(
                 latest_idx=latest_idx,
             ))
 
-        if not news_list:
-            # No more news to crawl.
-            break
-
         news.db.write.write_new_records(cur=cur, news_list=news_list)
 
         conn.commit()
