@@ -1,3 +1,4 @@
+import re
 from collections import Counter
 from typing import List
 
@@ -67,6 +68,10 @@ def get_news_list(
             if err.args:
                 logger.update([err.args[0]])
 
+    # No news were found.
+    if not data_obj['newsid'] or not data_obj['news_id_list']:
+        return []
+
     # Get news id within specified range.
     news_idx_list = data_obj['news_id_list'].split(',')[1:]
     news_idx_list = map(
@@ -108,7 +113,13 @@ def get_news_list(
 
             # Get news id within specified range.
             next_news_idx_list = filter(
-                bool, data_obj['news_id_list'].split(','))
+                bool,
+                data_obj['news_id_list'].split(','),
+            )
+            next_news_idx_list = map(
+                lambda idx: re.search(r'(\d+)', idx).group(1),
+                next_news_idx_list,
+            )
             next_news_idx_list = map(int, next_news_idx_list)
             next_news_idx_list = filter(
                 lambda idx: first_idx <= idx <= latest_idx,
