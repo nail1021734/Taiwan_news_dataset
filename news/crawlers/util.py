@@ -12,7 +12,7 @@ BEFORE_BANNED_SLEEP_SECS = {
     'cna': 0.0,
     'epochtimes': 0.0,
     'ettoday': 0.0,
-    'ftv': 1.0,
+    'ftv': 0.0,
     'ltn': 60.0,
     'ntdtv': 0.0,
     'setn': 60.0,
