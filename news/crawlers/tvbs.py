@@ -43,6 +43,7 @@ def get_news_list(
     if debug:
         iter_range = tqdm(iter_range, desc='Find latest idx loop.')
 
+    data_obj = None
     # Find latest idx loop:
     for idx in iter_range:
         url = f'https://news.tvbs.com.tw/news/LoadMoreOverview?limit=100&offset=0&cateid={category_id}&cate={category}&newsid={idx}'
@@ -69,7 +70,7 @@ def get_news_list(
                 logger.update([err.args[0]])
 
     # No news were found.
-    if not data_obj['newsid'] or not data_obj['news_id_list']:
+    if not data_obj or not data_obj['newsid'] or not data_obj['news_id_list']:
         return []
 
     # Get news id within specified range.
