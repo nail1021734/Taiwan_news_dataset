@@ -1,3 +1,4 @@
+import re
 from collections import Counter
 from typing import List
 
@@ -42,6 +43,7 @@ def get_news_list(
     if debug:
         iter_range = tqdm(iter_range, desc='Find latest idx loop.')
 
+    data_obj = None
     # Find latest idx loop:
     for idx in iter_range:
         url = f'https://news.tvbs.com.tw/news/LoadMoreOverview?limit=100&offset=0&cateid={category_id}&cate={category}&newsid={idx}'
@@ -66,6 +68,10 @@ def get_news_list(
         except Exception as err:
             if err.args:
                 logger.update([err.args[0]])
+
+    # No news were found.
+    if not data_obj or not data_obj['newsid'] or not data_obj['news_id_list']:
+        return []
 
     # Get news id within specified range.
     news_idx_list = data_obj['news_id_list'].split(',')[1:]
@@ -108,7 +114,13 @@ def get_news_list(
 
             # Get news id within specified range.
             next_news_idx_list = filter(
-                bool, data_obj['news_id_list'].split(','))
+                bool,
+                data_obj['news_id_list'].split(','),
+            )
+            next_news_idx_list = map(
+                lambda idx: re.search(r'(\d+)', idx).group(1),
+                next_news_idx_list,
+            )
             next_news_idx_list = map(int, next_news_idx_list)
             next_news_idx_list = filter(
                 lambda idx: first_idx <= idx <= latest_idx,
@@ -194,10 +206,6 @@ def main(
                 first_idx=cur_first_idx,
                 latest_idx=latest_idx,
             ))
-
-        if not news_list:
-            # No more news to crawl.
-            break
 
         news.db.write.write_new_records(cur=cur, news_list=news_list)
 

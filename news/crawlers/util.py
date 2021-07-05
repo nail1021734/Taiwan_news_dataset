@@ -82,6 +82,11 @@ def check_status_code(company: str, response: Response) -> None:
         before_banned_sleep(company=company)
         raise Exception('News not found.')
 
+    # To many crawler at the same time.
+    if response.status_code == 429:
+        before_banned_sleep(company=company)
+        raise Exception('Too many request.')
+
     # Something weird happend.
     if response.status_code != 200:
         before_banned_sleep(company=company)
