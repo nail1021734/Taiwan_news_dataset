@@ -91,6 +91,7 @@ def get_news_list(
 
     # Loop to find the next first id.
     next_idx = int(data_obj['newsid'])
+    data_obj = None
     while first_idx <= next_idx <= latest_idx:
         url = f'https://news.tvbs.com.tw/news/LoadMoreOverview?limit=100&offset=0&cateid={category_id}&cate={category}&newsid={next_idx}'
 
@@ -108,6 +109,10 @@ def get_news_list(
             )
 
             data_obj = response.json()
+
+            # No mext first idx were found.
+            if not data_obj or not data_obj['newsid'] or not data_obj['news_id_list']:
+                break
 
             # Successfully find the next first idx and update next first id.
             next_idx = int(data_obj['newsid'])
