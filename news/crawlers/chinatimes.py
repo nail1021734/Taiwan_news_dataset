@@ -61,10 +61,6 @@ def get_news_list(
                 url=url,
             ))
 
-            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-            if past_datetime > news_datetime or news_datetime > current_datetime:
-                raise Exception('Time constraint violated.')
-
             news_list.append(parsed_news)
         except Exception as err:
             fail_count += 1
