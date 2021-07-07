@@ -10,7 +10,7 @@ import news.crawlers
 import news.db
 from news.db.schema import News
 
-CONTINUE_FAIL_COUNT = 5000
+CONTINUE_FAIL_COUNT = 500
 
 
 def get_news_list(
