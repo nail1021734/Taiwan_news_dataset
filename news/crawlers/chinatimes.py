@@ -10,7 +10,7 @@ import news.crawlers
 import news.db
 from news.db.schema import News
 
-CONTINUE_FAIL_COUNT = 5000
+CONTINUE_FAIL_COUNT = 500
 
 
 def get_news_list(
@@ -60,10 +60,6 @@ def get_news_list(
                 raw_xml=response.text,
                 url=url,
             ))
-
-            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-            if past_datetime > news_datetime or news_datetime > current_datetime:
-                raise Exception('Time constraint violated.')
 
             news_list.append(parsed_news)
         except Exception as err:

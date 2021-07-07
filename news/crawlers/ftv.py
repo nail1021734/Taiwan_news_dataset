@@ -10,7 +10,7 @@ import news.crawlers
 import news.db
 from news.db.schema import News
 
-CONTINUE_FAIL_COUNT = 1000
+CONTINUE_FAIL_COUNT = 100
 
 CATEGORIES = {
     'A': '體育',
