@@ -10,7 +10,8 @@ import news.crawlers
 import news.db
 from news.db.schema import News
 
-MAX_PAGE = 2672
+# Plus 1 to make range inclusive.
+MAX_PAGE = 2672 + 1
 PAGE_INTERVAL = 100
 
 
