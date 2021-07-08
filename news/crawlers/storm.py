@@ -80,6 +80,10 @@ def main(
         if latest_idx != -1:
             cur_latest_idx = min(cur_latest_idx, latest_idx)
 
+            # Make range inclusive.
+            if cur_latest_idx == latest_idx:
+                cur_latest_idx += 1
+
         news_list = get_news_list(
             debug=debug,
             first_idx=first_idx,

@@ -249,6 +249,9 @@ def main(
             debug=debug,
         )
 
+        # Make range inclusive.
+        max_page += 1
+
         # Commit database when crawling 10 pages.
         for page in range(start_page, max_page, PAGE_INTERVAL):
             page_range = [

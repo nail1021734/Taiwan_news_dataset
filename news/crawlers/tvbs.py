@@ -201,6 +201,10 @@ def main(
         cur_first_idx = latest_idx - RECORD_PER_COMMIT
         cur_first_idx = max(cur_first_idx, first_idx)
 
+        # Make range inclusive.
+        if cur_first_idx == first_idx:
+            cur_first_idx -= 1
+
         news_list = []
 
         for category, category_id in CATEGORIES.items():
