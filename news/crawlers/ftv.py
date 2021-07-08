@@ -122,7 +122,7 @@ def main(
     for api, category in CATEGORIES.items():
         date = current_datetime
         # Commit database once a day.
-        while date > past_datetime:
+        while date >= past_datetime:
             news.db.write.write_new_records(
                 cur=cur,
                 news_list=get_news_list(
