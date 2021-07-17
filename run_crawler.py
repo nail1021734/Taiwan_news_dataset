@@ -6,7 +6,6 @@ import dateutil.parser
 import news.crawlers
 
 CRAWLER_DICT = {
-    'apple': news.crawlers.apple.main,
     'chinatimes': news.crawlers.chinatimes.main,
     'cna': news.crawlers.cna.main,
     'epochtimes': news.crawlers.epochtimes.main,
