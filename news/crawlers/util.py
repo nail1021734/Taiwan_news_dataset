@@ -7,7 +7,6 @@ from requests import Response
 # blocking us. Note that LTN, SET, ftv, storm, TVBS use cloudfront services.
 # Note that LTN, ftv and SET will ban us.
 BEFORE_BANNED_SLEEP_SECS = {
-    'apple': 0.0,
     'chinatimes': 0.0,
     'cna': 0.0,
     'epochtimes': 0.0,
@@ -32,7 +31,6 @@ BEFORE_BANNED_SLEEP_SECS = {
 # response 200 instead of 404.
 # TVBS is set to 0 since we use API without bad request.
 AFTER_BANNED_SLEEP_SECS = {
-    'apple': 86400.0,
     'chinatimes': 0.0,
     'cna': 0.0,
     'epochtimes': 0.0,

@@ -115,7 +115,7 @@ def main(
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
     # Get database connection.
-    conn = news.db.util.get_conn(db_name=db_name)
+    conn = news.db.util.get_conn(db_name=f'raw/{db_name}')
     cur = conn.cursor()
     news.db.create.create_table(cur=cur)
 
