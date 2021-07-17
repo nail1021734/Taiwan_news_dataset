@@ -59,10 +59,6 @@ def get_news_list(
                 url=url,
             ))
 
-            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-            if past_datetime > news_datetime or news_datetime > current_datetime:
-                raise Exception('Time constraint violated.')
-
             news_list.append(parsed_news)
         except Exception as err:
             fail_count += 1
@@ -96,7 +92,7 @@ def main(
 
     date = current_datetime
     # Commit database once a day.
-    while date > past_datetime:
+    while date >= past_datetime:
         news.db.write.write_new_records(
             cur=cur,
             news_list=get_news_list(

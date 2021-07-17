@@ -47,7 +47,8 @@ def find_page_range(
         max_page = soup.select('div.pagination > a.page-numbers')[-2].text
         max_page = int(max_page.replace(',', ''))
     except Exception as err:
-        raise ValueError('Fail to find max page.')
+        # Only 1 page is available.
+        return 1
 
     # Only show progress bar in debug mode.
     iter_range = range(FIRST_PAGE, max_page)
@@ -111,7 +112,8 @@ def find_page_range(
                 start_page = page
                 break
         except Exception as err:
-            raise ValueError('Fail to find start page.')
+            # Some pages may not be available.
+            continue
 
     return start_page, max_page
 
@@ -246,6 +248,9 @@ def main(
             past_datetime=past_datetime,
             debug=debug,
         )
+
+        # Make range inclusive.
+        max_page += 1
 
         # Commit database when crawling 10 pages.
         for page in range(start_page, max_page, PAGE_INTERVAL):

@@ -19,7 +19,7 @@ def get_news_list(
     news_list: List[News] = []
     logger = Counter()
 
-    iter_range = range(first_idx, latest_idx)
+    iter_range = range(first_idx, latest_idx + 1)
     if debug:
         iter_range = tqdm(iter_range)
 
