@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Sequence
 
-from news.db.schema import News
+from news.util.db.schema import News
 
 
 def write_new_records(cur: sqlite3.Cursor, news_list: Sequence[News]):

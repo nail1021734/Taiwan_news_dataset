@@ -1,4 +1,4 @@
-from news.db import create, read, schema, util, write
+from news.util.db import create, read, schema, util, write
 
 __all__ = [
     create,

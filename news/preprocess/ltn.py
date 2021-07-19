@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import bs4
 from bs4 import BeautifulSoup
 
-from news.db.schema import News
+from news.util.db.schema import News
 
 BAD_ARTICLE_PATTERNS = [
     re.compile(r'^首次上稿.*?\d+:\d+$'),

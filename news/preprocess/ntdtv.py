@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import dateutil.parser
 from bs4 import BeautifulSoup
 
-from news.db.schema import News
+from news.util.db.schema import News
 
 BAD_TITLE_PATTERNS = [
     re.compile(r'【.*?】'),

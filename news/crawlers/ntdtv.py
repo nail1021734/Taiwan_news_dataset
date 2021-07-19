@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 import news.crawlers
 import news.preprocess
-from news.db.schema import News
+from news.crawlers.db.schema import News
 
 FIRST_PAGE = 1
 PAGE_INTERVAL = 50
@@ -33,12 +33,12 @@ def find_page_range(
         url = f'https://www.ntdtv.com/b5/prog{api}/1'
         response = requests.get(
             url,
-            timeout=news.crawlers.util.REQUEST_TIMEOUT,
+            timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
         )
         response.close()
 
         # Raise exception if status code is not 200.
-        news.crawlers.util.check_status_code(
+        news.crawlers.util.status_code.check_status_code(
             company='ntdtv',
             response=response
         )

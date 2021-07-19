@@ -7,8 +7,7 @@ import requests
 from tqdm import tqdm
 
 import news.crawlers
-import news.db
-from news.db.schema import News
+from news.crawlers.db.schema import News
 
 CONTINUE_FAIL_COUNT = 100
 
@@ -67,12 +66,12 @@ def get_news_list(
         try:
             response = requests.get(
                 url,
-                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
             )
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(
+            news.crawlers.util.status_code.check_status_code(
                 company='ftv',
                 response=response
             )

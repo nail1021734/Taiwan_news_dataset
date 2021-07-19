@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from bs4 import BeautifulSoup
 
-from news.db.schema import News
+from news.util.db.schema import News
 
 REMOVE_XML_PATTERN = re.compile(
     r'<blockquote\s.*?>.*?<a\s.*?>\.\.\.more</a>.*?</blockquote>'

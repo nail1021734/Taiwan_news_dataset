@@ -1,8 +1,8 @@
 import sqlite3
 from typing import List
 
-import news.db
-from news.db.schema import News
+import news.crawlers.db
+from news.crawlers.db.schema import News
 
 
 class AllRecords:
@@ -12,10 +12,8 @@ class AllRecords:
                 'at least one of `db_name` or `cur` must be provided.'
             )
 
-        sql = '''
-            SELECT article, category, company, datetime, raw_xml, reporter, title, url
-            FROM news
-        '''
+        sql = 'SELECT company_id, raw_xml, url_pattern FROM news'
+
         conn: sqlite3.Connection = None
 
         self.records: List[News] = []
@@ -25,18 +23,12 @@ class AllRecords:
             cur = conn.cursor()
 
         for (
-            article, category, company, datetime, raw_xml,
-            reporter, title, url
+            index, company_id, raw_xml, url_pattern
         ) in cur.execute(sql):
             self.records.append(News(
-                article=article,
-                category=category,
-                company=company,
-                datetime=datetime,
+                company_id=company_id,
                 raw_xml=raw_xml,
-                reporter=reporter,
-                title=title,
-                url=url,
+                url_pattern=url_pattern,
             ))
 
         if conn is not None:

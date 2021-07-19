@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import dateutil.parser
 from bs4 import BeautifulSoup
 
-from news.db.schema import News
+from news.util.db.schema import News
 
 FILTER_WORDS = [
     '▲', '●', '▼', '★', '►', '※', '【更多新聞】', '以上言論不代表本網立場。', '圖一、',

@@ -4,7 +4,7 @@ import unicodedata
 import dateutil.parser
 from bs4 import BeautifulSoup
 
-from news.db.schema import News
+from news.util.db.schema import News
 
 REPORTER_PATTERN = re.compile(r'\(大紀元記者(.*?)報導\)')
 URL_PATTERN = re.compile(

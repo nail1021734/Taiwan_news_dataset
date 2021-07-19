@@ -7,14 +7,18 @@ import requests
 from tqdm import tqdm
 
 import news.crawlers
-import news.db
-from news.db.schema import News
+from news.crawlers.util.normalize import (
+    company_id,
+    compress_raw_xml,
+    compress_url
+)
+from news.crawlers.db.schema import News
 
 CONTINUE_FAIL_COUNT = 500
+COMPANY = '中時'
 
 
 def get_news_list(
-    category: str,
     current_datetime: datetime,
     api: str,
     past_datetime: datetime,
@@ -43,12 +47,12 @@ def get_news_list(
         try:
             response = requests.get(
                 url,
-                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
             )
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(
+            news.crawlers.util.status_code.check_status_code(
                 company='chinatimes',
                 response=response
             )
@@ -56,12 +60,11 @@ def get_news_list(
             # If `status_code == 200`, reset `fail_count`.
             fail_count = 0
 
-            parsed_news = news.preprocess.chinatimes.parse(ori_news=News(
-                raw_xml=response.text,
-                url=url,
+            news_list.append(News(
+                company_id=company_id(COMPANY),
+                raw_xml=compress_raw_xml(response.text),
+                url_pattern=compress_url(url),
             ))
-
-            news_list.append(parsed_news)
         except Exception as err:
             fail_count += 1
 
@@ -123,19 +126,18 @@ def main(
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
     # Get database connection.
-    conn = news.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
     cur = conn.cursor()
-    news.db.create.create_table(cur=cur)
+    news.crawlers.db.create.create_table(cur=cur)
 
     for category, api in CATEGORIES.items():
         date = current_datetime
         # Commit database once a day.
         while date >= past_datetime:
-            news.db.write.write_new_records(
+            news.crawlers.db.write.write_new_records(
                 cur=cur,
                 news_list=get_news_list(
                     api=api,
-                    category=category,
                     current_datetime=date,
                     debug=debug,
                     past_datetime=date - timedelta(days=1),

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from bs4 import BeautifulSoup
 
-from news.db.schema import News
+from news.util.db.schema import News
 
 REPORTER_END_PATTERNS = [
     re.compile(

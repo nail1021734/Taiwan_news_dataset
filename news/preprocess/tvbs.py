@@ -6,7 +6,7 @@ import bs4
 import dateutil.parser
 from bs4 import BeautifulSoup
 
-from news.db.schema import News
+from news.util.db.schema import News
 
 DROP_ARTICLE_PATTERNS = [
     re.compile(r'因應新冠肺炎疫情，疾管署持續疫情監測與邊境管制措施，'),
