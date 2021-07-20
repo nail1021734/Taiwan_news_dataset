@@ -7,11 +7,17 @@ import requests
 from tqdm import tqdm
 
 import news.crawlers
+from news.crawlers.util.normalize import (
+    company_id,
+    compress_raw_xml,
+    compress_url
+)
 from news.crawlers.db.schema import News
 
 # Plus 1 to make range inclusive.
 MAX_PAGE = 2672 + 1
 PAGE_INTERVAL = 100
+COMPANY = '聯合報'
 
 
 def get_news_list(
@@ -74,20 +80,21 @@ def get_news_list(
 
                     response = requests.get(
                         url,
-                        timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                        timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
                     )
                     response.close()
 
                     # Raise exception if status code is not 200.
-                    news.crawlers.util.check_status_code(
+                    news.crawlers.util.status_code.check_status_code(
                         company='udn',
                         response=response
                     )
-                    parsed_news = news.preprocess.udn.parse(ori_news=News(
-                        raw_xml=response.text,
-                        url=url,
+
+                    news_list.append(News(
+                        company_id=company_id(COMPANY),
+                        raw_xml=compress_raw_xml(response.text),
+                        url_pattern=compress_url(url),
                     ))
-                    news_list.append(parsed_news)
                 except Exception as err:
                     if err.args:
                         logger.update([err.args[0]])
@@ -115,9 +122,9 @@ def main(
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
     # Get database connection.
-    conn = news.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
     cur = conn.cursor()
-    news.db.create.create_table(cur=cur)
+    news.crawlers.db.create.create_table(cur=cur)
 
     # Commit database when crawling 10 pages.
     for page in range(0, MAX_PAGE, PAGE_INTERVAL):
@@ -134,7 +141,7 @@ def main(
         # When news violate `past_datetime` break for loop.
         if not news_list:
             break
-        news.db.write.write_new_records(
+        news.crawlers.db.write.write_new_records(
             cur=cur,
             news_list=news_list,
         )

@@ -10,14 +10,19 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 import news.crawlers
-import news.preprocess
+from news.crawlers.util.normalize import (
+    company_id,
+    compress_raw_xml,
+    compress_url
+)
 from news.crawlers.db.schema import News
 
 FIRST_PAGE = 1
-PAGE_INTERVAL = 50
+PAGE_INTERVAL = 1
 URL_PATTERN = re.compile(
     r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a\d+.html'
 )
+COMPANY = '新唐人'
 
 
 def find_page_range(
@@ -63,12 +68,12 @@ def find_page_range(
         try:
             response = requests.get(
                 page_url,
-                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
             )
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(
+            news.crawlers.util.status_code.check_status_code(
                 company='ntdtv',
                 response=response
             )
@@ -146,12 +151,12 @@ def get_news_list(
         try:
             response = requests.get(
                 page_url,
-                timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
             )
             response.close()
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(
+            news.crawlers.util.status_code.check_status_code(
                 company='ntdtv',
                 response=response
             )
@@ -172,22 +177,17 @@ def get_news_list(
 
                 response = requests.get(
                     news_url,
-                    timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                    timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
                 )
                 response.close()
 
                 # Raise exception if status code is not 200.
-                news.crawlers.util.check_status_code(
+                news.crawlers.util.status_code.check_status_code(
                     company='ntdtv',
                     response=response
                 )
 
-                # Parse news in this page.
-                parsed_news = news.preprocess.ntdtv.parse(ori_news=News(
-                    raw_xml=response.text,
-                    url=news_url,
-                ))
-                news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
+                news_datetime = news.crawlers.util.date_parse.ntdtv(news_url)
 
                 # If `news_datetime > current_datetime` just continue.
                 if news_datetime > current_datetime:
@@ -197,7 +197,11 @@ def get_news_list(
                     is_datetime_valid = False
                     break
 
-                news_list.append(parsed_news)
+                news_list.append(News(
+                    company_id=company_id(COMPANY),
+                    raw_xml=compress_raw_xml(response.text),
+                    url_pattern=compress_url(news_url),
+                ))
             except Exception as err:
                 if err.args:
                     logger.update([err.args[0]])
@@ -234,9 +238,9 @@ def main(
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
     # Get database connection.
-    conn = news.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
     cur = conn.cursor()
-    news.db.create.create_table(cur=cur)
+    news.crawlers.db.create.create_table(cur=cur)
 
     for category, api in CATEGORIES.items():
         # Find page range that consistent with specified time range.
@@ -268,7 +272,7 @@ def main(
             # When news violate `past_datetime` break for loop.
             if not news_list:
                 break
-            news.db.write.write_new_records(
+            news.crawlers.db.write.write_new_records(
                 cur=cur,
                 news_list=news_list,
             )

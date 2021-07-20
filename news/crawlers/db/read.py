@@ -19,7 +19,7 @@ class AllRecords:
         self.records: List[News] = []
 
         if db_name:
-            conn = news.db.util.get_conn(db_name=db_name)
+            conn = news.crawlers.db.util.get_conn(db_name=db_name)
             cur = conn.cursor()
 
         for (

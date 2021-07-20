@@ -5,10 +5,16 @@ import requests
 from tqdm import tqdm
 
 import news.crawlers
+from news.crawlers.util.normalize import (
+    company_id,
+    compress_raw_xml,
+    compress_url
+)
 from news.crawlers.db.schema import News
 
 FIRST_PAGE = 1
 MAX_PAGE = 26
+COMPANY = '自由'
 
 
 def get_news_list(
@@ -56,26 +62,23 @@ def get_news_list(
         for news_dict in api_json:
             try:
                 news_url = news_dict['url']
-
                 response = requests.get(
                     news_url,
-                    timeout=news.crawlers.util.REQUEST_TIMEOUT,
+                    timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
                 )
                 response.close()
 
                 # Raise exception if status code is not 200.
-                news.crawlers.util.check_status_code(
+                news.crawlers.util.status_code.check_status_code(
                     company='ltn',
                     response=response
                 )
 
-                # Parse news in this page.
-                parsed_news = news.preprocess.ltn.parse(ori_news=News(
-                    raw_xml=response.text,
-                    url=news_url,
+                news_list.append(News(
+                    company_id=company_id(COMPANY),
+                    raw_xml=compress_raw_xml(response.text),
+                    url_pattern=compress_url(news_url),
                 ))
-
-                news_list.append(parsed_news)
             except Exception as err:
                 if err.args:
                     logger.update([err.args[0]])
@@ -105,12 +108,12 @@ def main(
 ):
 
     # Get database connection.
-    conn = news.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
     cur = conn.cursor()
-    news.db.create.create_table(cur=cur)
+    news.crawlers.db.create.create_table(cur=cur)
 
     for category, api in CATEGORIES.items():
-        news.db.write.write_new_records(
+        news.crawlers.db.write.write_new_records(
             cur=cur,
             news_list=get_news_list(
                 api=api,

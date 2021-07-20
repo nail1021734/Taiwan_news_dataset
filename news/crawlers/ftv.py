@@ -7,9 +7,15 @@ import requests
 from tqdm import tqdm
 
 import news.crawlers
+from news.crawlers.util.normalize import (
+    company_id,
+    compress_raw_xml,
+    compress_url
+)
 from news.crawlers.db.schema import News
 
 CONTINUE_FAIL_COUNT = 100
+COMPANY = '民視'
 
 CATEGORIES = {
     'A': '體育',
@@ -76,18 +82,15 @@ def get_news_list(
                 response=response
             )
 
-            parsed_news = news.preprocess.ftv.parse(ori_news=News(
-                raw_xml=response.text,
-                url=url,
-            ))
-
             # If `status_code == 200` and successfully parsed (only happend when
             # such news is not missing), reset `fail_count`.
             fail_count = 0
 
-            news_datetime = dateutil.parser.isoparse(parsed_news.datetime)
-
-            news_list.append(parsed_news)
+            news_list.append(News(
+                company_id=company_id(COMPANY),
+                raw_xml=compress_raw_xml(response.text),
+                url_pattern=compress_url(url),
+            ))
         except Exception as err:
             fail_count += 1
 
@@ -114,15 +117,15 @@ def main(
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
     # Get database connection.
-    conn = news.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
     cur = conn.cursor()
-    news.db.create.create_table(cur=cur)
+    news.crawlers.db.create.create_table(cur=cur)
 
     for api, category in CATEGORIES.items():
         date = current_datetime
         # Commit database once a day.
         while date >= past_datetime:
-            news.db.write.write_new_records(
+            news.crawlers.db.write.write_new_records(
                 cur=cur,
                 news_list=get_news_list(
                     category=category,

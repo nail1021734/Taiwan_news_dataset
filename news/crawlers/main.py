@@ -9,14 +9,14 @@ CRAWLER_DICT = {
     'chinatimes': news.crawlers.chinatimes.main,
     'cna': news.crawlers.cna.main,
     'epochtimes': news.crawlers.epochtimes.main,
-    # 'ettoday': news.crawlers.ettoday.main,
-    # 'ftv': news.crawlers.ftv.main,
-    # 'ltn': news.crawlers.ltn.main,
-    # 'ntdtv': news.crawlers.ntdtv.main,
-    # 'setn': news.crawlers.setn.main,
-    # 'storm': news.crawlers.storm.main,
-    # 'tvbs': news.crawlers.tvbs.main,
-    # 'udn': news.crawlers.udn.main,
+    'ettoday': news.crawlers.ettoday.main,
+    'ftv': news.crawlers.ftv.main,
+    'ltn': news.crawlers.ltn.main,
+    'ntdtv': news.crawlers.ntdtv.main,
+    'setn': news.crawlers.setn.main,
+    'storm': news.crawlers.storm.main,
+    'tvbs': news.crawlers.tvbs.main,
+    'udn': news.crawlers.udn.main,
 }
 
 

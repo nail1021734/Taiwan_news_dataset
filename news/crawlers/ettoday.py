@@ -5,9 +5,15 @@ import requests
 from tqdm import tqdm
 
 import news.crawlers
+from news.crawlers.util.normalize import (
+    company_id,
+    compress_raw_xml,
+    compress_url
+)
 from news.crawlers.db.schema import News
 
 RECORD_PER_COMMIT = 1000
+COMPANY = '東森'
 
 
 def get_news_list(
@@ -39,12 +45,11 @@ def get_news_list(
                 response=response
             )
 
-            parsed_news = news.preprocess.ettoday.parse(ori_news=News(
-                raw_xml=response.text,
-                url=url,
+            news_list.append(News(
+                company_id=company_id(COMPANY),
+                raw_xml=compress_raw_xml(response.text),
+                url_pattern=compress_url(url),
             ))
-
-            news_list.append(parsed_news)
         except Exception as err:
             if err.args:
                 logger.update([err.args[0]])
@@ -70,9 +75,9 @@ def main(
         )
 
     # Get database connection.
-    conn = news.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
     cur = conn.cursor()
-    news.db.create.create_table(cur=cur)
+    news.crawlers.db.create.create_table(cur=cur)
 
     while first_idx <= latest_idx or latest_idx == -1:
         cur_latest_idx = first_idx + RECORD_PER_COMMIT
@@ -89,7 +94,7 @@ def main(
             # No more news to crawl.
             break
 
-        news.db.write.write_new_records(cur=cur, news_list=news_list)
+        news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)
 
         conn.commit()
 
