@@ -2,7 +2,7 @@ import sqlite3
 from typing import List
 
 import news.crawlers.db
-from news.crawlers.db.schema import News
+from news.crawlers.db.schema import RawNews
 
 
 class AllRecords:
@@ -12,11 +12,11 @@ class AllRecords:
                 'at least one of `db_name` or `cur` must be provided.'
             )
 
-        sql = 'SELECT company_id, raw_xml, url_pattern FROM news'
+        sql = 'SELECT id, company_id, raw_xml, url_pattern FROM news'
 
         conn: sqlite3.Connection = None
 
-        self.records: List[News] = []
+        self.records: List[RawNews] = []
 
         if db_name:
             conn = news.crawlers.db.util.get_conn(db_name=db_name)
@@ -25,7 +25,7 @@ class AllRecords:
         for (
             index, company_id, raw_xml, url_pattern
         ) in cur.execute(sql):
-            self.records.append(News(
+            self.records.append(RawNews(
                 company_id=company_id,
                 raw_xml=raw_xml,
                 url_pattern=url_pattern,
@@ -34,7 +34,7 @@ class AllRecords:
         if conn is not None:
             conn.close()
 
-    def __getitem__(self, idx: int) -> News:
+    def __getitem__(self, idx: int) -> RawNews:
         return self.records[idx]
 
     def __len__(self) -> int:

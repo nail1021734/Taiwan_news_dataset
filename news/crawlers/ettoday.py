@@ -10,7 +10,7 @@ from news.crawlers.util.normalize import (
     compress_raw_xml,
     compress_url
 )
-from news.crawlers.db.schema import News
+from news.crawlers.db.schema import RawNews
 
 RECORD_PER_COMMIT = 1000
 COMPANY = '東森'
@@ -21,8 +21,8 @@ def get_news_list(
     latest_idx: int,
     *,
     debug: bool = True,
-) -> List[News]:
-    news_list: List[News] = []
+) -> List[RawNews]:
+    news_list: List[RawNews] = []
     logger = Counter()
 
     iter_range = range(first_idx, latest_idx + 1)
@@ -45,7 +45,7 @@ def get_news_list(
                 response=response
             )
 
-            news_list.append(News(
+            news_list.append(RawNews(
                 company_id=company_id(COMPANY),
                 raw_xml=compress_raw_xml(response.text),
                 url_pattern=compress_url(url),

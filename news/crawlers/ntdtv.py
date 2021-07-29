@@ -15,7 +15,7 @@ from news.crawlers.util.normalize import (
     compress_raw_xml,
     compress_url
 )
-from news.crawlers.db.schema import News
+from news.crawlers.db.schema import RawNews
 
 FIRST_PAGE = 1
 PAGE_INTERVAL = 1
@@ -131,8 +131,8 @@ def get_news_list(
     page_range: List[int],
     *,
     debug: bool = False,
-) -> List[News]:
-    news_list: List[News] = []
+) -> List[RawNews]:
+    news_list: List[RawNews] = []
     logger = Counter()
 
     iter_range = range(page_range[0], page_range[1])
@@ -197,7 +197,7 @@ def get_news_list(
                     is_datetime_valid = False
                     break
 
-                news_list.append(News(
+                news_list.append(RawNews(
                     company_id=company_id(COMPANY),
                     raw_xml=compress_raw_xml(response.text),
                     url_pattern=compress_url(news_url),

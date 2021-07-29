@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class News:
+class RawNews:
     company_id: str = ''
     raw_xml: str = ''
     url_pattern: str = ''

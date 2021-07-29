@@ -11,7 +11,7 @@ from news.crawlers.util.normalize import (
     compress_raw_xml,
     compress_url
 )
-from news.crawlers.db.schema import News
+from news.crawlers.db.schema import RawNews
 
 RECORD_PER_COMMIT = 1000
 CATEGORIES = {
@@ -40,8 +40,8 @@ def get_news_list(
     latest_idx: int,
     *,
     debug: bool = True,
-) -> List[News]:
-    news_list: List[News] = []
+) -> List[RawNews]:
+    news_list: List[RawNews] = []
     logger = Counter()
 
     # Only show progress bar in debug mode.
@@ -170,7 +170,7 @@ def get_news_list(
                 response=response
             )
 
-            news_list.append(News(
+            news_list.append(RawNews(
                 company_id=company_id(COMPANY),
                 raw_xml=compress_raw_xml(response.text),
                 url_pattern=compress_url(url),

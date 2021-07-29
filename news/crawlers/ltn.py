@@ -10,7 +10,7 @@ from news.crawlers.util.normalize import (
     compress_raw_xml,
     compress_url
 )
-from news.crawlers.db.schema import News
+from news.crawlers.db.schema import RawNews
 
 FIRST_PAGE = 1
 MAX_PAGE = 26
@@ -22,8 +22,8 @@ def get_news_list(
     api: str,
     *,
     debug: bool = False,
-) -> List[News]:
-    news_list: List[News] = []
+) -> List[RawNews]:
+    news_list: List[RawNews] = []
     logger = Counter()
 
     # Only show progress bar in debug mode.
@@ -74,7 +74,7 @@ def get_news_list(
                     response=response
                 )
 
-                news_list.append(News(
+                news_list.append(RawNews(
                     company_id=company_id(COMPANY),
                     raw_xml=compress_raw_xml(response.text),
                     url_pattern=compress_url(news_url),

@@ -10,7 +10,7 @@ PROJECT_ROOT: Final[str] = os.path.abspath(os.path.join(
     os.pardir,
 ))
 
-DATA_PATH: Final[str] = os.path.join(PROJECT_ROOT, 'data', 'raw')
+DATA_PATH: Final[str] = os.path.join(PROJECT_ROOT, 'data', 'parsed')
 
 
 def get_path(db_name: str) -> str:

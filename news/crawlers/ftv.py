@@ -12,7 +12,7 @@ from news.crawlers.util.normalize import (
     compress_raw_xml,
     compress_url
 )
-from news.crawlers.db.schema import News
+from news.crawlers.db.schema import RawNews
 
 CONTINUE_FAIL_COUNT = 100
 COMPANY = '民視'
@@ -40,8 +40,8 @@ def get_news_list(
     past_datetime: datetime,
     *,
     debug: bool = False,
-) -> List[News]:
-    news_list: List[News] = []
+) -> List[RawNews]:
+    news_list: List[RawNews] = []
     logger = Counter()
 
     date = current_datetime
@@ -86,7 +86,7 @@ def get_news_list(
             # such news is not missing), reset `fail_count`.
             fail_count = 0
 
-            news_list.append(News(
+            news_list.append(RawNews(
                 company_id=company_id(COMPANY),
                 raw_xml=compress_raw_xml(response.text),
                 url_pattern=compress_url(url),
