@@ -175,7 +175,6 @@ def parse(ori_news: RawNews) -> ParsedNews:
         # FTV response 404 with status code 200.
         # Thus some pages do not have title since it is 404.
         raise ValueError('Fail to parse FTV news title.')
-
     parsed_news.article = article
     parsed_news.category = category
     parsed_news.datetime = news_datetime

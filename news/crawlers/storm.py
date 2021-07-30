@@ -46,6 +46,8 @@ def get_news_list(
                 response=response
             )
 
+            if not news.crawlers.util.pre_parse.check_storm_page_exist(url):
+                continue
             news_list.append(RawNews(
                 company_id=company_id(COMPANY),
                 raw_xml=compress_raw_xml(response.text),
@@ -76,7 +78,7 @@ def main(
         )
 
     # Get database connection.
-    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'{db_name}')
     cur = conn.cursor()
     news.crawlers.db.create.create_table(cur=cur)
 

@@ -81,6 +81,9 @@ def get_news_list(
                 company='ftv',
                 response=response
             )
+            # Check if page exist.
+            if not news.crawlers.util.pre_parse.check_ftv_page_exist(url):
+                continue
 
             # If `status_code == 200` and successfully parsed (only happend when
             # such news is not missing), reset `fail_count`.
@@ -117,7 +120,7 @@ def main(
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
     # Get database connection.
-    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'{db_name}')
     cur = conn.cursor()
     news.crawlers.db.create.create_table(cur=cur)
 

@@ -108,7 +108,7 @@ def main(
 ):
 
     # Get database connection.
-    conn = news.crawlers.db.util.get_conn(db_name=f'raw/{db_name}')
+    conn = news.crawlers.db.util.get_conn(db_name=f'{db_name}')
     cur = conn.cursor()
     news.crawlers.db.create.create_table(cur=cur)
 
