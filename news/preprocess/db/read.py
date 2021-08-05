@@ -13,7 +13,7 @@ class AllRecords:
             )
 
         sql = '''
-            SELECT id, article, category, company_id, datetime, reporter, title, url_pattern
+            SELECT article, category, company_id, datetime, reporter, title, url_pattern
             FROM news
         '''
         conn: sqlite3.Connection = None
@@ -21,15 +21,14 @@ class AllRecords:
         self.records: List[ParsedNews] = []
 
         if db_name:
-            conn = news.parse.db.util.get_conn(db_name=db_name)
+            conn = news.preprocess.db.util.get_conn(db_name=db_name)
             cur = conn.cursor()
 
         for (
-            index, article, category, company_id, datetime,
+            article, category, company_id, datetime,
             reporter, title, url_pattern
         ) in cur.execute(sql):
             self.records.append(ParsedNews(
-                index=index,
                 article=article,
                 category=category,
                 company_id=company_id,

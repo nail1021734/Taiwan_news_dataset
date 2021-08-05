@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ParsedNews:
+    index: int = 0
     article: str = ''
     category: str = ''
     company_id: str = ''
@@ -12,6 +13,7 @@ class ParsedNews:
     url_pattern: str = ''
 
     def __iter__(self):
+        yield self.index
         yield self.article
         yield self.category
         yield self.company_id
