@@ -3,3 +3,5 @@ python -m news.preprocess.main --source ftv_split --function ner_tag_subs --targ
 python -m news.preprocess.main --source ftv_split --function NER_dataset --target ftv_NER_result
 
 python -m news.preprocess.main --source ftv_split --function length_filter --target ftv_len --min_length 200 --max_length 1000
+
+python -m news.preprocess.main --source ftv_split --function date_filter --target date --NER_result ftv_NER_result
