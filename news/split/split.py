@@ -1,8 +1,8 @@
-from news.split.db.util import get_conn
-import sqlite3
-import news.split.db
 import os
+
 from tqdm import tqdm
+
+import news.split.db
 
 
 def split_db(db_path: str, save_path: str, id_interval: int):

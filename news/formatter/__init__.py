@@ -1,1 +1,1 @@
-from news.formatter import chinatimes
+from news.formatter.formatter import raw_data_formatter, parsed_data_formatter

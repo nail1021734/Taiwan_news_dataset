@@ -5,12 +5,9 @@ import requests
 from tqdm import tqdm
 
 import news.crawlers
-from news.crawlers.util.normalize import (
-    company_id,
-    compress_raw_xml,
-    compress_url
-)
 from news.crawlers.db.schema import RawNews
+from news.crawlers.util.normalize import (company_id, compress_raw_xml,
+                                          compress_url)
 
 FIRST_PAGE = 1
 MAX_PAGE = 26

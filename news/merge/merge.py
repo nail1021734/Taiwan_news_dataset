@@ -1,8 +1,8 @@
-from news.merge.db.util import get_conn
-import sqlite3
-import news.merge.db
 import os
+
 from tqdm import tqdm
+
+import news.merge.db
 
 
 def merge_db(dir_path: str, save_db: str, reserve_id: bool):

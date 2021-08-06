@@ -1,4 +1,5 @@
 import argparse
+
 from news.split.split import split_db
 
 

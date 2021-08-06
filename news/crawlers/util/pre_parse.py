@@ -1,5 +1,6 @@
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
+
 import news.crawlers
 
 
@@ -29,5 +30,5 @@ def check_storm_page_exist(url):
     try:
         title = soup.select('h1#article_title')[0].text
         return True
-    except:
+    except Exception as err:
         return False

@@ -5,14 +5,12 @@ import requests
 from tqdm import tqdm
 
 import news.crawlers
-from news.crawlers.util.normalize import (
-    company_id,
-    compress_raw_xml,
-    compress_url
-)
 from news.crawlers.db.schema import RawNews
+from news.crawlers.util.normalize import (company_id, compress_raw_xml,
+                                          compress_url)
 
 RECORD_PER_COMMIT = 1000
+COMPANY = '三立'
 
 
 def get_news_list(
@@ -48,7 +46,7 @@ def get_news_list(
             news_list.append(RawNews(
                 company_id=company_id(COMPANY),
                 raw_xml=compress_raw_xml(response.text),
-                url_pattern=compress_url(news_url),
+                url_pattern=compress_url(url),
             ))
         except Exception as err:
             if err.args:

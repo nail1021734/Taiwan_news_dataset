@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-
 REMOVE_XML_PATTERN = re.compile(
     r'<blockquote\s.*?>.*?<a\s.*?>\.\.\.more</a>.*?</blockquote>'
 )

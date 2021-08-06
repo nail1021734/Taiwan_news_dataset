@@ -1,10 +1,11 @@
 import argparse
-from news.parse.db.schema import ParsedNews
-import news.parse.db
-import news.preprocess.db
+import json
 import os
 import pickle
-import json
+
+import news.parse.db
+import news.preprocess.db
+from news.parse.db.schema import ParsedNews
 from news.preprocess.preprocess import *
 
 PREPROCESS_FUNCTION = {
@@ -21,6 +22,7 @@ PREPROCESS_FUNCTION = {
     'NER_dataset': NER_dataset,
     'ner_tag_subs': ner_tag_subs,
     'date_filter': date_filter,
+    'base_preprocess': base_preprocess,
 }
 
 
@@ -28,8 +30,9 @@ def parse_argument():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--function',
+        choices=PREPROCESS_FUNCTION.keys(),
         type=str,
-        help='select preprocess function.',
+        help='Select preprocess function.',
     )
     parser.add_argument(
         '--source',
@@ -37,7 +40,7 @@ def parse_argument():
         help='Specify database or dir to perform preprocess.',
     )
     parser.add_argument(
-        '--target',
+        '--save_path',
         type=str,
         help='Specify save path.',
     )
@@ -63,7 +66,7 @@ def parse_argument():
         '--NER_result',
         type=str,
         default=None,
-        help='Specify NER_result path when use `ner_tag_subs` method.'
+        help='Specify NER_result path when use `ner_tag_subs` or `date_filter` method.'
     )
 
     args = parser.parse_args()
@@ -75,7 +78,7 @@ def preprocess(
     args: argparse.Namespace,
 ):
     # According to different function give different parameter.
-    if args.function == 'length_filter':
+    if args.function == 'length_filter' or args.function == 'base_preprocess':
         result = PREPROCESS_FUNCTION[args.function](
             dataset=dataset,
             min_length=args.min_length,
@@ -122,11 +125,11 @@ def preprocess(
         # Check if source is dir.
         if args.source.split('.')[-1] == 'db':
             # If source not dir then save as file.
-            target_path = os.path.join('data', args.target)
+            target_path = os.path.join('data', args.save_path)
             pickle.dump(NER_result, open(target_path, 'wb'))
         else:
             # If source is dir then save in dir.
-            target_path = os.path.join('data', args.target)
+            target_path = os.path.join('data', args.save_path)
             # Create target dir if not exist.
             if not (os.path.exists(target_path)
                     or os.path.isfile(target_path)):
@@ -157,7 +160,7 @@ def main():
         # If result is `None` then pass.
         if result is not None:
             # Get target database connection.
-            tgt_conn = news.preprocess.db.util.get_conn(db_name=args.target)
+            tgt_conn = news.preprocess.db.util.get_conn(db_name=args.save_path)
 
             # Create table.
             news.preprocess.db.create.create_table(cur=tgt_conn.cursor())
@@ -178,7 +181,7 @@ def main():
 
             # Initial source file path and tgt file path.
             src_file_path = os.path.join(args.source, filename)
-            tgt_file_path = os.path.join(args.target, filename)
+            tgt_file_path = os.path.join(args.save_path, filename)
 
             # Read source dataset.
             dataset = news.parse.db.read.AllRecords(db_name=src_file_path)

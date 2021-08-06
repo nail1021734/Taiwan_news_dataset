@@ -1,4 +1,3 @@
-import re
 import unicodedata
 from datetime import datetime, timedelta
 
@@ -7,7 +6,6 @@ from bs4 import BeautifulSoup
 
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
-
 
 FILTER_WORDS = [
     '▲', '●', '▼', '★', '►', '※', '【更多新聞】', '以上言論不代表本網立場。', '圖一、',

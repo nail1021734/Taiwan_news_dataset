@@ -1,13 +1,11 @@
 import re
 import unicodedata
-from datetime import datetime, timedelta
 
 import dateutil.parser
 from bs4 import BeautifulSoup
 
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
-
 
 BAD_TITLE_PATTERNS = [
     re.compile(r'【.*?】'),

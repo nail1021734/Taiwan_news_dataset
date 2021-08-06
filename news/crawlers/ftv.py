@@ -2,17 +2,13 @@ from collections import Counter
 from datetime import datetime, timedelta
 from typing import List
 
-import dateutil.parser
 import requests
 from tqdm import tqdm
 
 import news.crawlers
-from news.crawlers.util.normalize import (
-    company_id,
-    compress_raw_xml,
-    compress_url
-)
 from news.crawlers.db.schema import RawNews
+from news.crawlers.util.normalize import (company_id, compress_raw_xml,
+                                          compress_url)
 
 CONTINUE_FAIL_COUNT = 100
 COMPANY = '民視'

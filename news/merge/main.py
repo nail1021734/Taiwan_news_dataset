@@ -1,4 +1,5 @@
 import argparse
+
 from news.merge.merge import merge_db
 
 

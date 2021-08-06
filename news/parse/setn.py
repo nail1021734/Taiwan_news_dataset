@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-
 CATEGORIES = {
     0: '熱門',
     2: '財經',

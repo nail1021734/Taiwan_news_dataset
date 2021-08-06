@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-
 DROP_ARTICLE_PATTERNS = [
     re.compile(r'因應新冠肺炎疫情，疾管署持續疫情監測與邊境管制措施，'),
     re.compile(r'◎\s*本文摘自'),

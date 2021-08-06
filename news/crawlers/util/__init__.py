@@ -1,1 +1,1 @@
-from news.crawlers.util import normalize, status_code, date_parse, pre_parse
+from news.crawlers.util import date_parse, normalize, pre_parse, status_code

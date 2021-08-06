@@ -8,7 +8,6 @@ from bs4 import BeautifulSoup
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-
 BAD_ARTICLE_PATTERNS = [
     re.compile(r'^首次上稿.*?\d+:\d+$'),
     re.compile(r'^更新時間.*?\d+:\d+$'),

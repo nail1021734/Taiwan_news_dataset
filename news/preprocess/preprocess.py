@@ -1,11 +1,14 @@
-import news.preprocess.db
-import unicodedata
-import re
-from tqdm import tqdm
 import copy
-from typing import List
 import pickle
+import re
+import unicodedata
+from typing import List
+
 from ckip_transformers.nlp import CkipNerChunker
+from tqdm import tqdm
+
+import news.parse.db.schema
+import news.preprocess.db
 
 
 def NFKC(dataset: news.parse.db.schema.ParsedNews):
@@ -105,13 +108,14 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
                         context[index+1: index+4] == 'loc',
                         context[index+1: index+4] == 'num',
                         context[index+1: index+4] == 'unk',
+                        context[index+1: index+4] == 'fac',
                     )
                 ):
                     index = context.find('>', index) + 1
                     continue
             try:
                 char_type = unicodedata.name(context[index]).split(' ')[0]
-            except:
+            except Exception as err:
                 index += 1
                 continue
             if char_type == 'LATIN':
@@ -141,10 +145,10 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
                         [context[:index], '<unk>', context[index+1:]])
                     index += 4
                 last_type = 'JAPAN'
-            if char_type == 'SPACE' and last_type != None:
+            if char_type == 'SPACE' and last_type is not None:
                 context = ''.join([context[:index], context[index+1:]])
                 index -= 1
-            if char_type == 'DIGIT' and last_type != None:
+            if char_type == 'DIGIT' and last_type is not None:
                 context = ''.join([context[:index], context[index+1:]])
                 index -= 1
             if char_type == 'CJK':
@@ -193,10 +197,10 @@ def not_CJK_filter(dataset: news.parse.db.schema.ParsedNews):
         rp_title = ""
         rp_article = ""
         for i in data.title:
-            if re.match('[\w\s]', i):
+            if re.match(r'[\w\s]', i):
                 try:
                     c_type = unicodedata.name(i).split(' ')[0]
-                except:
+                except Exception as err:
                     continue
                 if c_type == 'LATIN' or c_type == 'CJK' or c_type == 'SPACE' or c_type == 'DIGIT':
                     rp_title += i
@@ -204,10 +208,10 @@ def not_CJK_filter(dataset: news.parse.db.schema.ParsedNews):
                 if re.match(r'[，、。?,.!~「」><《》+-/:：＋－＊／！]', i):
                     rp_title += i
         for i in data.article:
-            if re.match('[\w\s]', i):
+            if re.match(r'[\w\s]', i):
                 try:
                     c_type = unicodedata.name(i).split(' ')[0]
-                except:
+                except Exception as err:
                     continue
                 if c_type == 'LATIN' or c_type == 'CJK' or c_type == 'SPACE' or c_type == 'DIGIT':
                     rp_article += i
@@ -389,4 +393,22 @@ def date_filter(
         data.title = rp_title
         data.article = rp_article
 
+    return dataset
+
+
+def base_preprocess(
+    dataset: news.parse.db.schema.ParsedNews,
+    min_length: int,
+    max_length: int,
+):
+    # Not replace word to tag.
+    dataset = NFKC(dataset)
+    dataset = url_filter(dataset)
+    dataset = whitespace_filter(dataset)
+    dataset = length_filter(dataset, min_length, max_length)
+    dataset = parentheses_filter(dataset)
+    dataset = emoji_filter(dataset)
+    dataset = not_CJK_filter(dataset)
+    dataset = language_filter(dataset)
+    dataset = length_filter(dataset, min_length, max_length)
     return dataset

@@ -303,7 +303,7 @@ def language_filter(dataset):
                 continue
             try:
                 char_type = unicodedata.name(context[index]).split(' ')[0]
-            except:
+            except Exception as err:
                 index += 1
                 continue
             if char_type == 'LATIN':
@@ -427,10 +427,10 @@ def not_CJK_filter(dataset):
         rp_title = ""
         rp_article = ""
         for i in data['title']:
-            if re.match('[\w\s]', i):
+            if re.match(r'[\w\s]', i):
                 try:
                     c_type = unicodedata.name(i).split(' ')[0]
-                except:
+                except Exception as err:
                     continue
                 if c_type == 'LATIN' or c_type == 'CJK' or c_type == 'SPACE' or c_type == 'DIGIT':
                     rp_title += i
@@ -438,10 +438,10 @@ def not_CJK_filter(dataset):
                 if re.match(r'[，、。?,.!~「」><《》+-/:：＋－＊／！]', i):
                     rp_title += i
         for i in data['article']:
-            if re.match('[\w\s]', i):
+            if re.match(r'[\w\s]', i):
                 try:
                     c_type = unicodedata.name(i).split(' ')[0]
-                except:
+                except Exception as err:
                     continue
                 if c_type == 'LATIN' or c_type == 'CJK' or c_type == 'SPACE' or c_type == 'DIGIT':
                     rp_article += i

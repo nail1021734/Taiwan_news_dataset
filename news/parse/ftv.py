@@ -1,12 +1,11 @@
 import re
 import unicodedata
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from bs4 import BeautifulSoup
 
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
-
 
 REPORTER_END_PATTERNS = [
     re.compile(

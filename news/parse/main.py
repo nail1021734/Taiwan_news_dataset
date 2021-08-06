@@ -1,9 +1,10 @@
 import argparse
-import os
+
+from tqdm import tqdm
+
 import news.crawlers.db
 import news.parse
 import news.parse.db
-from tqdm import tqdm
 
 COMPANY_DICT = {
     'chinatimes': news.parse.chinatimes.parse,

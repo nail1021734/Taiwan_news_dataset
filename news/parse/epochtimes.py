@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-
 REPORTER_PATTERN = re.compile(r'\(大紀元記者(.*?)報導\)')
 URL_PATTERN = re.compile(
     r'/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm'
