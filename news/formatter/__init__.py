@@ -1,1 +1,1 @@
-from news.formatter.formatter import raw_data_formatter, parsed_data_formatter
+from news.formatter.formatter import parsed_data_formatter, raw_data_formatter

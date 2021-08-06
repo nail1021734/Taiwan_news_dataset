@@ -3,17 +3,26 @@ from typing import Dict, List
 
 
 def write_new_records(cur: sqlite3.Cursor, news_list: List[Dict]):
-    existed_url = list(cur.execute('''
-        SELECT url_pattern FROM news
-    '''))
+    url_type = 'url_pattern'
+    try:
+        existed_url = list(cur.execute(f'''
+            SELECT {url_type} FROM news
+        '''))
+    except Exception as err:
+        if err.args[0] == 'no such column: url_pattern':
+            url_type = 'url'
+            existed_url = list(cur.execute(f'''
+                SELECT {url_type} FROM news
+            '''))
+
     existed_url = set(map(lambda url: url[0], existed_url))
 
     # Filter out existed news.
     tmp = []
     for n in news_list:
-        if n['url_pattern'] not in existed_url:
+        if n[url_type] not in existed_url:
             tmp.append(n)
-            existed_url.add(n['url_pattern'])
+            existed_url.add(n[url_type])
 
     # Dynamic handle column.
     columns = list(news_list[0].keys())

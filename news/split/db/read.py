@@ -15,13 +15,19 @@ def dict_factory(
 
 
 class AllRecords:
-    def __init__(self, db_name: str = None, cur: sqlite3.Cursor = None):
+    def __init__(
+        self,
+        offset: int,
+        interval: int,
+        db_name: str = None,
+        cur: sqlite3.Cursor = None,
+    ):
         if not db_name and cur is None:
             raise ValueError(
                 'at least one of `db_name` or `cur` must be provided.'
             )
 
-        sql = 'SELECT * FROM news'
+        sql = f'SELECT * FROM news LIMIT {interval} OFFSET {offset}'
 
         conn: sqlite3.Connection = None
 

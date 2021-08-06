@@ -1,8 +1,9 @@
+from datetime import datetime
+
 import news.crawlers.db
 import news.parse.db
-from news.crawlers.util.normalize import URL_PATTERNS, COMPANY_ID_TABLE
+from news.crawlers.util.normalize import COMPANY_ID_TABLE, URL_PATTERNS
 from news.formatter.schema import FormatedNews
-from datetime import datetime
 
 
 def raw_data_formatter(

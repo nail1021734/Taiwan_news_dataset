@@ -3,7 +3,21 @@ from typing import List
 
 
 def create_table(cur: sqlite3.Cursor, columns: List[str]):
-    if len(columns) == 4:
+    if 'url' in columns:
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS news (
+            id INTEGER PRIMARY KEY,
+            article TEXT,
+            category TEXT,
+            company INTEGER,
+            datetime INTEGER,
+            reporter TEXT,
+            title TEXT,
+            url TEXT,
+            raw_xml TEXT
+        );
+        """)
+    elif len(columns) == 4:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS news (
                 id INTEGER PRIMARY KEY,
@@ -24,4 +38,4 @@ def create_table(cur: sqlite3.Cursor, columns: List[str]):
             title TEXT,
             url_pattern TEXT
         );
-    """)
+        """)

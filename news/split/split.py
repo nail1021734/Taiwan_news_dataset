@@ -9,18 +9,29 @@ def split_db(db_path: str, save_path: str, id_interval: int):
     # Get db name.
     src_db_name = db_path.split('/')[-1].split('.')[0]
 
-    # Get source data.
-    src_data = news.split.db.read.AllRecords(db_name=db_path)
-    interval_iter = list(range(0, len(src_data), id_interval))
-
-    # Get column names.
-    column_names = list(src_data[0].keys())
-
+    # Initial offset
+    offset = 0
     # Save `src_data` in split db.
-    for index, interval_cnt in tqdm(enumerate(interval_iter)):
+    while True:
+        # Get source data.
+        src_data = news.split.db.read.AllRecords(
+            db_name=db_path,
+            offset=offset,
+            interval=id_interval,
+        )
+
+        # Get column names.
+        column_names = list(src_data[0].keys())
+
+        # If this iteration get latest data, than index plus one to
+        # avoid same file name.
+        index = offset // id_interval
+        if len(src_data) < id_interval:
+            index += 1
 
         # Get target db path.
-        tgt_path = os.path.join(save_path, f'{src_db_name}_{index}.db')
+        tgt_path = os.path.join(
+            save_path, f'{src_db_name}_{index}.db')
 
         # Get target db conncetion.
         tgt_conn = news.split.db.util.get_conn(tgt_path)
@@ -29,15 +40,19 @@ def split_db(db_path: str, save_path: str, id_interval: int):
             cur=tgt_conn.cursor(), columns=column_names)
 
         # Save data into db.
-        max_interval = min(len(src_data), interval_cnt + id_interval)
         news.split.db.write.write_new_records(
             cur=tgt_conn.cursor(),
-            news_list=src_data[interval_cnt: max_interval]
+            news_list=src_data,
         )
 
         # Commit and close.
         tgt_conn.commit()
         tgt_conn.close()
+
+        if len(src_data) < id_interval:
+            break
+        else:
+            offset += id_interval
 
 
 def main(db_path: str, save_dir: str, id_interval: int):
