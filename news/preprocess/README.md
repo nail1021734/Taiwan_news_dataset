@@ -13,6 +13,7 @@
 ## NER_format
 
 `Ner_format` need to input a list comtain one or many dictionarys.
+
 - `type`: Specify one or many NER type to replace by `tag`.
 - `tag`: Specify tag pattern.(Example `"loc"` will be `"<loc>"`)
 - `NeedID`: If true then every tag of same word will have same ID.(Example: when tag is `"loc"` will be `"<loc0>"`)

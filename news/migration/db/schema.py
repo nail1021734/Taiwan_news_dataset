@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class OriginNews:
-    index: int = 0
+    index: int = None
     article: str = ''
     category: str = ''
     company: str = ''
