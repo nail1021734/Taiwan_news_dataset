@@ -10,13 +10,12 @@ from news.crawlers.db.schema import RawNews
 from news.crawlers.util.normalize import (company_id, compress_raw_xml,
                                           compress_url)
 
-CONTINUE_FAIL_COUNT = 500
+CONTINUE_FAIL_COUNT = 100
 COMPANY = '中時'
 
 
 def get_news_list(
     current_datetime: datetime,
-    api: str,
     past_datetime: datetime,
     *,
     debug: bool = False,
@@ -39,33 +38,40 @@ def get_news_list(
         if fail_count >= CONTINUE_FAIL_COUNT:
             break
 
-        url = f'https://www.chinatimes.com/realtimenews/{date_str}{i:06d}-{api}?chdtv'
-        try:
-            response = requests.get(
-                url,
-                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-            )
-            response.close()
+        check_get_news = False
+        for category, api in CATEGORIES.items():
+            url = f'https://www.chinatimes.com/realtimenews/{date_str}{i:06d}-{api}?chdtv'
+            try:
+                response = requests.get(
+                    url,
+                    timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
+                )
+                response.close()
 
-            # Raise exception if status code is not 200.
-            news.crawlers.util.status_code.check_status_code(
-                company='chinatimes',
-                response=response
-            )
+                # Raise exception if status code is not 200.
+                news.crawlers.util.status_code.check_status_code(
+                    company='chinatimes',
+                    response=response
+                )
 
+                news_list.append(RawNews(
+                    company_id=company_id(COMPANY),
+                    raw_xml=compress_raw_xml(response.text),
+                    url_pattern=compress_url(url),
+                ))
+
+                # If already get news in this id then break to next id.
+                check_get_news = True
+                break
+            except Exception as err:
+                if err.args:
+                    logger.update([err.args[0]])
+        if not check_get_news:
+            fail_count += 1
+        else:
             # If `status_code == 200`, reset `fail_count`.
             fail_count = 0
-
-            news_list.append(RawNews(
-                company_id=company_id(COMPANY),
-                raw_xml=compress_raw_xml(response.text),
-                url_pattern=compress_url(url),
-            ))
-        except Exception as err:
-            fail_count += 1
-
-            if err.args:
-                logger.update([err.args[0]])
+        print(fail_count)
 
     # Only show error stats in debug mode.
     if debug:
@@ -126,23 +132,21 @@ def main(
     cur = conn.cursor()
     news.crawlers.db.create.create_table(cur=cur)
 
-    for category, api in CATEGORIES.items():
-        date = current_datetime
-        # Commit database once a day.
-        while date >= past_datetime:
-            news.crawlers.db.write.write_new_records(
-                cur=cur,
-                news_list=get_news_list(
-                    api=api,
-                    current_datetime=date,
-                    debug=debug,
-                    past_datetime=date - timedelta(days=1),
-                ),
-            )
-            # Go back 1 day.
-            date = date - timedelta(days=1)
+    date = current_datetime
+    # Commit database once a day.
+    while date >= past_datetime:
+        news.crawlers.db.write.write_new_records(
+            cur=cur,
+            news_list=get_news_list(
+                current_datetime=date,
+                debug=debug,
+                past_datetime=date - timedelta(days=1),
+            ),
+        )
+        # Go back 1 day.
+        date = date - timedelta(days=1)
 
-            conn.commit()
+        conn.commit()
 
     # Close database connection.
     conn.close()

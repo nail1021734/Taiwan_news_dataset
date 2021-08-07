@@ -1,5 +1,5 @@
 import argparse
-
+import os
 from tqdm import tqdm
 
 import news.crawlers.db
@@ -24,8 +24,8 @@ COMPANY_DICT = {
 def parse_argument():
     r'''
     `company` example: 'cna'
-    `raw_db_name` example: `chinatimes.db`
-    `parsed_db_name` example: `chinatimes.db`
+    `raw` example: `chinatimes.db`
+    `save_path` example: `chinatimes.db`
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -35,14 +35,14 @@ def parse_argument():
         help='Select parser.',
     )
     parser.add_argument(
-        '--raw_db_name',
+        '--raw',
         type=str,
-        help='Select the db to parse.(From `data/raw` folder.)',
+        help='Select db or dir to parse.(From `data/raw` folder.)',
     )
     parser.add_argument(
-        '--parsed_db_name',
+        '--save_path',
         type=str,
-        help='Specify saved db name.',
+        help='Specify save path.',
     )
     parser.add_argument(
         '--debug',
@@ -55,36 +55,82 @@ def parse_argument():
     return args
 
 
-if __name__ == '__main__':
+def parse(
+    raw_dataset: news.crawlers.db.schema.RawNews,
+    company: str
+) -> news.parse.db.schema.ParsedNews:
+
+    data_iter = raw_dataset
+
+    parsed_data = [COMPANY_DICT[company](raw_data)
+                   for raw_data in tqdm(data_iter)]
+
+    return parsed_data
+
+
+def main():
     args = parse_argument()
 
-    # Read raw data.
-    raw_dataset = news.crawlers.db.read.AllRecords(db_name=args.raw_db_name)
+    # Check if raw path is dir.
+    if os.path.isfile(args.raw):
+        # Read raw data.
+        raw_dataset = news.crawlers.db.read.AllRecords(db_name=args.raw)
 
-    # Parse raw data.
-    parsed_data = []
-    data_iter = raw_dataset
-    if args.debug:
-        data_iter = tqdm(raw_dataset)
-    for raw_data in data_iter:
-        try:
-            parsed_data.append(COMPANY_DICT[args.company](raw_data))
-        except Exception as err:
-            if args.debug:
-                print(err.args[0])
+        # Parse raw data.
+        parsed_data = parse(
+            raw_dataset=raw_dataset,
+            company=args.company
+        )
 
-    # Connect to target database.
-    parsed_db_conn = news.parse.db.util.get_conn(db_name=args.parsed_db_name)
-    db_cursor = parsed_db_conn.cursor()
+        # Connect to target database.
+        parsed_db_conn = news.parse.db.util.get_conn(db_name=args.save_path)
 
-    # Create `news` table if target database didn't contain this table.
-    news.parse.db.create.create_table(cur=db_cursor)
+        # Create `news` table if target database didn't contain this table.
+        news.parse.db.create.create_table(
+            cur=parsed_db_conn.cursor()
+        )
 
-    # Write parsed data in target db.
-    news.parse.db.write.write_new_records(
-        cur=db_cursor,
-        news_list=parsed_data
-    )
+        # Write parsed data in target db.
+        news.parse.db.write.write_new_records(
+            cur=parsed_db_conn.cursor(),
+            news_list=parsed_data
+        )
 
-    parsed_db_conn.commit()
-    parsed_db_conn.close()
+        parsed_db_conn.commit()
+        parsed_db_conn.close()
+    else:
+        raw_path = os.path.join('data', 'raw', args.raw)
+        for filename in os.listdir(raw_path):
+            # Read raw data.
+            raw_dataset = news.crawlers.db.read.AllRecords(
+                db_name=os.path.join(args.raw, filename)
+            )
+
+            # Parse raw data.
+            parsed_data = parse(
+                raw_dataset=raw_dataset,
+                company=args.company
+            )
+
+            # Connect to target database.
+            parsed_db_conn = news.parse.db.util.get_conn(
+                db_name=os.path.join(args.save_path, filename)
+            )
+
+            # Create `news` table if target database didn't contain this table.
+            news.parse.db.create.create_table(
+                cur=parsed_db_conn.cursor()
+            )
+
+            # Write parsed data in target db.
+            news.parse.db.write.write_new_records(
+                cur=parsed_db_conn.cursor(),
+                news_list=parsed_data
+            )
+
+            parsed_db_conn.commit()
+            parsed_db_conn.close()
+
+
+if __name__ == '__main__':
+    main()

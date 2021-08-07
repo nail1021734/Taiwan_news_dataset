@@ -3,12 +3,12 @@
 ## parameters
 
 - `company`: Select parser.
-- `raw_db_name`: Select the database to parse.(Path root: `data/raw`)
-- `parsed_db_name`: Specify saved db name.(Path root: `data/parsed`)
+- `raw`: Select the database or dir to parse.(Path root: `data/raw`)
+- `save_path`: Specify saved db or dir name.(Path root: `data/parsed`)
 - `debug`: Select whether use debug mode.
 
 ## example
 
 ```sh
-python -m --company ftv --raw_db_name raw_ftv.db --parsed_db_name parsed_ftv.db --debug True
+python -m news.parse.main --company ftv --raw raw_ftv.db --save_path parsed_ftv.db --debug True
 ```

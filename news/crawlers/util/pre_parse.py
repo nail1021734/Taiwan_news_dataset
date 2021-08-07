@@ -32,3 +32,19 @@ def check_storm_page_exist(url):
         return True
     except Exception as err:
         return False
+
+
+def get_setn_link(url):
+    response = requests.get(
+        url,
+        timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
+    )
+    response.close()
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    news_atag = soup.select('div.newsItems h3.view-li-title > a')
+
+    news_links = [i['href'] for i in news_atag]
+
+    return news_links
