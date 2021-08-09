@@ -71,7 +71,6 @@ def get_news_list(
         else:
             # If `status_code == 200`, reset `fail_count`.
             fail_count = 0
-        print(fail_count)
 
     # Only show error stats in debug mode.
     if debug:
