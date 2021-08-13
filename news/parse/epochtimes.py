@@ -7,7 +7,21 @@ from bs4 import BeautifulSoup
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-REPORTER_PATTERN = re.compile(r'\(大紀元記者(.*?)報導\)')
+BAD_TITLE_PATTERNS = [
+    re.compile(r'【.*?】'),
+]
+BAD_ARTICLE_PATTERNS = [
+    re.compile(r'@\*#'),
+    re.compile(r'\(轉自(.*?)/.*?\)'),
+    re.compile(r'─+點閱\s*【.*?】\s*─+'),
+    re.compile(r'點閱\s*【.*?】\s*系列文章'),
+    re.compile(r'本文網址:\s*.*?$'),
+    re.compile(r'【.*?】'),
+    re.compile(r'責任編輯:.*$'),
+]
+REPORTER_PATTERNS = [
+    re.compile(r'\(大紀元記者(.*?)報導\)'),
+]
 URL_PATTERN = re.compile(
     r'/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm'
 )
@@ -37,6 +51,8 @@ def parse(ori_news: RawNews) -> ParsedNews:
         article_tags = soup.select('div#artbody > p,h2')
         article = ' '.join(map(lambda tag: tag.text.strip(), article_tags))
         article = unicodedata.normalize('NFKC', article).strip()
+        for pattern in BAD_ARTICLE_PATTERNS:
+            article = pattern.sub('', article).strip()
     except Exception:
         raise ValueError('Fail to parse epochtimes news article.')
 
@@ -67,8 +83,13 @@ def parse(ori_news: RawNews) -> ParsedNews:
     # News reporter.
     reporter = ''
     try:
-        reporter = REPORTER_PATTERN.search(article).group(1)
-    except Exception:
+        for reporter_pattern in REPORTER_PATTERNS:
+            search_result = reporter_pattern.search(article)
+            if not search_result:
+                continue
+            article = article[search_result.end():]
+            reporter = search_result.group(1)
+    except Exception as err:
         # There may not have reporter.
         reporter = ''
 
@@ -77,6 +98,8 @@ def parse(ori_news: RawNews) -> ParsedNews:
     try:
         title = soup.select('h1.title')[0].text
         title = unicodedata.normalize('NFKC', title).strip()
+        for pattern in BAD_TITLE_PATTERNS:
+            title = pattern.sub('', title)
     except Exception:
         raise ValueError('Fail to parse epochtimes news title.')
 

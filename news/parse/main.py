@@ -62,8 +62,12 @@ def parse(
 
     data_iter = raw_dataset
 
-    parsed_data = [COMPANY_DICT[company](raw_data)
-                   for raw_data in tqdm(data_iter)]
+    parsed_data = []
+    for raw_data in tqdm(data_iter):
+        try:
+            parsed_data.append(COMPANY_DICT[company](raw_data))
+        except Exception:
+            continue
 
     return parsed_data
 
