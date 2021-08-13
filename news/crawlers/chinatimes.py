@@ -10,7 +10,7 @@ from news.crawlers.db.schema import RawNews
 from news.crawlers.util.normalize import (company_id, compress_raw_xml,
                                           compress_url)
 
-CONTINUE_FAIL_COUNT = 100
+CONTINUE_FAIL_COUNT = 400
 COMPANY = '中時'
 
 

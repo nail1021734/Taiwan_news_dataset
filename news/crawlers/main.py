@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import dateutil.parser
 
 import news.crawlers
+import time
 
 CRAWLER_DICT = {
     'chinatimes': news.crawlers.chinatimes.main,
@@ -96,4 +97,7 @@ if __name__ == '__main__':
     func = CRAWLER_DICT[args.crawler_name]
     param = dict((k, v) for k, v in vars(args).items()
                  if k in func.__code__.co_varnames)
+    start = time.time()
     func(**param)
+    end = time.time()
+    print(end - start)

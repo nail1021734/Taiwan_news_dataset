@@ -72,7 +72,7 @@ def main():
     args = parse_argument()
 
     # Check if raw path is dir.
-    if os.path.isfile(args.raw):
+    if args.raw.split('.')[-1] == 'db':
         # Read raw data.
         raw_dataset = news.crawlers.db.read.AllRecords(db_name=args.raw)
 
