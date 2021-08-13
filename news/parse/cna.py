@@ -8,6 +8,7 @@ from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
 REPORTER_PATTERN = re.compile(r'\((.*?)\)')
+BAD_ARTICLE_PATTERN = re.compile(r'\((編輯|譯者).*?\)')
 
 
 def parse(ori_news: RawNews) -> ParsedNews:
@@ -83,6 +84,13 @@ def parse(ori_news: RawNews) -> ParsedNews:
     except Exception:
         raise ValueError('Fail to parse CNA news title.')
 
+    # Remove article bad pattern
+    try:
+        match = re.search(BAD_ARTICLE_PATTERN, article)
+        if match:
+            article = article[: match.start()]
+    except Exception:
+        raise ValueError('Fail to remove article bad pattern.')
     parsed_news.article = article
     parsed_news.category = category
     parsed_news.datetime = news_datetime
