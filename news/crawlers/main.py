@@ -1,10 +1,10 @@
 import argparse
+import time
 from datetime import datetime, timedelta, timezone
 
 import dateutil.parser
 
 import news.crawlers
-import time
 
 CRAWLER_DICT = {
     'chinatimes': news.crawlers.chinatimes.main,

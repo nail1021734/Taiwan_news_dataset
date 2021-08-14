@@ -1,5 +1,6 @@
 import argparse
 import os
+
 from tqdm import tqdm
 
 import news.crawlers.db

@@ -1,3 +1,4 @@
+import re
 import unicodedata
 from datetime import datetime, timedelta
 
@@ -5,6 +6,17 @@ from bs4 import BeautifulSoup
 
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
+
+BAD_ARTICLE_PATTERNS = [
+    re.compile(r'文章來源:.*'),
+    re.compile(r'----------------.*'),
+    re.compile(r'更多內容.*'),
+    re.compile(r'全文及圖表請見.*'),
+    re.compile(r'圖片來源:.*'),
+    re.compile(r'※免付費防疫專線.*'),
+    re.compile(r' ★《中時新聞網》提醒您:'),
+    re.compile(r' ★中時新聞網提醒您'),
+]
 
 
 def parse(ori_news: RawNews) -> ParsedNews:
@@ -41,7 +53,12 @@ def parse(ori_news: RawNews) -> ParsedNews:
             article = soup.select('div.article-body')[0].text
 
         article = unicodedata.normalize('NFKC', article).strip()
-    except Exception:
+        for pattern in BAD_ARTICLE_PATTERNS:
+            search_result = pattern.search(article)
+            if search_result:
+                article = article[:search_result.start()]
+                break
+    except Exception as err:
         raise ValueError('Fail to parse Chinatimes news article.')
 
     # News category.
