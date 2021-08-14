@@ -78,7 +78,7 @@ def check_status_code(company: str, response: Response) -> None:
     # ETtoday use 410 instead of 404.
     if response.status_code in [404, 410]:
         before_banned_sleep(company=company)
-        raise Exception('News not found.')
+        raise Exception('Url not found.')
 
     # To many crawler at the same time.
     if response.status_code == 429:

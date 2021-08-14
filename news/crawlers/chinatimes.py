@@ -70,6 +70,10 @@ def get_news_list(
             fail_count += 1
         else:
             # If `status_code == 200`, reset `fail_count`.
+            if 'Index not found.' in logger.keys():
+                logger['Index not found.'] += fail_count
+            else:
+                logger['Index not found.'] = fail_count
             fail_count = 0
 
     # Only show error stats in debug mode.

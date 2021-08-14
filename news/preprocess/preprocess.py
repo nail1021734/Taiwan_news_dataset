@@ -409,6 +409,5 @@ def base_preprocess(
     dataset = parentheses_filter(dataset)
     dataset = emoji_filter(dataset)
     dataset = not_CJK_filter(dataset)
-    dataset = language_filter(dataset)
     dataset = length_filter(dataset, min_length, max_length)
     return dataset

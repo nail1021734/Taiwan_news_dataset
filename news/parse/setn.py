@@ -30,9 +30,15 @@ CATEGORIES = {
     65: '健康',
 }
 
+END_ARTICLE_PATTERNS = [
+    re.compile(r'※ 免付費防疫專線.*'),
+]
+
 REPORTER_PATTERNS = [
-    re.compile(r'^記者(.*?)/.*?報導$'),
-    re.compile(r'^.*?/(.*?)報導$'),
+    re.compile(r'^記者(.*?)/.*?報導'),
+    re.compile(r'^.*?/(.*?)報導'),
+    re.compile(r'^影音編輯/(.*?) '),
+    re.compile(r'^助理編輯/(.*?) '),
 ]
 
 
@@ -66,6 +72,12 @@ def parse(ori_news: RawNews) -> ParsedNews:
             map(lambda tag: tag.text.strip(), article_tags),
         ))
         article = unicodedata.normalize('NFKC', article).strip()
+        for pattern in END_ARTICLE_PATTERNS:
+            search_result = pattern.search(article)
+            if search_result:
+                article = article[:search_result.start()]
+                break
+        article = article.strip()
     except Exception:
         raise ValueError('Fail to parse SET news article.')
 
@@ -100,6 +112,7 @@ def parse(ori_news: RawNews) -> ParsedNews:
             if match:
                 reporter = ','.join(match.groups())
                 article = article[:match.start()] + article[match.end():]
+                article = article.strip()
                 break
     except Exception:
         # There may not have reporter.
