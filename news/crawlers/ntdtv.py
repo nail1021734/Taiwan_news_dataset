@@ -15,7 +15,7 @@ from news.crawlers.util.normalize import (company_id, compress_raw_xml,
                                           compress_url)
 
 FIRST_PAGE = 1
-PAGE_INTERVAL = 1
+PAGE_INTERVAL = 100
 URL_PATTERN = re.compile(
     r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a\d+.html'
 )

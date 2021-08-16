@@ -14,7 +14,7 @@ from news.crawlers.util.normalize import (company_id, compress_raw_xml,
                                           compress_url)
 
 FIRST_PAGE = 2
-PAGE_INTERVAL = 50
+PAGE_INTERVAL = 100
 URL_PATTERN = re.compile(
     r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm'
 )
