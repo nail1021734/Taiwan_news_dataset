@@ -62,7 +62,7 @@ def main():
     args = parse_argument()
 
     # Check if `args.src` is file.
-    if os.path.isfile(args.src):
+    if args.src.split('.')[-1] == 'db':
         origin_data = news.migration.db.read.AllRecords(
             db_name=args.src
         )
