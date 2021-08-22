@@ -101,7 +101,7 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
         last_type = None
         while index < len(context):
             if context[index] == '<':
-                if all(
+                if any(
                     (
                         context[index+1: index+4] == 'org',
                         context[index+1: index+4] == 'per',
