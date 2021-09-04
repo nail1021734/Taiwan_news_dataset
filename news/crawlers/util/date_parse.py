@@ -4,6 +4,8 @@ import dateutil.parser
 
 
 def epochtimes(url: str):
+    r'''從網址取得epochtimes新聞的日期
+    '''
     URL_PATTERN = re.compile(
         r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm'
     )
@@ -18,6 +20,8 @@ def epochtimes(url: str):
 
 
 def ntdtv(url: str):
+    r'''從網址取得epochtimes新聞的日期
+    '''
     URL_PATTERN = re.compile(
         r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a\d+.html'
     )

@@ -77,22 +77,26 @@ def preprocess(
     dataset: ParsedNews,
     args: argparse.Namespace,
 ):
-    # According to different function give different parameter.
+    # 根據使用者選擇的function改變輸入的參數
     if args.function == 'length_filter' or args.function == 'base_preprocess':
+        # 如果輸入的function包含`length_filter`，則需要輸入min_length和max_length
         result = PREPROCESS_FUNCTION[args.function](
             dataset=dataset,
             min_length=args.min_length,
             max_length=args.max_length
         )
     elif args.function == 'date_filter':
-        # Check if source is dir.
+        # `date_filter`需要讀取NER的資訊，因此要判斷輸入的source是資料夾還是db檔
         if args.source.split('.')[-1] == 'db':
+            # 若是db檔則直接讀取`args.NER_result`路徑，取得NER分析的結果
             result_file_path = os.path.join('data', args.NER_result)
             result = PREPROCESS_FUNCTION[args.function](
                 dataset=dataset,
                 result_path=result_file_path
             )
         else:
+            # 若是資料夾則取出`args.NER_result`路徑下和`args.source`名稱相同的
+            # NER分析結果
             result_file_name = args.filename.split('.')[0] + '.pickle'
             result_file_path = os.path.join(
                 'data', args.NER_result, result_file_name)
@@ -101,8 +105,9 @@ def preprocess(
                 result_path=result_file_path
             )
     elif args.function == 'ner_tag_subs':
-        # Check if source is dir.
+        # `ner_tag_subs`需要讀取NER的資訊，因此要判斷輸入的source是資料夾還是db檔
         if args.source.split('.')[-1] == 'db':
+            # 若是db檔則直接讀取`args.NER_result`路徑，取得NER分析的結果
             result_file_path = os.path.join('data', args.NER_result)
             result = PREPROCESS_FUNCTION[args.function](
                 dataset=dataset,
@@ -110,6 +115,8 @@ def preprocess(
                 result_path=result_file_path
             )
         else:
+            # 若是資料夾則取出`args.NER_result`路徑下和`args.source`名稱相同的
+            # NER分析結果
             result_file_name = args.filename.split('.')[0] + '.pickle'
             result_file_path = os.path.join(
                 'data', args.NER_result, result_file_name)
@@ -122,29 +129,34 @@ def preprocess(
         NER_result = PREPROCESS_FUNCTION[args.function](
             dataset=dataset
         )
-        # Check if source is dir.
         if args.source.split('.')[-1] == 'db':
-            # If source not dir then save as file.
+            # 如果輸入的`args.source`為db檔，則直接保存成名稱為`args.save_path`的
+            # pickle檔
             target_path = os.path.join('data', args.save_path)
             pickle.dump(NER_result, open(target_path, 'wb'))
         else:
-            # If source is dir then save in dir.
+            # 如果輸入的`args.source`為資料夾，則將NER結果保存到資料夾中
+
+            # 初始化目標資料夾路徑
             target_path = os.path.join('data', args.save_path)
-            # Create target dir if not exist.
+
+            # 檢查目標資料夾是否存在，如果不存在則建立資料夾
             if not (os.path.exists(target_path)
                     or os.path.isfile(target_path)):
                 os.makedirs(target_path)
 
-            # Initial Save filename.
+            # 初始化保存的檔案名稱
             filename = args.filename.split('.')[0] + '.pickle'
 
-            # Save in pickle file.
+            # 保存成pickle檔
             pickle.dump(
                 NER_result,
                 open(os.path.join(target_path, f'{filename}'), 'wb'),
             )
+        # NER結果由於已經保存為pickle檔所以不需回傳
         return None
     else:
+        # 不需額外處理的function則直接執行
         result = PREPROCESS_FUNCTION[args.function](dataset=dataset)
     return result
 
@@ -152,20 +164,25 @@ def preprocess(
 def main():
     args = parse_argument()
 
-    # Check source is file or dir.
+    # 檢查輸入的`args.source`是資料夾還是db檔
     if args.source.split('.')[-1] == 'db':
+        # 如果是db檔則直接保存到`data/preprocess`資料夾下
+
+        # 取得來源資料庫的資料
         dataset = news.parse.db.read.AllRecords(db_name=args.source)
+
+        # 取得前處理完的結果
         result = preprocess(dataset=dataset, args=args)
 
-        # If result is `None` then pass.
+        # 如果result是`None`就跳過
         if result is not None:
-            # Get target database connection.
+            # 取得寫入資料庫的連線
             tgt_conn = news.preprocess.db.util.get_conn(db_name=args.save_path)
 
-            # Create table.
+            # 在目標資料庫建立table
             news.preprocess.db.create.create_table(cur=tgt_conn.cursor())
 
-            # Write in database.
+            # 寫入目標資料庫
             news.preprocess.db.write.write_new_records(
                 cur=tgt_conn.cursor(),
                 news_list=result
@@ -175,6 +192,9 @@ def main():
             tgt_conn.commit()
             tgt_conn.close()
     else:
+        # 如果是資料夾則在`data/preprocess`建立名為`args.save_path`的資料夾，並
+        # 將結果保存在此資料夾下
+
         for filename in os.listdir(os.path.join('data', 'parsed', args.source)):
             # Add filename in `args`.
             args.filename = filename
@@ -183,11 +203,11 @@ def main():
             src_file_path = os.path.join(args.source, filename)
             tgt_file_path = os.path.join(args.save_path, filename)
 
-            # Read source dataset.
+            # 取得來源資料庫的資料
             dataset = news.parse.db.read.AllRecords(db_name=src_file_path)
             result = preprocess(dataset=dataset, args=args)
 
-            # If result is `None` then pass.
+            # 如果result是`None`就跳過
             if result is not None:
                 # Get target database connection.
                 tgt_conn = news.preprocess.db.util.get_conn(

@@ -9,7 +9,7 @@ def split_db(db_path: str, save_path: str, id_interval: int):
     # Get db name.
     src_db_name = db_path.split('/')[-1].split('.')[0]
 
-    # Initial offset
+    # Initial offset.
     offset = 0
     # Save `src_data` in split db.
     while True:

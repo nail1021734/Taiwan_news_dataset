@@ -2,19 +2,26 @@ from datetime import datetime
 
 import news.crawlers.db
 import news.parse.db
-from news.crawlers.util.normalize import COMPANY_ID_TABLE, URL_PATTERNS
+from news.crawlers.util.normalize import COMPANY_ID_TABLE, COMPANY_URL
 from news.formatter.schema import FormatedNews
 
 
 def raw_data_formatter(
     dataset: news.crawlers.db.schema.RawNews
 ) -> FormatedNews:
+    r'''將raw data中的`url_pattern`改為完整URL，以及`company_id`改回公司名
+    '''
     result = []
+
+    # 將company對應id的table改為id對應company的table
     id_to_company = {v: k for k, v in COMPANY_ID_TABLE.items()}
+
+    # 對每一筆資料進行轉換
     for i in dataset:
-        company = id_to_company[i.index]
-        url = URL_PATTERNS[company] + i.url_pattern
+        company = id_to_company[i.idx]
+        url = COMPANY_URL[company] + i.url_pattern
         result.append(FormatedNews(
+            idx=i.idx,
             company=company,
             url=url,
             raw_xml=i.raw_xml,
@@ -25,15 +32,21 @@ def raw_data_formatter(
 def parsed_data_formatter(
     dataset: news.parse.db.schema.ParsedNews
 ) -> FormatedNews:
+    r'''將parsed data中的`url_pattern`改為完整URL，以及`company_id`改回公司名
+    '''
     result = []
+
+    # 將company對應id的table改為id對應company的table
     id_to_company = {v: k for k, v in COMPANY_ID_TABLE.items()}
+
+    # 對每一筆資料進行轉換
     for i in dataset:
-        company = id_to_company[i.index]
-        url = URL_PATTERNS[company] + i.url_pattern
+        company = id_to_company[i.idx]
+        url = COMPANY_URL[company] + i.url_pattern
         time = datetime.fromtimestamp(i.datetime)
         date = time.strftime('%Y%m%d')
         result.append(FormatedNews(
-            index=i.index,
+            idx=i.idx,
             article=i.article,
             category=i.category,
             company=company,

@@ -45,12 +45,6 @@ def parse_argument():
         type=str,
         help='Specify save path.',
     )
-    parser.add_argument(
-        '--debug',
-        type=bool,
-        default=False,
-        help='Select whether use debug mode.',
-    )
 
     args = parser.parse_args()
     return args
@@ -60,11 +54,10 @@ def parse(
     raw_dataset: news.crawlers.db.schema.RawNews,
     company: str
 ) -> news.parse.db.schema.ParsedNews:
-
-    data_iter = raw_dataset
-
+    r'''根據指定的公司用不同方法parse輸入的`raw_data`
+    '''
     parsed_data = []
-    for raw_data in tqdm(data_iter):
+    for raw_data in tqdm(raw_dataset):
         try:
             parsed_data.append(COMPANY_DICT[company](raw_data))
         except Exception:
@@ -76,8 +69,11 @@ def parse(
 def main():
     args = parse_argument()
 
-    # Check if raw path is dir.
+    # 確認輸入的`raw`路徑是db檔還是資料夾
     if args.raw.split('.')[-1] == 'db':
+        # 如果輸入的`raw`路徑是db檔則只對這個檔案做parse，
+        # 並把資料存在`data/parsed`資料夾下
+
         # Read raw data.
         raw_dataset = news.crawlers.db.read.AllRecords(db_name=args.raw)
 
@@ -104,6 +100,9 @@ def main():
         parsed_db_conn.commit()
         parsed_db_conn.close()
     else:
+        # 如果輸入的`raw`路徑是資料夾則將資料夾內的所有db都做parse，
+        # 並把資料存在`data/parsed`資料夾下
+
         raw_path = os.path.join('data', 'raw', args.raw)
         for filename in os.listdir(raw_path):
             # Read raw data.

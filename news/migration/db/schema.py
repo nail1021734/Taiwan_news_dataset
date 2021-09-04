@@ -2,8 +2,10 @@ from dataclasses import dataclass
 
 
 @dataclass
-class OriginNews:
-    index: int = None
+class OldNews:
+    r'''用來保存舊格式資料的class
+    '''
+    idx: int = 0
     article: str = ''
     category: str = ''
     company: str = ''
@@ -14,7 +16,7 @@ class OriginNews:
     raw_xml: str = ''
 
     def __iter__(self):
-        yield self.index
+        yield self.idx
         yield self.article
         yield self.category
         yield self.company

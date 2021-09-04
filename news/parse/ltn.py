@@ -65,7 +65,7 @@ def parse(ori_news: RawNews) -> ParsedNews:
         ))
         if related_news_tag:
             article_tags = article_tags[
-                :article_tags.index(related_news_tag[0])
+                :article_tags.idx(related_news_tag[0])
             ]
         article_tags = filter(
             lambda tag: all(map(

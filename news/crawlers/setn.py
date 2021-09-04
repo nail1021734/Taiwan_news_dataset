@@ -49,9 +49,9 @@ def get_news_list(
                 )
 
                 news_list.append(RawNews(
-                    company_id=company_id(COMPANY),
-                    raw_xml=compress_raw_xml(response.text),
-                    url_pattern=compress_url(news_url),
+                    company_id=company_id(company=COMPANY),
+                    raw_xml=compress_raw_xml(raw_xml=response.text),
+                    url_pattern=compress_url(url=news_url, company=COMPANY),
                 ))
         except Exception as err:
             if err.args:

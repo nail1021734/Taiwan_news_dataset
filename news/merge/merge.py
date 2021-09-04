@@ -6,10 +6,10 @@ import news.merge.db
 
 
 def merge_db(dir_path: str, save_db: str, reserve_id: bool):
-    # Get all db in `dir_path`.
+    # 取得輸入資料夾`dir_path`中所有資料庫名稱
     db_names = os.listdir(os.path.join('data', dir_path))
 
-    # Create target db.
+    # 建立寫入目標資料庫的connection
     tgt_conn = news.merge.db.util.get_conn(save_db)
 
     create_table = False

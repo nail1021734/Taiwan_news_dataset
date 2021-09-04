@@ -55,9 +55,9 @@ def get_news_list(
                 )
 
                 news_list.append(RawNews(
-                    company_id=company_id(COMPANY),
-                    raw_xml=compress_raw_xml(response.text),
-                    url_pattern=compress_url(url),
+                    company_id=company_id(company=COMPANY),
+                    raw_xml=compress_raw_xml(raw_xml=response.text),
+                    url_pattern=compress_url(url=url, company=COMPANY),
                 ))
 
                 # If already get news in this id then break to next id.

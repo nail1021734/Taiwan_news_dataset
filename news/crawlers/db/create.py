@@ -2,6 +2,7 @@ import sqlite3
 
 
 def create_table(cur: sqlite3.Cursor):
+    # Raw dataset只保存id, company_id, raw_xml, url_pattern
     cur.execute("""
         CREATE TABLE IF NOT EXISTS news (
             id INTEGER PRIMARY KEY,

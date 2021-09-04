@@ -46,9 +46,9 @@ def get_news_list(
             if not news.crawlers.util.pre_parse.check_storm_page_exist(url):
                 continue
             news_list.append(RawNews(
-                company_id=company_id(COMPANY),
-                raw_xml=compress_raw_xml(response.text),
-                url_pattern=compress_url(url),
+                company_id=company_id(company=COMPANY),
+                raw_xml=compress_raw_xml(raw_xml=response.text),
+                url_pattern=compress_url(url=url, company=COMPANY),
             ))
         except Exception as err:
             if err.args:

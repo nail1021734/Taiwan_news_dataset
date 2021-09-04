@@ -97,7 +97,4 @@ if __name__ == '__main__':
     func = CRAWLER_DICT[args.crawler_name]
     param = dict((k, v) for k, v in vars(args).items()
                  if k in func.__code__.co_varnames)
-    start = time.time()
     func(**param)
-    end = time.time()
-    print(end - start)

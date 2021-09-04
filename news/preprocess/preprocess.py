@@ -230,7 +230,7 @@ def NER_dataset(
     ner_driver = CkipNerChunker(level=3, device=0)
 
     # Get id, article and title.
-    data = [[i.index, i.title, i.article] for i in dataset]
+    data = [[i.idx, i.title, i.article] for i in dataset]
 
     # NER titles.
     titles_ner = ner_driver(list(zip(*data))[1], batch_size=8)
@@ -288,7 +288,7 @@ def ner_tag_subs(
 
     NER_result = read_NER_result(result_path)
     for data in tqdm(dataset):
-        index = data.index
+        index = data.idx
 
         # Find data that have same id.
         ner_data = next(i for i in NER_result if i['id'] == index)
@@ -375,7 +375,7 @@ def date_filter(
             return False
     NER_result = read_NER_result(result_path)
     for data in tqdm(dataset):
-        index = data.index
+        index = data.idx
         # Find data that have same id.
         ner_data = next(i for i in NER_result if i['id'] == index)
 

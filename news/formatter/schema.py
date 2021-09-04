@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class FormatedNews:
-    index: int = 0
+    idx: int = 0
     article: str = ''
     category: str = ''
     company: str = ''
@@ -13,7 +13,7 @@ class FormatedNews:
     url: str = ''
 
     def __iter__(self):
-        yield self.index
+        yield self.idx
         yield self.article
         yield self.category
         yield self.company

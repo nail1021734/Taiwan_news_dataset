@@ -23,10 +23,7 @@ def parse_argument():
     )
 
     def boolean_type(string):
-        if string == 'True':
-            return True
-        else:
-            return False
+        return string == 'True'
     parser.add_argument(
         '--reserve_id',
         type=boolean_type,

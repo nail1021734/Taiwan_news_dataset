@@ -7,11 +7,13 @@ from news.parse.db.schema import ParsedNews
 
 class AllRecords:
     def __init__(self, db_name: str, cur: sqlite3.Cursor = None):
+        # 檢查是否有給予`db_name`或是`cur`，如果都沒有則無法進行後續讀取
         if not db_name and cur is None:
             raise ValueError(
                 'at least one of `db_name` or `cur` must be provided.'
             )
 
+        # 讀取用的sql指令
         sql = '''
             SELECT article, category, company_id, datetime, reporter, title, url_pattern
             FROM news
@@ -24,6 +26,7 @@ class AllRecords:
             conn = news.preprocess.db.util.get_conn(db_name=db_name)
             cur = conn.cursor()
 
+        # 將讀取出的資料轉換為ParsedNews物件
         for (
             article, category, company_id, datetime,
             reporter, title, url_pattern
@@ -38,6 +41,7 @@ class AllRecords:
                 url_pattern=url_pattern,
             ))
 
+        # 關閉資料庫連線
         if conn is not None:
             conn.close()
 
