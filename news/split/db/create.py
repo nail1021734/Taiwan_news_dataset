@@ -5,6 +5,7 @@ from typing import List
 def create_table(cur: sqlite3.Cursor, columns: List[str]):
     # 根據輸入決定table格式
     if 'url' in columns:
+        # 針對舊資料格式，切割舊資料格式時會用到
         cur.execute("""
         CREATE TABLE IF NOT EXISTS news (
             id INTEGER PRIMARY KEY,
@@ -19,6 +20,7 @@ def create_table(cur: sqlite3.Cursor, columns: List[str]):
         );
         """)
     elif len(columns) == 4:
+        # 處理raw data
         cur.execute("""
             CREATE TABLE IF NOT EXISTS news (
                 id INTEGER PRIMARY KEY,
@@ -28,6 +30,7 @@ def create_table(cur: sqlite3.Cursor, columns: List[str]):
             );
         """)
     else:
+        # 處理parse過的data
         cur.execute("""
         CREATE TABLE IF NOT EXISTS news (
             id INTEGER PRIMARY KEY,
