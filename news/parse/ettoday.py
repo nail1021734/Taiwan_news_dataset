@@ -55,14 +55,20 @@ def parse(ori_news: RawNews) -> ParsedNews:
             for strong_tag in article_tag.select('strong'):
                 for filter_word in FILTER_WORDS:
                     # Check if previous sibiling exists and contains filter words.
-                    if strong_tag.previous_sibling and filter_word in strong_tag.previous_sibling:
+                    if (
+                        strong_tag.previous_sibling and
+                        filter_word in strong_tag.previous_sibling
+                    ):
                         strong_tag.previous_sibling.extract()
                         strong_tag.extract()
                         break
                     # Check if strong tag contains filter words or too short.
                     # When text length equals to 1, it means the text is just a
                     # punctuation mark.
-                    if filter_word in strong_tag.text or len(strong_tag.text) <= 1:
+                    if (
+                        filter_word in strong_tag.text or
+                        len(strong_tag.text) <= 1
+                    ):
                         strong_tag.extract()
                         break
 

@@ -13,6 +13,7 @@ from news.crawlers.db.schema import RawNews
 from news.crawlers.util.normalize import (company_id, compress_raw_xml,
                                           compress_url)
 
+# 大紀元的第1頁格式和第2頁不一樣，為了方邊處理統一從第2頁開始
 FIRST_PAGE = 2
 PAGE_INTERVAL = 100
 URL_PATTERN = re.compile(
@@ -79,10 +80,14 @@ def find_page_range(
             a_tags = soup.select(
                 'div.post_list.left_col > div.one_post div.text > div.title > a'
             )
+
+            # 過慮掉找不到日期的網址
             matches = filter(
                 bool,
                 map(lambda a_tag: URL_PATTERN.match(a_tag['href']), a_tags)
             )
+
+            # 將年月日資訊取出來轉成int
             news_datetimes = map(
                 lambda match: {
                     'year': int(match.group(1)),
@@ -91,12 +96,15 @@ def find_page_range(
                 },
                 matches,
             )
+
+            # 轉換成datatime物件
             news_datetimes = list(map(
                 lambda n: dateutil.parser.isoparse(
                     f"20{n['year']:02d}-{n['month']:02d}-{n['day']:02d}T00:00:00Z"
                 ),
                 news_datetimes,
             ))
+
             # Break loop if `news_datetime < past_datetime`.
             if news_datetimes[0] < past_datetime:
                 break
@@ -142,8 +150,8 @@ def get_news_list(
         if not is_datetime_valid:
             break
 
+        # 抓取頁面內所有新聞的網址
         page_url = f'https://www.epochtimes.com/b5/{api}_{page}.htm'
-
         try:
             response = requests.get(
                 page_url,
@@ -167,6 +175,7 @@ def get_news_list(
                 logger.update([err.args[0]])
             continue
 
+        # 抓取新聞原始碼
         for a_tag in a_tags:
             try:
                 news_url = a_tag['href']

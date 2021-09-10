@@ -46,6 +46,7 @@ def get_news_list(
     date_str = \
         f'{date.strftime("%Y")}{int(date.strftime("%m")):x}{date.strftime("%d")}'
 
+    # W類別的新聞index比較長
     if api == 'W':
         iter_range = range(10000)
     else:

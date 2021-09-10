@@ -23,11 +23,8 @@ def split_db(db_path: str, save_path: str, id_interval: int):
         # Get column names.
         column_names = list(src_data[0].keys())
 
-        # If this iteration get latest data, than index plus one to
-        # avoid same file name.
+        # 計算保存檔案時檔案名稱的index
         index = offset // id_interval
-        if len(src_data) < id_interval:
-            index += 1
 
         # Get target db path.
         tgt_path = os.path.join(

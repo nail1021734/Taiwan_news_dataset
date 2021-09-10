@@ -33,7 +33,7 @@ def parse_argument():
 
 
 def migrate(
-    origin_data: news.crawlers.db.schema.RawNews,
+    origin_data: news.crawlers.db.schema.OldNews,
     migrate_version: str,
     save_path: str
 ):
@@ -84,13 +84,11 @@ def main():
             origin_data = news.migration.db.read.AllRecords(
                 db_name=os.path.join(args.src, filename)
             )
-            # 取得來源檔案名稱
-            clear_filename = filename.split('.')[0]
 
             # 將舊資料轉為指定版本的格式並保存到目標資料庫
             migrate(
                 origin_data=origin_data,
-                save_path=os.path.join(args.save_path, f'{clear_filename}.db'),
+                save_path=os.path.join(args.save_path, filename),
                 migrate_version=args.migrate_version
             )
 

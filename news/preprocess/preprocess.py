@@ -194,8 +194,8 @@ def not_CJK_filter(dataset: news.parse.db.schema.ParsedNews):
     `[，、。?,.!~「」><《》+-/:：＋－＊／！]`
     """
     for data in tqdm(dataset):
-        rp_title = ""
-        rp_article = ""
+        rp_title = ''
+        rp_article = ''
         for i in data.title:
             if re.match(r'[\w\s]', i):
                 try:
@@ -299,10 +299,16 @@ def ner_tag_subs(
         tot_ner.extend(copy.deepcopy(t_ner))
 
         # Build type table.
-        type_table = dict((k, {'id': idx, 'NeedID': tag_dict[idx]['NeedID'], 'tag': tag_dict[idx]['tag']}) for idx in range(
-            len(tag_dict)) for k in tag_dict[idx]['type'])
+        type_table = dict((
+            k,
+            {
+                'id': idx,
+                'NeedID': tag_dict[idx]['NeedID'],
+                'tag': tag_dict[idx]['tag']
+            }
+        ) for idx in range(len(tag_dict)) for k in tag_dict[idx]['type'])
 
-        # Build word2tag table.
+        # Build word to tag table.
         word2tag_dict = [{} for i in range(len(tag_dict))]
         for word in tot_ner:
             if word['ner'] in type_table.keys():

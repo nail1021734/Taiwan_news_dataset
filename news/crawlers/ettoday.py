@@ -76,6 +76,7 @@ def main(
     cur = conn.cursor()
     news.crawlers.db.create.create_table(cur=cur)
 
+    # 如果`latest_id`為-1表示抓到沒有新聞為止
     while first_idx <= latest_idx or latest_idx == -1:
         cur_latest_idx = first_idx + RECORD_PER_COMMIT
         if latest_idx != -1:

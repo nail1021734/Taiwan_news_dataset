@@ -27,7 +27,6 @@ news
 |    |    |-write.py
 |    |    |-schema.py
 |    |    |-util.py
-|    |    |-write.py
 |    |-util
 |    |    |-normalize.py
 |    |    |-date_parse.py
@@ -42,7 +41,6 @@ news
 |    |    |-write.py
 |    |    |-schema.py
 |    |    |-util.py
-|    |    |-write.py
 |-split
 |    |-README.md
 |    |-split.py
@@ -61,7 +59,6 @@ news
 |    |    |-write.py
 |    |    |-schema.py
 |    |    |-util.py
-|    |    |-write.py
 |-merge
 |    |-README.md
 |    |-merge.py
@@ -71,7 +68,6 @@ news
 |    |    |-write.py
 |    |    |-schema.py
 |    |    |-util.py
-|    |    |-write.py
 ```
 
 ## DB Schema
