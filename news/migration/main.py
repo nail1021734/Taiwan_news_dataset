@@ -33,7 +33,7 @@ def parse_argument():
 
 
 def migrate(
-    origin_data: news.crawlers.db.schema.OldNews,
+    origin_data: news.migration.db.schema.OldNews,
     migrate_version: str,
     save_path: str
 ):
@@ -72,7 +72,8 @@ def main():
         )
         migrate(
             origin_data=origin_data,
-            args=args
+            save_path=args.save_path,
+            migrate_version=args.migrate_version
         )
     else:
         # 若是資料夾則對資料夾內每個db檔做處理，並將處理結果保存在raw資料夾下
