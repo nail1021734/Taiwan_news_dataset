@@ -25,7 +25,7 @@ def write_new_records(cur: sqlite3.Cursor, news_list: Sequence[ParsedNews]):
     # 從`news_list`內的資料取出需要的欄位
     news_list = [
         tuple(
-            news.id,
+            news.idx,
             news.article,
             news.category,
             news.company_id,
