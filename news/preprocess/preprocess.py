@@ -103,12 +103,12 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
             if context[index] == '<':
                 if any(
                     (
-                        context[index+1: index+4] == 'org',
-                        context[index+1: index+4] == 'per',
-                        context[index+1: index+4] == 'loc',
-                        context[index+1: index+4] == 'num',
-                        context[index+1: index+4] == 'unk',
-                        context[index+1: index+4] == 'fac',
+                        context[index + 1: index + 4] == 'org',
+                        context[index + 1: index + 4] == 'per',
+                        context[index + 1: index + 4] == 'loc',
+                        context[index + 1: index + 4] == 'num',
+                        context[index + 1: index + 4] == 'unk',
+                        context[index + 1: index + 4] == 'fac',
                     )
                 ):
                     index = context.find('>', index) + 1
@@ -120,36 +120,36 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
                 continue
             if char_type == 'LATIN':
                 if last_type == 'LATIN':
-                    context = ''.join([context[:index], context[index+1:]])
+                    context = ''.join([context[:index], context[index + 1:]])
                     index -= 1
                 else:
                     context = ''.join(
-                        [context[:index], '<en>', context[index+1:]])
+                        [context[:index], '<en>', context[index + 1:]])
                     index += 3
                 last_type = 'LATIN'
             if char_type == 'HANGUL':
                 if last_type == 'HANGUL':
-                    context = ''.join([context[:index], context[index+1:]])
+                    context = ''.join([context[:index], context[index + 1:]])
                     index -= 1
                 else:
                     context = ''.join(
-                        [context[:index], '<unk>', context[index+1:]])
+                        [context[:index], '<unk>', context[index + 1:]])
                     index += 4
                 last_type = 'HANGUL'
             if char_type == 'KATAKANA' or char_type == 'HIRAGANA':
                 if last_type == 'JAPAN':
-                    context = ''.join([context[:index], context[index+1:]])
+                    context = ''.join([context[:index], context[index + 1:]])
                     index -= 1
                 else:
                     context = ''.join(
-                        [context[:index], '<unk>', context[index+1:]])
+                        [context[:index], '<unk>', context[index + 1:]])
                     index += 4
                 last_type = 'JAPAN'
             if char_type == 'SPACE' and last_type is not None:
-                context = ''.join([context[:index], context[index+1:]])
+                context = ''.join([context[:index], context[index + 1:]])
                 index -= 1
             if char_type == 'DIGIT' and last_type is not None:
-                context = ''.join([context[:index], context[index+1:]])
+                context = ''.join([context[:index], context[index + 1:]])
                 index -= 1
             if char_type == 'CJK':
                 last_type = None

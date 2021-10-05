@@ -2,8 +2,7 @@ import sqlite3
 
 
 def create_table(cur: sqlite3.Cursor):
-    r'''若指定的database內沒有名為news的table，則建立news table
-    '''
+    r"""若指定的 database 內沒有名為 news 的 table, 則建立 news table"""
     cur.execute("""
         CREATE TABLE IF NOT EXISTS news (
             id INTEGER PRIMARY KEY,

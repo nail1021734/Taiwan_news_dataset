@@ -3,8 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class OldNews:
-    r'''用來保存舊格式資料的class
-    '''
+    r"""用來保存舊格式資料的 class"""
     idx: int = 0
     article: str = ''
     category: str = ''

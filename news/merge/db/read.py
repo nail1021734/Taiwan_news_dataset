@@ -8,8 +8,7 @@ def dict_factory(
     cursor: sqlite3.Cursor,
     row: Tuple
 ) -> Dict:
-    r'''將執行完sql指令的回傳物件改為dictionary
-    '''
+    r"""將執行完 sql 指令的回傳物件改為 dictionary"""
     data = {}
     for idx, col in enumerate(cursor.description):
         data[col[0]] = row[idx]

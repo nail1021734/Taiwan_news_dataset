@@ -4,11 +4,11 @@ from news.split.split import split_db
 
 
 def parse_argument():
-    r'''
+    r"""
     `src` example: 'raw/ftv.db' or 'parse/ftv.db'.
     `save_dir` example: 'split_test'
     `id_interval` example: 100
-    '''
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--src',
@@ -32,7 +32,8 @@ def parse_argument():
 
 
 if __name__ == '__main__':
-    # example: `python -m news.split.main --src raw/ftv.db --save_dir ftv_split --id_interval 50`
+    # example: `python -m news.split.main --src raw/ftv.db --save_dir
+    # ftv_split --id_interval 50`
     args = parse_argument()
 
     split_db(

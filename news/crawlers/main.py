@@ -22,11 +22,11 @@ CRAWLER_DICT = {
 
 
 def parse_argument():
-    r'''
+    r"""
     `crawler_name` example: 'cna'
     `current_datetime` example: 2021-06-24T00:00:00Z
     `first_id` example: 55688
-    '''
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--crawler_name',

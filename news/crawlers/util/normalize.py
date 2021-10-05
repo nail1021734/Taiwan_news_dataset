@@ -27,6 +27,7 @@ URL_PATTERNS = {
     'tvbs': re.compile(r'https://news\.tvbs\.com\.tw/'),
     '聯合報': re.compile(r'https://udn\.com/news/'),
 }
+
 COMPANY_ID_TABLE = {
     '中時': 1,
     '中央社': 2,
@@ -45,18 +46,15 @@ WHITESPACE_COLLAPSE = re.compile(r'\s+')
 
 
 def compress_raw_xml(raw_xml: str):
-    r'''將`raw_xml`中多個空白合成一個空白
-    '''
+    r"""將 `raw_xml` 中多個空白合成一個空白"""
     return WHITESPACE_COLLAPSE.sub(' ', raw_xml)
 
 
 def compress_url(url: str, company: str):
-    r'''去掉同一新聞媒體中url相同的部份
-    '''
+    r"""去掉同一新聞媒體中 url 相同的部份"""
     return URL_PATTERNS[company].sub('', url)
 
 
 def company_id(company: str):
-    r'''將每個媒體用ID表示，取代文字
-    '''
+    r"""將每個媒體用 ID 表示, 取代文字"""
     return COMPANY_ID_TABLE[company]

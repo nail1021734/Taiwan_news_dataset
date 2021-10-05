@@ -1,9 +1,9 @@
 import argparse
 import os
 
+import news.crawlers.db
 import news.migration.db
 from news.migration.db_migration import v1
-import news.crawlers.db
 
 MIGRATE_VERSION = {
     'v1': v1,

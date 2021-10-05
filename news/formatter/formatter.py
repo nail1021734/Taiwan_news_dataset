@@ -9,8 +9,7 @@ from news.formatter.schema import FormatedNews
 def raw_data_formatter(
     dataset: news.crawlers.db.schema.RawNews
 ) -> FormatedNews:
-    r'''將raw data中的`url_pattern`改為完整URL，以及`company_id`改回公司名
-    '''
+    r"""將 raw data 中的 `url_pattern` 改為完整 URL, 以及 `company_id` 改回公司名"""
     result = []
 
     # 將company對應id的table改為id對應company的table
@@ -32,8 +31,7 @@ def raw_data_formatter(
 def parsed_data_formatter(
     dataset: news.parse.db.schema.ParsedNews
 ) -> FormatedNews:
-    r'''將parsed data中的`url_pattern`改為完整URL，以及`company_id`改回公司名
-    '''
+    r"""將 parsed data 中的 `url_pattern` 改為完整 URL, 以及 `company_id` 改回公司名"""
     result = []
 
     # 將company對應id的table改為id對應company的table
