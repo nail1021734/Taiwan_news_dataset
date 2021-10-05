@@ -1,8 +1,12 @@
 # Taiwan News Data project
 
-## README link
+蒐集台灣新聞網站與文字處理工具，主要應用於產生大量具有結構的繁體中文文本。
 
-- [crawlers](news/crawlers/README.md)
+## Tools' Links
+
+- [crawlers](news/crawlers)
+  - 爬蟲腳本，用於蒐集新聞內容原始資訊（XML）
+  - 新聞網站列表請見 [crawlers](news/crawlers/README.md)
 - [formatter](news/formatter/README.md)
 - [merge](news/merge/README.md)
 - [migration](news/migration/README.md)
@@ -10,64 +14,64 @@
 - [preprocess](news/preprocess/README.md)
 - [split](news/split/README.md)
 
-## File Directory
+## Project Directory
 
 ```sh
 news
-|-formatter
-|    |-README.md
-|	 |-formatter.py
-|    |-schema.py
-|-crawlers
-|    |-README.md
-|    |-company.py
-|    |-main.py
-|    |-db
-|    |    |-read.py
-|    |    |-write.py
-|    |    |-schema.py
-|    |    |-util.py
-|    |-util
-|    |    |-normalize.py
-|    |    |-date_parse.py
-|    |    |-pre_parse.py
-|    |    |-status_code.py
-|-parse
-|    |-README.md
-|    |-company.py
-|    |-main.py
-|    |-db
-|    |    |-read.py
-|    |    |-write.py
-|    |    |-schema.py
-|    |    |-util.py
-|-split
-|    |-README.md
-|    |-split.py
-|    |-main.py
-|    |-db
-|    |    |-create.py
-|    |    |-read.py
-|    |    |-write.py
-|    |    |-util.py
-|-preprocess
-|    |-README.md
-|    |-company.py
-|    |-main.py
-|    |-db
-|    |    |-read.py
-|    |    |-write.py
-|    |    |-schema.py
-|    |    |-util.py
-|-merge
-|    |-README.md
-|    |-merge.py
-|    |-main.py
-|    |-db
-|    |    |-read.py
-|    |    |-write.py
-|    |    |-schema.py
-|    |    |-util.py
+|- formatter
+|    |- README.md
+|	   |- formatter.py
+|    |- schema.py
+|- crawlers
+|    |- README.md
+|    |- company.py
+|    |- main.py
+|    |- db
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- schema.py
+|    |    |- util.py
+|    |- util
+|    |    |- normalize.py
+|    |    |- date_parse.py
+|    |    |- pre_parse.py
+|    |    |- status_code.py
+|- parse
+|    |- README.md
+|    |- company.py
+|    |- main.py
+|    |- db
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- schema.py
+|    |    |- util.py
+|- split
+|    |- README.md
+|    |- split.py
+|    |- main.py
+|    |- db
+|    |    |- create.py
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- util.py
+|- preprocess
+|    |- README.md
+|    |- company.py
+|    |- main.py
+|    |- db
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- schema.py
+|    |    |- util.py
+|- merge
+|    |- README.md
+|    |- merge.py
+|    |- main.py
+|    |- db
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- schema.py
+|    |    |- util.py
 ```
 
 ## DB Schema
