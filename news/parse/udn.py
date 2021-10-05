@@ -53,7 +53,8 @@ def parse(ori_news: RawNews) -> ParsedNews:
     article = ''
     try:
         # Discard images, captions, styles, scripts and ads.
-        for tag in soup.select('figure.article-content__image, style, script, div.inline-ads'):
+        for tag in soup.select(
+                'figure.article-content__image, style, script, div.inline-ads'):
             tag.extract()
 
         # Discard related links.

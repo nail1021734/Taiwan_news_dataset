@@ -14,10 +14,10 @@ class AllRecords:
             )
 
         # 讀取用的sql指令
-        sql = '''
+        sql = """
             SELECT id, article, category, company_id, datetime, reporter, title, url_pattern
             FROM news
-        '''
+        """
         conn: sqlite3.Connection = None
 
         self.records: List[ParsedNews] = []

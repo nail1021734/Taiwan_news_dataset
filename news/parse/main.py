@@ -23,11 +23,11 @@ COMPANY_DICT = {
 
 
 def parse_argument():
-    r'''
+    r"""
     `company` example: 'cna'
     `raw` example: `chinatimes.db`
     `save_path` example: `chinatimes.db`
-    '''
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--company',
@@ -54,8 +54,7 @@ def parse(
     raw_dataset: news.crawlers.db.schema.RawNews,
     company: str
 ) -> news.parse.db.schema.ParsedNews:
-    r'''根據指定的公司用不同方法parse輸入的`raw_data`
-    '''
+    r"""根據指定的公司用不同方法 parse 輸入的 `raw_data`"""
     parsed_data = []
     for raw_data in tqdm(raw_dataset):
         try:

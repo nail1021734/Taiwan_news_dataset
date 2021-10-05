@@ -54,7 +54,8 @@ def parse(ori_news: RawNews) -> ParsedNews:
         for article_tag in article_tags:
             for strong_tag in article_tag.select('strong'):
                 for filter_word in FILTER_WORDS:
-                    # Check if previous sibiling exists and contains filter words.
+                    # Check if previous sibiling exists and contains filter
+                    # words.
                     if (
                         strong_tag.previous_sibling and
                         filter_word in strong_tag.previous_sibling

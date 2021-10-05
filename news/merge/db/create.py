@@ -3,8 +3,7 @@ from typing import List
 
 
 def create_table(cur: sqlite3.Cursor, columns: List[str]):
-    r'''若指定的資料庫內沒有名為news的table，則建立news table
-    '''
+    r"""若指定的資料庫內沒有名為 news 的 table, 則建立 news table"""
     # 根據輸入決定table格式
     if len(columns) == 4:
         cur.execute("""

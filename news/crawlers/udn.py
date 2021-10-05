@@ -69,7 +69,8 @@ def get_news_list(
                     news_datetime = dateutil.parser.isoparse(
                         news_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     )
-                    if not (past_datetime <= news_datetime <= current_datetime):
+                    if not (
+                            past_datetime <= news_datetime <= current_datetime):
                         raise Exception('Time constraint violated.')
 
                     url = data_obj["titleLink"].split("?")[0]

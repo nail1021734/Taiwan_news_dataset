@@ -102,7 +102,8 @@ def find_page_range(
             # Break loop if `news_datetime < past_datetime`.
             if news_datetimes[0] < past_datetime:
                 break
-            # If this page contains valid news, we start crawling from this page.
+            # If this page contains valid news, we start crawling from this
+            # page.
             news_datetimes = filter(bool, map(
                 lambda n: past_datetime <= n <= current_datetime,
                 news_datetimes,

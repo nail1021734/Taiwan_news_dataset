@@ -4,11 +4,11 @@ from news.merge.merge import merge_db
 
 
 def parse_argument():
-    r'''
+    r"""
     `dir_path` example: 'raw/split_test'.
     `save_db` example: 'merge_test.db'
     `reserve_id` example: `True` or `False`
-    '''
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--dir_path',
@@ -35,7 +35,8 @@ def parse_argument():
 
 
 if __name__ == '__main__':
-    # example: `python -m news.merge.main --dir_path ftv_split --save_db ftv_merge.db --reserve_id False`
+    # example: `python -m news.merge.main --dir_path ftv_split --save_db
+    # ftv_merge.db --reserve_id False`
     args = parse_argument()
 
     merge_db(

@@ -1,7 +1,5 @@
 import os
 
-from tqdm import tqdm
-
 import news.split.db
 
 

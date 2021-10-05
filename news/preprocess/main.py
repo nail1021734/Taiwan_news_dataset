@@ -195,7 +195,11 @@ def main():
         # 如果是資料夾則在`data/preprocess`建立名為`args.save_path`的資料夾，並
         # 將結果保存在此資料夾下
 
-        for filename in os.listdir(os.path.join('data', 'parsed', args.source)):
+        for filename in os.listdir(
+            os.path.join(
+                'data',
+                'parsed',
+                args.source)):
             # Add filename in `args`.
             args.filename = filename
 

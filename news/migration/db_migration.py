@@ -9,9 +9,12 @@ from news.crawlers.util.normalize import (company_id, compress_raw_xml,
 def v1(
     dataset: news.migration.db.schema.OldNews,
 ) -> news.crawlers.db.schema.RawNews:
-    r'''從舊資料(`OldNews`)中取出raw data需要的部份(`company_id`, `url_pattern`, `raw_xml`)，
-    並轉換成正確的格式後保存成`RawNews`
-    '''
+    r"""將 `OldNews` 轉成 `RawNews`
+
+    從舊資料 `OldNews` 中取出 raw data 需要的部份
+    (`company_id`, `url_pattern`, `raw_xml`),
+    並轉換成正確的格式後保存成 `RawNews`
+    """
     result = []
     for i in tqdm(dataset):
         result.append(
