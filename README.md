@@ -123,3 +123,13 @@ news
 |reporter|text||
 |title|text||
 |url_pattern|text||
+
+## Testing
+
+```sh
+# 執行測試
+pipenv run test
+
+# 觀看測試覆蓋範圍
+pipenv run test-coverage
+```

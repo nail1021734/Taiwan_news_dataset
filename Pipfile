@@ -4,18 +4,23 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-requests = "*"
-tqdm = "*"
 bs4 = "*"
-torch = "*"
 ckip-transformers = "*"
 python-dateutil = "*"
+requests = "*"
+torch = "*"
+tqdm = "*"
 
 [dev-packages]
+autopep8 = "*"
+coverage = "*"
 flake8 = "*"
 isort = "*"
-autopep8 = "*"
 pytest = "*"
 
 [requires]
 python_version = "3.8"
+
+[scripts]
+test = "coverage run --branch --source=news --omit=.venv/* -m pytest"
+test-coverage = "coverage report"
