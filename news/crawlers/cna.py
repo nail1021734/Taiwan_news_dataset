@@ -5,7 +5,7 @@ from typing import List
 import requests
 from tqdm import tqdm
 
-import news.crawlers
+import news
 from news.crawlers.db.schema import RawNews
 from news.crawlers.util.normalize import (company_id, compress_raw_xml,
                                           compress_url)
@@ -86,7 +86,8 @@ def main(
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
     # Get database connection.
-    conn = news.crawlers.db.util.get_conn(db_name=f'{db_name}')
+    db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
+    conn = news.db.get_conn(db_path=db_path)
     cur = conn.cursor()
     news.crawlers.db.create.create_table(cur=cur)
 

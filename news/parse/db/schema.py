@@ -6,8 +6,8 @@ class ParsedNews:
     idx: int = 0
     article: str = ''
     category: str = ''
-    company_id: str = ''
-    datetime: str = ''
+    company_id: int = 0
+    datetime: int = 0
     reporter: str = ''
     title: str = ''
     url_pattern: str = ''

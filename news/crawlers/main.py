@@ -1,5 +1,4 @@
 import argparse
-import time
 from datetime import datetime, timedelta, timezone
 
 import dateutil.parser

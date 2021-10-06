@@ -1,37 +1,40 @@
 import sqlite3
-from typing import Sequence
+from typing import Final, Sequence
 
 from news.crawlers.db.schema import RawNews
 
+READ_SQL: Final[str] = """
+    SELECT url_pattern
+    FROM news;
+"""
 
-def write_new_records(cur: sqlite3.Cursor, news_list: Sequence[RawNews]):
-    r"""輸入目標資料庫的 `cursor` 與 `news_list`, 將 `news_list` 內的資料保存到目標資料庫中"""
+WRITE_SQL: Final[str] = """
+    INSERT INTO news(company_id, raw_xml, url_pattern)
+    VALUES (?, ?, ?);
+"""
 
-    # 取出已存在目標資料庫的url，避免重複保存相同的資料
-    existed_url = list(cur.execute("""
-        SELECT url_pattern FROM news
-    """))
+
+def write_new_records(
+    cur: sqlite3.Cursor,
+    news_list: Sequence[RawNews]
+) -> None:
+    r"""透過目標資料庫的 `cursor` 將 `news_list` 內的資料保存到目標資料庫中."""
+
+    # 取出已存在目標資料庫的 `url_pattern`, 避免重複保存相同的資料.
+    existed_url = list(cur.execute(READ_SQL))
     existed_url = set(map(lambda url: url[0], existed_url))
 
-    # 過濾掉`news_list`內重複的資料
-    tmp = []
+    # 過濾掉 `news_list` 內重複的資料並取出 `idx` 以外的欄位.
+    res = []
     for n in news_list:
         if n.url_pattern not in existed_url:
-            tmp.append(n)
+            res.append(
+                (
+                    n.company_id,
+                    n.raw_xml,
+                    n.url_pattern,
+                )
+            )
             existed_url.add(n.url_pattern)
 
-    # 從`news_list`內的資料取出id以外的欄位
-    news_list = [
-        (
-            news.company_id,
-            news.raw_xml,
-            news.url_pattern
-        ) for news in tmp]
-
-    cur.executemany(
-        """
-        INSERT INTO news(company_id, raw_xml, url_pattern)
-        VALUES (?, ?, ?)
-        """,
-        news_list
-    )
+    cur.executemany(WRITE_SQL, res)

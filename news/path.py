@@ -7,3 +7,6 @@ PROJECT_ROOT: Final[str] = os.path.abspath(os.path.join(
     os.pardir,
     os.pardir,
 ))
+
+# 資料集存放目錄
+DATA_PATH: Final[str] = os.path.join(PROJECT_ROOT, 'data')

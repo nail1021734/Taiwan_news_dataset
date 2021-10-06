@@ -74,7 +74,7 @@ def main():
         # 並把資料存在`data/parsed`資料夾下
 
         # Read raw data.
-        raw_dataset = news.crawlers.db.read.AllRecords(db_name=args.raw)
+        raw_dataset = news.crawlers.db.read.read_all_records(db_name=args.raw)
 
         # Parse raw data.
         parsed_data = parse(
