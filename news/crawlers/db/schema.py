@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class RawNews:
     idx: int = 0
-    company_id: str = ''
+    company_id: int = 0
     raw_xml: str = ''
     url_pattern: str = ''
 

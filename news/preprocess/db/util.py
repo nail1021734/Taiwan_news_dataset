@@ -14,9 +14,9 @@ def get_path(db_name: str) -> str:
 
 
 def get_conn(db_name: str) -> sqlite3.Connection:
-    r"""取得資料庫的 connection
+    r"""取得與資料庫的連線
 
-    如果指定的資料庫路徑不存在, 則創建路徑與檔案後回傳 connection
+    如果指定的資料庫路徑不存在, 則創建路徑與檔案後回傳連線
     """
     db_path = get_path(db_name)
     db_dir = os.path.dirname(db_path)

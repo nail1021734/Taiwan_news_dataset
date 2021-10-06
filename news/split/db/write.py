@@ -3,7 +3,7 @@ from typing import Dict, List
 
 
 def write_new_records(cur: sqlite3.Cursor, news_list: List[Dict]):
-    r"""輸入目標資料庫的 `cursor` 與 `news_list`, 將 `news_list` 內的資料保存到目標資料庫中"""
+    r"""透過目標資料庫的 `cursor` 將 `news_list` 內的資料保存到目標資料庫中"""
 
     # 由於切分的資料可能是舊資料，而舊資料中沒有`url_pattern`欄位，因此
     # 在這邊做辨識

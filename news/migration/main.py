@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import news
 import news.crawlers.db
 import news.migration.db
 from news.migration.db_migration import v1
@@ -43,9 +44,8 @@ def migrate(
     )
 
     # Get connection to `save_path`.
-    conn = news.crawlers.db.util.get_conn(
-        db_name=save_path
-    )
+    db_path = news.crawlers.db.util.get_db_path(db_name=save_path)
+    conn = news.db.get_conn(db_path=db_path)
     # Create table in `save_path`.
     news.crawlers.db.create.create_table(
         cur=conn.cursor()
