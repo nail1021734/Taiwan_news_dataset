@@ -1,23 +1,27 @@
 from collections import Counter
-from typing import List
+from typing import Dict, Final, List, Optional
 
-import requests
 from tqdm import tqdm
 
-import news.crawlers
+import news.crawlers.db.create
+import news.crawlers.db.util
+import news.crawlers.db.write
+import news.crawlers.util.normalize
+import news.crawlers.util.request_url
+import news.crawlers.util.status_code
+import news.db
 from news.crawlers.db.schema import RawNews
-from news.crawlers.util.normalize import (company_id, compress_raw_xml,
-                                          compress_url)
 
 RECORD_PER_COMMIT = 2000
-COMPANY = '風傳媒'
+COMPANY_ID = news.crawlers.util.normalize.get_company_id(company='風傳媒')
 
 
 def get_news_list(
     first_idx: int,
     latest_idx: int,
     *,
-    debug: bool = True,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -31,24 +35,23 @@ def get_news_list(
         url = f'https://www.storm.mg/article/{idx}'
 
         try:
-            response = requests.get(
-                url,
-                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-            )
-            response.close()
+            response = news.crawlers.util.request_url.get(url=url)
 
             # Raise exception if status code is not 200.
             news.crawlers.util.status_code.check_status_code(
-                company='storm',
-                response=response
+                company_id=COMPANY_ID,
+                status_code=response.status_code,
+                url=url,
             )
 
             if not news.crawlers.util.pre_parse.check_storm_page_exist(url):
                 continue
             news_list.append(RawNews(
-                company_id=company_id(company=COMPANY),
-                raw_xml=compress_raw_xml(raw_xml=response.text),
-                url_pattern=compress_url(url=url, company=COMPANY),
+                company_id=COMPANY_ID,
+                raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                    raw_xml=response.text),
+                url_pattern=news.crawlers.util.normalize.compress_url(
+                    url=url, company_id=COMPANY_ID),
             ))
         except Exception as err:
             if err.args:
@@ -67,7 +70,8 @@ def main(
     first_idx: int,
     latest_idx: int,
     *,
-    debug: bool = False,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ):
     if first_idx > latest_idx and latest_idx != -1:
         raise ValueError(
@@ -78,6 +82,8 @@ def main(
     db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
     conn = news.db.get_conn(db_path=db_path)
     cur = conn.cursor()
+
+    # Ensure news table exists.
     news.crawlers.db.create.create_table(cur=cur)
 
     while first_idx <= latest_idx or latest_idx == -1:
@@ -89,18 +95,19 @@ def main(
             if cur_latest_idx == latest_idx:
                 cur_latest_idx += 1
 
+        # Get news list.
         news_list = get_news_list(
             debug=debug,
             first_idx=first_idx,
             latest_idx=cur_latest_idx,
         )
 
+        # No more news to crawl.
         if not news_list:
-            # No more news to crawl.
             break
 
+        # Write news records to database.
         news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)
-
         conn.commit()
 
         first_idx += RECORD_PER_COMMIT

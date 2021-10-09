@@ -1,18 +1,20 @@
 import sqlite3
 from typing import Final, List
 
-import news
-import news.crawlers.db
-from news.crawlers.db.schema import RawNews
+import news.crawlers.db.create
+import news.crawlers.db.schema
+import news.crawlers.db.util
+import news.db
 
 # 讀取用的 SQL 指令
 SQL: Final[str] = """
     SELECT id, company_id, raw_xml, url_pattern
-    FROM news;
+    FROM   news;
 """
 
 
-def read_all_records(db_name: str) -> List[RawNews]:
+def read_all_records(db_name: Final[str]
+                     ) -> List[news.crawlers.db.schema.RawNews]:
     r"""讀取指定 `db_name` 中所有的 `RawNews`."""
 
     # 檢查是否有給予 `db_name`, 如果都沒有則無法進行後續讀取.
@@ -35,9 +37,9 @@ def read_all_records(db_name: str) -> List[RawNews]:
         conn.close()
 
     # 將讀取出的資料轉換為 `RawNews` 物件
-    all_records: List[RawNews] = []
+    all_records: List[news.crawlers.db.schema.RawNews] = []
     for idx, company_id, raw_xml, url_pattern in news_list:
-        all_records.append(RawNews(
+        all_records.append(news.crawlers.db.schema.RawNews(
             idx=idx,
             company_id=company_id,
             raw_xml=raw_xml,

@@ -1,6 +1,7 @@
 import inspect
 import sqlite3
 from inspect import Parameter, Signature
+from typing import Final
 
 import news.db
 
@@ -15,7 +16,7 @@ def test_module_function_signature() -> None:
                 name='db_path',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=str
+                annotation=Final[str],
             ),
         ],
         return_annotation=sqlite3.Connection,

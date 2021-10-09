@@ -1,22 +1,22 @@
 import sqlite3
 from typing import Final, Sequence
 
-from news.crawlers.db.schema import RawNews
+import news.crawlers.db.schema
 
 READ_SQL: Final[str] = """
     SELECT url_pattern
-    FROM news;
+    FROM   news;
 """
 
 WRITE_SQL: Final[str] = """
     INSERT INTO news(company_id, raw_xml, url_pattern)
-    VALUES (?, ?, ?);
+    VALUES          (?         , ?      , ?          );
 """
 
 
 def write_new_records(
-    cur: sqlite3.Cursor,
-    news_list: Sequence[RawNews]
+    cur: Final[sqlite3.Cursor],
+    news_list: Final[Sequence[news.crawlers.db.schema.RawNews]],
 ) -> None:
     r"""透過目標資料庫的 `cursor` 將 `news_list` 內的資料保存到目標資料庫中."""
 

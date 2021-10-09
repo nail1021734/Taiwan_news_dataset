@@ -4,6 +4,16 @@ from datetime import datetime, timedelta, timezone
 import dateutil.parser
 
 import news.crawlers
+import news.crawlers.chinatimes
+import news.crawlers.cna
+import news.crawlers.epochtimes
+import news.crawlers.ftv
+import news.crawlers.ltn
+import news.crawlers.ntdtv
+import news.crawlers.setn
+import news.crawlers.storm
+import news.crawlers.tvbs
+import news.crawlers.udn
 
 CRAWLER_DICT = {
     'chinatimes': news.crawlers.chinatimes.main,
@@ -80,20 +90,14 @@ if __name__ == '__main__':
     if not args.current_datetime:
         args.current_datetime = datetime.now(timezone.utc)
     else:
-        args.current_datetime = dateutil.parser.isoparse(
-            args.current_datetime
-        )
+        args.current_datetime = dateutil.parser.isoparse(args.current_datetime)
 
     # Default crawl one day news.
     if not args.past_datetime:
         args.past_datetime = args.current_datetime - timedelta(days=1)
     else:
-        args.past_datetime = dateutil.parser.isoparse(
-            args.past_datetime
-        )
+        args.past_datetime = dateutil.parser.isoparse(args.past_datetime)
 
     # Run crawler.
-    func = CRAWLER_DICT[args.crawler_name]
-    param = dict((k, v) for k, v in vars(args).items()
-                 if k in func.__code__.co_varnames)
-    func(**param)
+    crawler_script = CRAWLER_DICT[args.crawler_name]
+    crawler_script(**args.__dict__)

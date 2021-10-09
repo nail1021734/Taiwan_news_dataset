@@ -33,6 +33,6 @@ SQL: Final[str] = """
 """
 
 
-def create_table(cur: sqlite3.Cursor) -> None:
+def create_table(cur: Final[sqlite3.Cursor]) -> None:
     r"""執行創建表格 SQL."""
     cur.execute(SQL)

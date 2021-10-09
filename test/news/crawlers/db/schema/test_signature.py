@@ -4,13 +4,13 @@ from inspect import Parameter, Signature
 import news.crawlers.db.schema
 
 
-def test_module_function_signature():
+def test_module_function_signature() -> None:
     r"""Ensure module functions' signature."""
     assert hasattr(news.crawlers.db.schema, 'RawNews')
     assert inspect.isclass(news.crawlers.db.schema.RawNews)
 
 
-def test_class_attribute():
+def test_class_attribute() -> None:
     r"""Ensure class attributes' signature."""
     assert hasattr(news.crawlers.db.schema.RawNews, 'idx')
     assert isinstance(news.crawlers.db.schema.RawNews.idx, int)
@@ -26,7 +26,7 @@ def test_class_attribute():
     assert news.crawlers.db.schema.RawNews.url_pattern == ''
 
 
-def test_instance_method():
+def test_instance_method() -> None:
     r"""Ensure instance methods' signature."""
     assert hasattr(news.crawlers.db.schema.RawNews, '__iter__')
     assert inspect.isfunction(news.crawlers.db.schema.RawNews.__iter__)

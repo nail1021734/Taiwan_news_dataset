@@ -1,24 +1,28 @@
 from collections import Counter
-from typing import List
+from typing import Dict, Final, List, Optional
 
-import requests
 from tqdm import tqdm
 
-import news.crawlers
+import news.crawlers.db.create
+import news.crawlers.db.util
+import news.crawlers.db.write
+import news.crawlers.util.normalize
+import news.crawlers.util.request_url
+import news.crawlers.util.status_code
+import news.db
 from news.crawlers.db.schema import RawNews
-from news.crawlers.util.normalize import (company_id, compress_raw_xml,
-                                          compress_url)
 
 FIRST_PAGE = 1
 MAX_PAGE = 26
-COMPANY = '自由'
+COMPANY_ID = news.crawlers.util.normalize.get_company_id(company='自由')
 
 
 def get_news_list(
     category: str,
     api: str,
     *,
-    debug: bool = False,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -34,16 +38,13 @@ def get_news_list(
         page_url = f'https://news.ltn.com.tw/ajax/breakingnews/{api}/{page}'
 
         try:
-            response = requests.get(
-                page_url,
-                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-            )
-            response.close()
+            response = news.crawlers.util.request_url(url=page_url)
 
             # Raise exception if status code is not 200.
             news.crawlers.util.status_code.check_status_code(
-                company='ltn',
-                response=response
+                company_id=COMPANY_ID,
+                status_code=response.status_code,
+                url=page_url,
             )
 
             # If `status_code == 200`, parse links in this page.
@@ -59,22 +60,21 @@ def get_news_list(
         for news_dict in api_json:
             try:
                 news_url = news_dict['url']
-                response = requests.get(
-                    news_url,
-                    timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-                )
-                response.close()
+                response = news.crawlers.util.request_url(url=news_url)
 
                 # Raise exception if status code is not 200.
                 news.crawlers.util.status_code.check_status_code(
-                    company='ltn',
-                    response=response
+                    company_id=COMPANY_ID,
+                    status_code=response.status_code,
+                    url=news_url,
                 )
 
                 news_list.append(RawNews(
-                    company_id=company_id(company=COMPANY),
-                    raw_xml=compress_raw_xml(raw_xml=response.text),
-                    url_pattern=compress_url(url=news_url, company=COMPANY),
+                    company_id=COMPANY_ID,
+                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                        raw_xml=response.text),
+                    url_pattern=news.crawlers.util.normalize.compress_url(
+                        url=news_url, company_id=COMPANY_ID),
                 ))
             except Exception as err:
                 if err.args:
@@ -101,25 +101,28 @@ CATEGORIES = {
 def main(
     db_name: str,
     *,
-    debug: bool = False,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ):
 
     # Get database connection.
     db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
     conn = news.db.get_conn(db_path=db_path)
     cur = conn.cursor()
+
+    # Ensure news table exists.
     news.crawlers.db.create.create_table(cur=cur)
 
     for category, api in CATEGORIES.items():
-        news.crawlers.db.write.write_new_records(
-            cur=cur,
-            news_list=get_news_list(
-                api=api,
-                category=category,
-                debug=debug,
-            ),
+        # Get news list.
+        news_list = get_news_list(
+            api=api,
+            category=category,
+            debug=debug,
         )
 
+        # Write news records to database.
+        news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)
         conn.commit()
 
     # Close database connection.

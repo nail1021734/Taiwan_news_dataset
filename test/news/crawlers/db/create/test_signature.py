@@ -2,6 +2,7 @@ import inspect
 import re
 import sqlite3
 from inspect import Parameter, Signature
+from typing import Final
 
 import news.crawlers.db.create
 
@@ -19,7 +20,7 @@ def test_module_function_signature() -> None:
                     name='cur',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=sqlite3.Cursor
+                    annotation=Final[sqlite3.Cursor]
                 ),
             ],
             return_annotation=None,

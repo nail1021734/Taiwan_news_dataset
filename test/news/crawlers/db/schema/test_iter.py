@@ -3,7 +3,7 @@ import pytest
 import news.crawlers.db.schema
 
 
-def test_init():
+def test_init() -> None:
     r"""Instance of `RawNews` must be iterable.
 
     Iterator will generate following attributes in order:

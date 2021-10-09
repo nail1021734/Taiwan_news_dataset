@@ -1,7 +1,7 @@
 import news.crawlers.db.schema
 
 
-def test_init():
+def test_init() -> None:
     r"""Instance of `RawNews` must include correct attributes.
 
     Correct attributes includes:

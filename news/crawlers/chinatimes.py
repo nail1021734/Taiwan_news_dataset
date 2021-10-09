@@ -1,87 +1,25 @@
 from collections import Counter
 from datetime import datetime, timedelta
-from typing import List
+from typing import Dict, Final, List, Optional
 
 import requests
-from tqdm import tqdm
+from tqdm import trange
 
-import news
+import news.crawlers.db.create
+import news.crawlers.db.util
+import news.crawlers.db.write
+import news.crawlers.util.normalize
+import news.crawlers.util.request_url
+import news.crawlers.util.status_code
+import news.db
 from news.crawlers.db.schema import RawNews
-from news.crawlers.util.normalize import (company_id, compress_raw_xml,
-                                          compress_url)
 
-CONTINUE_FAIL_COUNT = 1000
-COMPANY = '中時'
-
-
-def get_news_list(
-    current_datetime: datetime,
-    past_datetime: datetime,
-    *,
-    debug: bool = False,
-) -> List[RawNews]:
-    news_list: List[RawNews] = []
-    logger = Counter()
-
-    date = current_datetime
-
-    fail_count = 0
-    date_str = date.strftime('%Y%m%d')
-
-    # Only show progress bar in debug mode.
-    iter_range = range(100000)
-    if debug:
-        iter_range = tqdm(iter_range)
-
-    for i in iter_range:
-        # No more news to crawl.
-        if fail_count >= CONTINUE_FAIL_COUNT:
-            break
-
-        check_get_news = False
-        for category, api in CATEGORIES.items():
-            url = f'https://www.chinatimes.com/realtimenews/{date_str}{i:06d}-{api}?chdtv'
-            try:
-                response = requests.get(
-                    url,
-                    timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-                )
-                response.close()
-
-                # Raise exception if status code is not 200.
-                news.crawlers.util.status_code.check_status_code(
-                    company='chinatimes',
-                    response=response
-                )
-
-                news_list.append(RawNews(
-                    company_id=company_id(company=COMPANY),
-                    raw_xml=compress_raw_xml(raw_xml=response.text),
-                    url_pattern=compress_url(url=url, company=COMPANY),
-                ))
-
-                # If already get news in this id then break to next id.
-                check_get_news = True
-                break
-            except Exception as err:
-                if err.args:
-                    logger.update([err.args[0]])
-        if not check_get_news:
-            fail_count += 1
-            logger.update(['Index not found.'])
-        else:
-            # If `status_code == 200`, reset `fail_count`.
-            fail_count = 0
-
-    # Only show error stats in debug mode.
-    if debug:
-        for k, v in logger.items():
-            print(f'{k}: {v}')
-
-    return news_list
-
-
-CATEGORIES = {
+# `category_id` is sorted based on request hit rates.
+###############################################################################
+#                                  WARNING
+# DO NOT change the order unless you know what you are doing.
+###############################################################################
+CATEGORY_ID_LOOKUP_TABLE: Final[Dict[str, str]] = {
     '政治': '260407',
     '時尚、玩食': '260405',
     '財經': '260410',
@@ -113,15 +51,100 @@ CATEGORIES = {
     '歷史': '260812',
     '時人真話': '260102',
 }
+COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
+    company='中時',
+)
+COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+    company_id=COMPANY_ID,
+)
+MAX_NEWS_PER_DAY: Final[int] = 100000
+
+
+def get_news_list(
+    current_datetime: Final[datetime],
+    *,
+    continue_fail_count: Final[Optional[int]] = 1000,
+    debug: Final[Optional[bool]] = False,
+    **kwargs: Final[Optional[Dict]],
+) -> List[RawNews]:
+    news_list: List[RawNews] = []
+    logger = Counter()
+
+    fail_count = 0
+    datetime_str = current_datetime.strftime('%Y%m%d')
+
+    # Only show progress bar in debug mode.
+    for news_idx in trange(
+        MAX_NEWS_PER_DAY,
+        disable=not debug,
+        dynamic_ncols=True,
+    ):
+        # Each `news_idx` only appear in exactly one category.  But we don't
+        # know which one.  Thus we loop through all categories to find the
+        # correct `category_idx` which the `news_idx` belongs to.  If no
+        # `category_idx` match, then `news_idx` does not exist.
+        for category_idx in CATEGORY_ID_LOOKUP_TABLE.values():
+            url = f'{COMPANY_URL}{datetime_str}{news_idx:06d}-{category_idx}'
+            response = None
+            try:
+                response = news.crawlers.util.request_url.get(url=url)
+
+                # Raise exception if status code is not 200.
+                news.crawlers.util.status_code.check_status_code(
+                    company_id=COMPANY_ID,
+                    status_code=response.status_code,
+                    url=url,
+                )
+
+                news_list.append(RawNews(
+                    company_id=COMPANY_ID,
+                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                        raw_xml=response.text,
+                    ),
+                    url_pattern=news.crawlers.util.normalize.compress_url(
+                        company_id=COMPANY_ID,
+                        url=url,
+                    ),
+                ))
+
+                # Reset `fail_count` when `status_code == 200`.
+                fail_count = 0
+                break
+            except Exception as err:
+                if err.args \
+                        and isinstance(response, requests.Response) \
+                        and response.status_code != 404:
+                    fail_count += 1
+                    logger.update([err.args[0]])
+                    break
+
+        # Request timeout.
+        if not isinstance(response, requests.Response):
+            fail_count += 1
+            logger.update(['Request timeout.'])
+        # `news_idx` does not exist.
+        elif response.status_code == 404:
+            fail_count += 1
+            logger.update(['URL not found.'])
+
+        # No more news to crawl.
+        if fail_count >= continue_fail_count:
+            break
+
+    # Only show error stats in debug mode.
+    if debug:
+        for k, v in logger.items():
+            print(f'{k}: {v}')
+
+    return news_list
 
 
 def main(
-    current_datetime: datetime,
-    db_name: str,
-    past_datetime: datetime,
-    *,
-    debug: bool = False,
-):
+    current_datetime: Final[datetime],
+    db_name: Final[str],
+    past_datetime: Final[datetime],
+    **kwargs: Final[Optional[Dict]],
+) -> None:
 
     if past_datetime > current_datetime:
         raise ValueError('Must have `past_datetime <= current_datetime`.')
@@ -130,23 +153,22 @@ def main(
     db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
     conn = news.db.get_conn(db_path=db_path)
     cur = conn.cursor()
+
+    # Ensure news table exists.
     news.crawlers.db.create.create_table(cur=cur)
 
-    date = current_datetime
-    # Commit database once a day.
-    while date >= past_datetime:
-        news.crawlers.db.write.write_new_records(
-            cur=cur,
-            news_list=get_news_list(
-                current_datetime=date,
-                debug=debug,
-                past_datetime=date - timedelta(days=1),
-            ),
-        )
-        # Go back 1 day.
-        date = date - timedelta(days=1)
+    # Commit transaction for each day.
+    loop_datetime = current_datetime
+    while loop_datetime >= past_datetime:
+        # Get news list.
+        news_list = get_news_list(current_datetime=loop_datetime, **kwargs)
 
+        # Write news records to database.
+        news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)
         conn.commit()
+
+        # Go back 1 day.
+        loop_datetime = loop_datetime - timedelta(days=1)
 
     # Close database connection.
     conn.close()
