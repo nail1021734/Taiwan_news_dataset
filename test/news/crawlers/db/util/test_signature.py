@@ -1,5 +1,6 @@
 import inspect
 from inspect import Parameter, Signature
+from typing import Final
 
 import news.crawlers.db.util
 
@@ -14,7 +15,7 @@ def test_module_function_signature() -> None:
                 name='db_name',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=str
+                annotation=Final[str],
             ),
         ],
         return_annotation=str,

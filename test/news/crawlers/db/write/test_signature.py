@@ -2,7 +2,7 @@ import inspect
 import re
 import sqlite3
 from inspect import Parameter, Signature
-from typing import Sequence
+from typing import Final, Sequence
 
 import news.crawlers.db.schema
 import news.crawlers.db.write
@@ -21,13 +21,15 @@ def test_module_function_signature() -> None:
                     name='cur',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=sqlite3.Cursor
+                    annotation=Final[sqlite3.Cursor],
                 ),
                 Parameter(
                     name='news_list',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Sequence[news.crawlers.db.schema.RawNews]
+                    annotation=Final[Sequence[
+                        news.crawlers.db.schema.RawNews
+                    ]],
                 ),
             ],
             return_annotation=None,
@@ -54,6 +56,6 @@ def test_module_attribute_signature() -> None:
         ==
         re.sub(r'\s+', ' ', """
             INSERT INTO news(company_id, raw_xml, url_pattern)
-            VALUES (?, ?, ?);
+            VALUES          (?         , ?      , ?          );
         """)
     )

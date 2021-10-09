@@ -1,7 +1,7 @@
 import inspect
 import re
 from inspect import Parameter, Signature
-from typing import List
+from typing import Final, List
 
 import news.crawlers.db.read
 import news.crawlers.db.schema
@@ -20,7 +20,7 @@ def test_module_function_signature() -> None:
                     name='db_name',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=str,
+                    annotation=Final[str],
                 ),
             ],
             return_annotation=List[news.crawlers.db.schema.RawNews],
@@ -28,7 +28,7 @@ def test_module_function_signature() -> None:
     )
 
 
-def test_module_attribute_signature():
+def test_module_attribute_signature() -> None:
     r"""Ensure module attributes' signature."""
     assert hasattr(news.crawlers.db.read, 'SQL')
     assert isinstance(news.crawlers.db.read.SQL, str)

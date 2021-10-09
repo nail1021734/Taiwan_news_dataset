@@ -1,14 +1,17 @@
 import re
 from collections import Counter
-from typing import List
+from typing import Dict, Final, List, Optional
 
-import requests
 from tqdm import tqdm
 
-import news.crawlers
+import news.crawlers.db.create
+import news.crawlers.db.util
+import news.crawlers.db.write
+import news.crawlers.util.normalize
+import news.crawlers.util.request_url
+import news.crawlers.util.status_code
+import news.db
 from news.crawlers.db.schema import RawNews
-from news.crawlers.util.normalize import (company_id, compress_raw_xml,
-                                          compress_url)
 
 RECORD_PER_COMMIT = 1000
 CATEGORIES = {
@@ -27,7 +30,7 @@ CATEGORIES = {
     'cars': 269,
     'money': 270,
 }
-COMPANY = 'tvbs'
+COMPANY_ID = news.crawlers.util.normalize.get_company_id(company='tvbs')
 
 
 def get_news_list(
@@ -36,7 +39,8 @@ def get_news_list(
     first_idx: int,
     latest_idx: int,
     *,
-    debug: bool = True,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -51,16 +55,13 @@ def get_news_list(
     for idx in iter_range:
         url = f'https://news.tvbs.com.tw/news/LoadMoreOverview?limit=100&offset=0&cateid={category_id}&cate={category}&newsid={idx}'
         try:
-            response = requests.get(
-                url,
-                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-            )
-            response.close()
+            response = news.crawlers.util.request_url.get(url=url)
 
             # Raise exception if status code is not 200.
             news.crawlers.util.status_code.check_status_code(
-                company='tvbs',
-                response=response
+                company_id=COMPANY_ID,
+                status_code=response.status_code,
+                url=url,
             )
 
             data_obj = response.json()
@@ -99,16 +100,13 @@ def get_news_list(
         url = f'https://news.tvbs.com.tw/news/LoadMoreOverview?limit=100&offset=0&cateid={category_id}&cate={category}&newsid={next_idx}'
 
         try:
-            response = requests.get(
-                url,
-                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-            )
-            response.close()
+            response = news.crawlers.util.request_url.get(url=url)
 
             # Raise exception if status code is not 200.
             news.crawlers.util.status_code.check_status_code(
-                company='tvbs',
-                response=response
+                company_id=COMPANY_ID,
+                status_code=response.status_code,
+                url=url,
             )
 
             data_obj = response.json()
@@ -155,22 +153,21 @@ def get_news_list(
         url = f'https://news.tvbs.com.tw/{category}/{idx}'
 
         try:
-            response = requests.get(
-                url,
-                timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-            )
-            response.close()
+            response = news.crawlers.util.request_url.get(url=url)
 
             # Raise exception if status code is not 200.
             news.crawlers.util.status_code.check_status_code(
-                company='tvbs',
-                response=response
+                company_id=COMPANY_ID,
+                status_code=response.status_code,
+                url=url,
             )
 
             news_list.append(RawNews(
-                company_id=company_id(company=COMPANY),
-                raw_xml=compress_raw_xml(raw_xml=response.text),
-                url_pattern=compress_url(url=url, company=COMPANY),
+                company_id=COMPANY_ID,
+                raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                    raw_xml=response.text),
+                url_pattern=news.crawlers.util.normalize.compress_url(
+                    url=url, company_id=COMPANY_ID),
             ))
         except Exception as err:
             if err.args:
@@ -189,7 +186,8 @@ def main(
     first_idx: int,
     latest_idx: int,
     *,
-    debug: bool = False,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ):
     if first_idx > latest_idx:
         raise ValueError('Must have `first_idx <= latest_idx`.')
@@ -198,6 +196,8 @@ def main(
     db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
     conn = news.db.get_conn(db_path=db_path)
     cur = conn.cursor()
+
+    # Ensure news table exists.
     news.crawlers.db.create.create_table(cur=cur)
 
     while first_idx <= latest_idx:
@@ -208,8 +208,8 @@ def main(
         if cur_first_idx == first_idx:
             cur_first_idx -= 1
 
+        # Get news list.
         news_list = []
-
         for category, category_id in CATEGORIES.items():
             news_list.extend(get_news_list(
                 category=category,
@@ -219,8 +219,8 @@ def main(
                 latest_idx=latest_idx,
             ))
 
+        # Write news records to database.
         news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)
-
         conn.commit()
 
         latest_idx -= RECORD_PER_COMMIT

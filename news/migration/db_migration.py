@@ -2,8 +2,8 @@ from tqdm import tqdm
 
 import news.crawlers.db
 import news.migration.db
-from news.crawlers.util.normalize import (company_id, compress_raw_xml,
-                                          compress_url)
+from news.crawlers.util.normalize import (compress_raw_xml, compress_url,
+                                          get_company_id)
 
 
 def v1(
@@ -19,7 +19,7 @@ def v1(
     for i in tqdm(dataset):
         result.append(
             news.crawlers.db.schema.RawNews(
-                company_id=company_id(company=i.company),
+                company_id=get_company_id(company=i.company),
                 url_pattern=compress_url(url=i.url, company=i.company),
                 raw_xml=compress_raw_xml(raw_xml=i.raw_xml)
             )

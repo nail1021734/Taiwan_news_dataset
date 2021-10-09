@@ -1,15 +1,12 @@
-import requests
+from typing import Final
+
 from bs4 import BeautifulSoup
 
-import news.crawlers
+import news.crawlers.util.status_code
 
 
 def check_ftv_page_exist(url):
-    response = requests.get(
-        url,
-        timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-    )
-    response.close()
+    response = news.crawlers.util.request_url.get(url=url)
 
     soup = BeautifulSoup(response.text, 'html.parser')
     script_tag = soup.select('script')
@@ -19,11 +16,7 @@ def check_ftv_page_exist(url):
 
 
 def check_storm_page_exist(url):
-    response = requests.get(
-        url,
-        timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-    )
-    response.close()
+    response = news.crawlers.util.request_url.get(url=url)
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -36,13 +29,9 @@ def check_storm_page_exist(url):
 
 
 def get_setn_link(url):
-    # setn新聞不是用index暴力爬，需要先parse出每頁新聞的url，因此在這裡對
-    # 每個page進行parse，回傳新聞網址
-    response = requests.get(
-        url,
-        timeout=news.crawlers.util.status_code.REQUEST_TIMEOUT,
-    )
-    response.close()
+    # setn 新聞不是用 index 暴力爬, 需要先 parse 出每頁新聞的 url, 因此在這裡對
+    # 每個 page 進行 parse, 回傳新聞網址.
+    response = news.crawlers.util.request_url.get(url=url)
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
