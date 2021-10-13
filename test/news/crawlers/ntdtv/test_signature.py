@@ -5,16 +5,16 @@ from inspect import Parameter, Signature
 from typing import Dict, Final, List, Optional, Union
 
 import news.crawlers.db.schema
-import news.crawlers.epochtimes
+import news.crawlers.ntdtv
 import news.crawlers.util.normalize
 
 
 def test_module_function_signature() -> None:
     r"""Ensure module functions' signature."""
-    assert hasattr(news.crawlers.epochtimes, 'get_datetime_from_url')
-    assert inspect.isfunction(news.crawlers.epochtimes.get_datetime_from_url)
+    assert hasattr(news.crawlers.ntdtv, 'get_datetime_from_url')
+    assert inspect.isfunction(news.crawlers.ntdtv.get_datetime_from_url)
     assert inspect.signature(
-        news.crawlers.epochtimes.get_datetime_from_url,
+        news.crawlers.ntdtv.get_datetime_from_url,
     ) == Signature(
         parameters=[
             Parameter(
@@ -26,10 +26,10 @@ def test_module_function_signature() -> None:
         ],
         return_annotation=Union[datetime, None],
     )
-    assert hasattr(news.crawlers.epochtimes, 'get_max_page')
-    assert inspect.isfunction(news.crawlers.epochtimes.get_max_page)
+    assert hasattr(news.crawlers.ntdtv, 'get_max_page')
+    assert inspect.isfunction(news.crawlers.ntdtv.get_max_page)
     assert inspect.signature(
-        news.crawlers.epochtimes.get_max_page,
+        news.crawlers.ntdtv.get_max_page,
     ) == Signature(
         parameters=[
             Parameter(
@@ -47,10 +47,10 @@ def test_module_function_signature() -> None:
         ],
         return_annotation=int,
     )
-    assert hasattr(news.crawlers.epochtimes, 'get_start_page')
-    assert inspect.isfunction(news.crawlers.epochtimes.get_start_page)
+    assert hasattr(news.crawlers.ntdtv, 'get_start_page')
+    assert inspect.isfunction(news.crawlers.ntdtv.get_start_page)
     assert inspect.signature(
-        news.crawlers.epochtimes.get_start_page,
+        news.crawlers.ntdtv.get_start_page,
     ) == Signature(
         parameters=[
             Parameter(
@@ -98,10 +98,10 @@ def test_module_function_signature() -> None:
         ],
         return_annotation=int,
     )
-    assert hasattr(news.crawlers.epochtimes, 'get_news_list')
-    assert inspect.isfunction(news.crawlers.epochtimes.get_news_list)
+    assert hasattr(news.crawlers.ntdtv, 'get_news_list')
+    assert inspect.isfunction(news.crawlers.ntdtv.get_news_list)
     assert inspect.signature(
-        news.crawlers.epochtimes.get_news_list,
+        news.crawlers.ntdtv.get_news_list,
     ) == Signature(
         parameters=[
             Parameter(
@@ -155,9 +155,9 @@ def test_module_function_signature() -> None:
         ],
         return_annotation=List[news.crawlers.db.schema.RawNews],
     )
-    assert hasattr(news.crawlers.epochtimes, 'main')
-    assert inspect.isfunction(news.crawlers.epochtimes.main)
-    assert inspect.signature(news.crawlers.epochtimes.main) == Signature(
+    assert hasattr(news.crawlers.ntdtv, 'main')
+    assert inspect.isfunction(news.crawlers.ntdtv.main)
+    assert inspect.signature(news.crawlers.ntdtv.main) == Signature(
         parameters=[
             Parameter(
                 name='current_datetime',
@@ -190,32 +190,32 @@ def test_module_function_signature() -> None:
 
 def test_module_attribute_signature() -> None:
     r"""Ensure module attributes' signature."""
-    assert hasattr(news.crawlers.epochtimes, 'CATEGORY_API_LOOKUP_TABLE')
-    assert news.crawlers.epochtimes.CATEGORY_API_LOOKUP_TABLE == {
-        '大陸': 'nsc413',
-        '美國': 'nsc412',
-        '香港': 'ncid1349362',
-        '國際': 'nsc418',
-        '台灣': 'ncid1349361',
-        '科技': 'nsc419',
-        '財經': 'nsc420',
-        '文化': 'nsc2007',
+    assert hasattr(news.crawlers.ntdtv, 'CATEGORY_API_LOOKUP_TABLE')
+    assert news.crawlers.ntdtv.CATEGORY_API_LOOKUP_TABLE == {
+        '國際': '202',
+        '港澳': '205',
+        '財經': '208',
+        '健康': '1255',
+        '體育': '211',
+        '美國': '203',
+        '大陸': '204',
+        '文史': '647',
     }
-    assert hasattr(news.crawlers.epochtimes, 'COMMIT_PAGE_INTERVAL')
-    assert news.crawlers.epochtimes.COMMIT_PAGE_INTERVAL == 10
-    assert hasattr(news.crawlers.epochtimes, 'COMPANY_ID')
+    assert hasattr(news.crawlers.ntdtv, 'COMMIT_PAGE_INTERVAL')
+    assert news.crawlers.ntdtv.COMMIT_PAGE_INTERVAL == 10
+    assert hasattr(news.crawlers.ntdtv, 'COMPANY_ID')
     assert (
-        news.crawlers.epochtimes.COMPANY_ID ==
-        news.crawlers.util.normalize.get_company_id(company='大紀元')
+        news.crawlers.ntdtv.COMPANY_ID ==
+        news.crawlers.util.normalize.get_company_id(company='新唐人')
     )
-    assert hasattr(news.crawlers.epochtimes, 'COMPANY_URL')
+    assert hasattr(news.crawlers.ntdtv, 'COMPANY_URL')
     assert (
-        news.crawlers.epochtimes.COMPANY_URL == news.crawlers.util.normalize
-        .get_company_url(company_id=news.crawlers.epochtimes.COMPANY_ID)
+        news.crawlers.ntdtv.COMPANY_URL == news.crawlers.util.normalize
+        .get_company_url(company_id=news.crawlers.ntdtv.COMPANY_ID)
     )
-    assert hasattr(news.crawlers.epochtimes, 'DATE_PATTERN')
-    assert news.crawlers.epochtimes.DATE_PATTERN == re.compile(
-        news.crawlers.epochtimes.COMPANY_URL + r'(\d+)/(\d+)/(\d+)/n\d+\.htm',
+    assert hasattr(news.crawlers.ntdtv, 'DATE_PATTERN')
+    assert news.crawlers.ntdtv.DATE_PATTERN == re.compile(
+        news.crawlers.ntdtv.COMPANY_URL + r'(\d+)/(\d+)/(\d+)/a\d+\.html',
     )
-    assert hasattr(news.crawlers.epochtimes, 'FIRST_PAGE')
-    assert news.crawlers.epochtimes.FIRST_PAGE == 2
+    assert hasattr(news.crawlers.ntdtv, 'FIRST_PAGE')
+    assert news.crawlers.ntdtv.FIRST_PAGE == 1

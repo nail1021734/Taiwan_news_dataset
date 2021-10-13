@@ -2,37 +2,28 @@ import test.news.crawlers.conftest
 from datetime import datetime, timedelta, timezone
 from typing import Final
 
-import news.crawlers.db.schema
-import news.crawlers.epochtimes
-import news.crawlers.util.request_url
-from news.crawlers.epochtimes import (
-    CATEGORY_API_LOOKUP_TABLE, FIRST_PAGE, get_news_list
-)
+import news.crawlers.util
+from news.crawlers.ntdtv import CATEGORY_API_LOOKUP_TABLE, get_start_page
 
 
-def test_get_news_list() -> None:
-    r"""Must return list of `RawNews`."""
-
+def test_get_start_page() -> None:
+    r"""Start page must be larger than 2."""
+    current_datetime = datetime(
+        year=2021,
+        month=10,
+        day=12,
+        tzinfo=timezone.utc,
+    )
     for category_api in CATEGORY_API_LOOKUP_TABLE.values():
-        news_list = get_news_list(
+        start_page = get_start_page(
             category_api=category_api,
-            continue_fail_count=1,
-            current_datetime=datetime.now(tz=timezone.utc),
+            continue_fail_count=5,
+            current_datetime=current_datetime - timedelta(days=90),
             debug=False,
-            first_page=FIRST_PAGE,
-            last_page=FIRST_PAGE + 1,
-            past_datetime=datetime.now(tz=timezone.utc) - timedelta(days=30),
+            max_page=10,
+            past_datetime=current_datetime - timedelta(days=91),
         )
-
-        # If news were successfully crawled, then `news_list` is not empty.
-        assert len(news_list) >= 1
-
-        for n in news_list:
-            assert isinstance(n, news.crawlers.db.schema.RawNews)
-            assert isinstance(n.idx, int)
-            assert n.company_id == news.crawlers.epochtimes.COMPANY_ID
-            assert isinstance(n.raw_xml, str)
-            assert isinstance(n.url_pattern, str)
+        assert start_page > 2
 
 
 def test_show_progress_bar(
@@ -51,19 +42,18 @@ def test_show_progress_bar(
         mock_get,
     )
 
-    get_news_list(
+    get_start_page(
         category_api=list(CATEGORY_API_LOOKUP_TABLE.values())[0],
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc),
         debug=True,
-        first_page=FIRST_PAGE,
-        last_page=FIRST_PAGE + 1,
+        max_page=10,
         past_datetime=datetime.now(tz=timezone.utc) - timedelta(days=2),
     )
     captured = capsys.readouterr()
 
     # `tqdm` will output to stderr and thus `captured.err` is not empty.
-    assert 'Crawling' in captured.err
+    assert 'Find start page' in captured.err
 
 
 def test_show_error_statistics(
@@ -82,13 +72,12 @@ def test_show_error_statistics(
         mock_get,
     )
 
-    get_news_list(
+    get_start_page(
         category_api=list(CATEGORY_API_LOOKUP_TABLE.values())[0],
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc),
         debug=True,
-        first_page=FIRST_PAGE,
-        last_page=FIRST_PAGE + 1,
+        max_page=10,
         past_datetime=datetime.now(tz=timezone.utc) - timedelta(days=2),
     )
     captured = capsys.readouterr()
