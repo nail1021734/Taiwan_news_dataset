@@ -8,8 +8,8 @@ from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
 REPORTER_END_PATTERNS = [
-    re.compile(
-        r'[。!\s]\s*\(.{0,6}/([^(綜合|整理)]{0,16})\s+.{0,4}(:?報導|編輯)\){0,2}'),
+    re
+    .compile(r'[。!\s]\s*\(.{0,6}/([^(綜合|整理)]{0,16})\s+.{0,4}(:?報導|編輯)\){0,2}'),
     re.compile(r'[。!\s]\s*.{0,6}/([^(綜合|整理)]{0,16})\s*.{0,4}(:?報導|編輯)'),
     re.compile(r'\(責任編輯/(.*?)\)'),
     # (民視新聞/鄭博暉、林俊明、洪明生 台南-屏東)

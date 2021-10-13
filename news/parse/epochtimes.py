@@ -22,9 +22,7 @@ BAD_ARTICLE_PATTERNS = [
 REPORTER_PATTERNS = [
     re.compile(r'\(大紀元記者(.*?)報導\)'),
 ]
-URL_PATTERN = re.compile(
-    r'/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm'
-)
+URL_PATTERN = re.compile(r'/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm')
 
 
 def parse(ori_news: RawNews) -> ParsedNews:

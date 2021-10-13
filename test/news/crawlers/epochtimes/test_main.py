@@ -1,13 +1,12 @@
 import test.news.crawlers.conftest
 from datetime import datetime, timedelta, timezone
-from typing import Final
+from typing import Final, List
 
 import pytest
 
-import news.crawlers.chinatimes
 import news.crawlers.db.read
 import news.crawlers.db.schema
-import news.crawlers.util.request_url
+import news.crawlers.epochtimes
 
 
 def test_utc_timezone(db_name: Final[str]) -> None:
@@ -16,7 +15,7 @@ def test_utc_timezone(db_name: Final[str]) -> None:
         tz=timezone(offset=timedelta(hours=8)),
     )
     with pytest.raises(ValueError) as excinfo:
-        news.crawlers.chinatimes.main(
+        news.crawlers.epochtimes.main(
             current_datetime=taiwan_current_datetime,
             db_name=db_name,
             past_datetime=datetime.now(tz=timezone.utc),
@@ -28,7 +27,7 @@ def test_utc_timezone(db_name: Final[str]) -> None:
     )
 
     with pytest.raises(ValueError) as excinfo:
-        news.crawlers.chinatimes.main(
+        news.crawlers.epochtimes.main(
             current_datetime=datetime.now(tz=timezone.utc),
             db_name=db_name,
             past_datetime=taiwan_current_datetime,
@@ -40,7 +39,7 @@ def test_utc_timezone(db_name: Final[str]) -> None:
 def test_datetime_order(db_name: Final[str]) -> None:
     r"""Must have `past_datetime <= current_datetime`."""
     with pytest.raises(ValueError) as excinfo:
-        news.crawlers.chinatimes.main(
+        news.crawlers.epochtimes.main(
             current_datetime=datetime.now(tz=timezone.utc),
             db_name=db_name,
             past_datetime=datetime.now(tz=timezone.utc) + timedelta(days=2),
@@ -59,16 +58,45 @@ def test_save_news_to_db(
 ) -> None:
     r"""Save crawling news to database with correct format."""
 
-    def mock_get(**kwargs) -> test.news.crawlers.conftest.MockResponse:
-        return response_200
+    def mock_get_max_page(**kwargs) -> int:
+        return 2
+
+    def mock_get_start_page(**kwargs) -> int:
+        return 2
+
+    def mock_get_news_list(**kwargs) -> List[news.crawlers.db.schema.RawNews]:
+        return [
+            news.crawlers.db.schema.RawNews(
+                idx=0,
+                company_id=news.crawlers.epochtimes.COMPANY_ID,
+                raw_xml='abc',
+                url_pattern='123',
+            ),
+            news.crawlers.db.schema.RawNews(
+                idx=0,
+                company_id=news.crawlers.epochtimes.COMPANY_ID,
+                raw_xml='def',
+                url_pattern='456',
+            ),
+        ]
 
     monkeypatch.setattr(
-        news.crawlers.util.request_url,
-        'get',
-        mock_get,
+        news.crawlers.epochtimes,
+        'get_max_page',
+        mock_get_max_page,
+    )
+    monkeypatch.setattr(
+        news.crawlers.epochtimes,
+        'get_start_page',
+        mock_get_start_page,
+    )
+    monkeypatch.setattr(
+        news.crawlers.epochtimes,
+        'get_news_list',
+        mock_get_news_list,
     )
 
-    news.crawlers.chinatimes.main(
+    news.crawlers.epochtimes.main(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc),
         db_name=db_name,
@@ -82,6 +110,6 @@ def test_save_news_to_db(
     for record in all_records:
         assert isinstance(record, news.crawlers.db.schema.RawNews)
         assert isinstance(record.idx, int)
-        assert record.company_id == news.crawlers.chinatimes.COMPANY_ID
+        assert record.company_id == news.crawlers.epochtimes.COMPANY_ID
         assert isinstance(record.raw_xml, str)
         assert isinstance(record.url_pattern, str)

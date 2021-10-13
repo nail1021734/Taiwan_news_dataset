@@ -12,9 +12,7 @@ def test_module_function_signature() -> None:
     assert hasattr(news.crawlers.db.read, 'read_all_records')
     assert inspect.isfunction(news.crawlers.db.read.read_all_records)
     assert (
-        inspect.signature(news.crawlers.db.read.read_all_records)
-        ==
-        Signature(
+        inspect.signature(news.crawlers.db.read.read_all_records) == Signature(
             parameters=[
                 Parameter(
                     name='db_name',
@@ -33,10 +31,10 @@ def test_module_attribute_signature() -> None:
     assert hasattr(news.crawlers.db.read, 'SQL')
     assert isinstance(news.crawlers.db.read.SQL, str)
     assert (
-        re.sub(r'\s+', ' ', news.crawlers.db.read.SQL)
-        ==
-        re.sub(r'\s+', ' ', """
+        re.sub(r'\s+', ' ', news.crawlers.db.read.SQL) == re.sub(
+            r'\s+', ' ', """
             SELECT id, company_id, raw_xml, url_pattern
             FROM news;
-        """)
+        """
+        )
     )

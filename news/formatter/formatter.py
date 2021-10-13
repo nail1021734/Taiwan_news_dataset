@@ -2,8 +2,9 @@ from datetime import datetime
 
 import news.crawlers.db
 import news.parse.db
-from news.crawlers.util.normalize import (COMPANY_ID_LOOKUP_TABLE,
-                                          get_company_url)
+from news.crawlers.util.normalize import (
+    COMPANY_ID_LOOKUP_TABLE, get_company_url
+)
 from news.formatter.schema import FormatedNews
 
 
@@ -20,12 +21,14 @@ def raw_data_formatter(
     for i in dataset:
         company = id_to_company[i.idx]
         url = get_company_url(company=company) + i.url_pattern
-        result.append(FormatedNews(
-            idx=i.idx,
-            company=company,
-            url=url,
-            raw_xml=i.raw_xml,
-        ))
+        result.append(
+            FormatedNews(
+                idx=i.idx,
+                company=company,
+                url=url,
+                raw_xml=i.raw_xml,
+            )
+        )
     return result
 
 
@@ -44,14 +47,16 @@ def parsed_data_formatter(
         url = get_company_url(company=company) + i.url_pattern
         time = datetime.fromtimestamp(i.datetime)
         date = time.strftime('%Y%m%d')
-        result.append(FormatedNews(
-            idx=i.idx,
-            article=i.article,
-            category=i.category,
-            company=company,
-            url=url,
-            datetime=date,
-            reporter=i.reporter,
-            title=i.title,
-        ))
+        result.append(
+            FormatedNews(
+                idx=i.idx,
+                article=i.article,
+                category=i.category,
+                company=company,
+                url=url,
+                datetime=date,
+                reporter=i.reporter,
+                title=i.title,
+            )
+        )
     return result

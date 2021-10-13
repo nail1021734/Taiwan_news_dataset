@@ -13,8 +13,8 @@ def parse_argument():
     parser.add_argument(
         '--dir_path',
         type=str,
-        help='select dir to merge.(selected ' +
-        'dir must under `data` floder).',
+        help='select dir to merge.(selected '
+        + 'dir must under `data` floder).',
     )
     parser.add_argument(
         '--save_db',
@@ -24,6 +24,7 @@ def parse_argument():
 
     def boolean_type(string):
         return string == 'True'
+
     parser.add_argument(
         '--reserve_id',
         type=boolean_type,

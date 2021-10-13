@@ -4,10 +4,7 @@ from typing import Dict, List, Tuple
 import news.split.db
 
 
-def dict_factory(
-    cursor: sqlite3.Cursor,
-    row: Tuple
-) -> Dict:
+def dict_factory(cursor: sqlite3.Cursor, row: Tuple) -> Dict:
     r"""將執行完 sql 指令的回傳物件改為 dictionary"""
     data = {}
     for idx, col in enumerate(cursor.description):
@@ -16,6 +13,7 @@ def dict_factory(
 
 
 class AllRecords:
+
     def __init__(
         self,
         offset: int,

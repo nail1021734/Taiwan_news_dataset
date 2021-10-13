@@ -11,10 +11,8 @@ def test_module_function_signature() -> None:
     r"""Ensure module functions' signature."""
     assert hasattr(news.crawlers.util.request_url, 'get')
     assert inspect.isfunction(news.crawlers.util.request_url.get)
-    assert (
-        inspect.signature(news.crawlers.util.request_url.get)
-        ==
-        Signature(
+    assert inspect.signature(news.crawlers.util.request_url.get) \
+        == Signature(
             parameters=[
                 Parameter(
                     name='url',
@@ -31,4 +29,3 @@ def test_module_function_signature() -> None:
             ],
             return_annotation=requests.Response,
         )
-    )

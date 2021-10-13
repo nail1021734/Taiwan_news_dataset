@@ -26,9 +26,7 @@ REPORTER_PATTERNS = [
     re.compile(r'^採訪/(.*?)\s*編輯/(.*?)\s*後製/(.*?)$'),
     re.compile(r'\(責任編輯:(.*?)\)')
 ]
-URL_PATTERN = re.compile(
-    r'/b5/(\d+)/(\d+)/(\d+)/a\d+.html'
-)
+URL_PATTERN = re.compile(r'/b5/(\d+)/(\d+)/(\d+)/a\d+.html')
 
 
 def parse(ori_news: RawNews) -> ParsedNews:

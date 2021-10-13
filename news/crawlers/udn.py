@@ -64,14 +64,12 @@ def get_news_list(
             for data_obj in data_lists['lists']:
                 try:
                     news_datetime = datetime.strptime(
-                        data_obj['time']['date'],
-                        '%Y-%m-%d %H:%M'
+                        data_obj['time']['date'], '%Y-%m-%d %H:%M'
                     ) - timedelta(hours=8)
                     news_datetime = dateutil.parser.isoparse(
                         news_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     )
-                    if not (
-                            past_datetime <= news_datetime <= current_datetime):
+                    if not (past_datetime <= news_datetime <= current_datetime):
                         raise Exception('Time constraint violated.')
 
                     url = data_obj["titleLink"].split("?")[0]
@@ -86,13 +84,15 @@ def get_news_list(
                         url=url,
                     )
 
-                    news_list.append(RawNews(
-                        company_id=COMPANY_ID,
-                        raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                            raw_xml=response.text),
-                        url_pattern=news.crawlers.util.normalize.compress_url(
-                            url=url, company_id=COMPANY_ID),
-                    ))
+                    news_list.append(
+                        RawNews(
+                            company_id=COMPANY_ID,
+                            raw_xml=news.crawlers.util.normalize
+                            .compress_raw_xml(raw_xml=response.text),
+                            url_pattern=news.crawlers.util.normalize
+                            .compress_url(url=url, company_id=COMPANY_ID),
+                        )
+                    )
                 except Exception as err:
                     if err.args:
                         logger.update([err.args[0]])
@@ -101,7 +101,7 @@ def get_news_list(
                             time_constraint_violated = True
                             break
 
-    # Only show error stats in debug mode.
+    # Only show error statistics in debug mode.
     if debug:
         for k, v in logger.items():
             print(f'{k}: {v}')
@@ -113,8 +113,9 @@ def main(
     current_datetime: datetime,
     db_name: str,
     past_datetime: datetime,
-    **kwargs: Optional[Dict],
+    **kwargs: Final[Optional[Dict]],
 ):
+    # Value check.
     if past_datetime > current_datetime:
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 

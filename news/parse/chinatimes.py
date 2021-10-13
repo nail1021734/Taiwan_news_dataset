@@ -44,10 +44,9 @@ def parse(ori_news: RawNews) -> ParsedNews:
 
         if article_tags:
             # Remove empty tags.
-            article = ' '.join(filter(
-                bool,
-                map(lambda tag: tag.text.strip(), article_tags)
-            ))
+            article = ' '.join(
+                filter(bool, map(lambda tag: tag.text.strip(), article_tags))
+            )
         # One line only news. Chinatime is trash.
         else:
             article = soup.select('div.article-body')[0].text
@@ -64,9 +63,8 @@ def parse(ori_news: RawNews) -> ParsedNews:
     # News category.
     category = ''
     try:
-        category = soup.select(
-            'nav.breadcrumb-wrapper > ol > li > a > span'
-        )[-1].text
+        category = soup.select('nav.breadcrumb-wrapper > ol > li > a > span'
+                              )[-1].text
         category = unicodedata.normalize('NFKC', category).strip()
     except Exception:
         # There may not have category.

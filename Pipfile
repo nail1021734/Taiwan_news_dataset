@@ -12,15 +12,16 @@ torch = "*"
 tqdm = "*"
 
 [dev-packages]
-autopep8 = "*"
 coverage = "*"
 flake8 = "*"
 isort = "*"
 pytest = "*"
+yapf = "*"
 
 [requires]
 python_version = "3.8"
 
 [scripts]
+lint = "yapf --in-place --recursive --exclude **/*/.venv news test"
 test = "coverage run --branch --source=news --omit=.venv/* -m pytest"
 test-coverage = "coverage report"

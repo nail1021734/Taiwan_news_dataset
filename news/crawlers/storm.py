@@ -20,8 +20,8 @@ def get_news_list(
     first_idx: int,
     latest_idx: int,
     *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
+    debug: Final[Optional[bool]] = False,
+    **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -46,18 +46,22 @@ def get_news_list(
 
             if not news.crawlers.util.pre_parse.check_storm_page_exist(url):
                 continue
-            news_list.append(RawNews(
-                company_id=COMPANY_ID,
-                raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                    raw_xml=response.text),
-                url_pattern=news.crawlers.util.normalize.compress_url(
-                    url=url, company_id=COMPANY_ID),
-            ))
+            news_list.append(
+                RawNews(
+                    company_id=COMPANY_ID,
+                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                        raw_xml=response.text
+                    ),
+                    url_pattern=news.crawlers.util.normalize.compress_url(
+                        url=url, company_id=COMPANY_ID
+                    ),
+                )
+            )
         except Exception as err:
             if err.args:
                 logger.update([err.args[0]])
 
-    # Only show error stats in debug mode.
+    # Only show error statistics in debug mode.
     if debug:
         for k, v in logger.items():
             print(f'{k}: {v}')
@@ -69,10 +73,9 @@ def main(
     db_name: str,
     first_idx: int,
     latest_idx: int,
-    *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
-):
+    **kwargs: Final[Optional[Dict]],
+) -> None:
+    # Value check.
     if first_idx > latest_idx and latest_idx != -1:
         raise ValueError(
             'Must have `first_idx <= latest_idx` or `latest_idx == -1`'
@@ -97,9 +100,9 @@ def main(
 
         # Get news list.
         news_list = get_news_list(
-            debug=debug,
             first_idx=first_idx,
             latest_idx=cur_latest_idx,
+            **kwargs,
         )
 
         # No more news to crawl.

@@ -1,5 +1,5 @@
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Final, List, Optional
 
 import requests
@@ -75,9 +75,10 @@ def get_news_list(
 
     # Only show progress bar in debug mode.
     for news_idx in trange(
-        MAX_NEWS_PER_DAY,
-        disable=not debug,
-        dynamic_ncols=True,
+            MAX_NEWS_PER_DAY,
+            desc='Crawling',
+            disable=not debug,
+            dynamic_ncols=True,
     ):
         # Each `news_idx` only appear in exactly one category.  But we don't
         # know which one.  Thus we loop through all categories to find the
@@ -95,17 +96,18 @@ def get_news_list(
                     status_code=response.status_code,
                     url=url,
                 )
-
-                news_list.append(RawNews(
-                    company_id=COMPANY_ID,
-                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                        raw_xml=response.text,
-                    ),
-                    url_pattern=news.crawlers.util.normalize.compress_url(
+                news_list.append(
+                    RawNews(
                         company_id=COMPANY_ID,
-                        url=url,
-                    ),
-                ))
+                        raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                            raw_xml=response.text,
+                        ),
+                        url_pattern=news.crawlers.util.normalize.compress_url(
+                            company_id=COMPANY_ID,
+                            url=url,
+                        ),
+                    )
+                )
 
                 # Reset `fail_count` when `status_code == 200`.
                 fail_count = 0
@@ -131,7 +133,7 @@ def get_news_list(
         if fail_count >= continue_fail_count:
             break
 
-    # Only show error stats in debug mode.
+    # Only show error statistics in debug mode.
     if debug:
         for k, v in logger.items():
             print(f'{k}: {v}')
@@ -145,7 +147,11 @@ def main(
     past_datetime: Final[datetime],
     **kwargs: Final[Optional[Dict]],
 ) -> None:
-
+    # Value check.
+    if current_datetime.tzinfo != timezone.utc:
+        raise ValueError('`current_datetime` must in utc timezone.')
+    if past_datetime.tzinfo != timezone.utc:
+        raise ValueError('`past_datetime` must in utc timezone.')
     if past_datetime > current_datetime:
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 

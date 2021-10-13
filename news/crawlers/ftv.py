@@ -38,8 +38,8 @@ def get_news_list(
     api: str,
     past_datetime: datetime,
     *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
+    debug: Final[Optional[bool]] = False,
+    **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -87,13 +87,17 @@ def get_news_list(
             # such news is not missing), reset `fail_count`.
             fail_count = 0
 
-            news_list.append(RawNews(
-                company_id=COMPANY_ID,
-                raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                    raw_xml=response.text),
-                url_pattern=news.crawlers.util.normalize.compress_url(
-                    url=url, company_id=COMPANY_ID),
-            ))
+            news_list.append(
+                RawNews(
+                    company_id=COMPANY_ID,
+                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                        raw_xml=response.text
+                    ),
+                    url_pattern=news.crawlers.util.normalize.compress_url(
+                        url=url, company_id=COMPANY_ID
+                    ),
+                )
+            )
         except Exception as err:
             fail_count += 1
 
@@ -101,7 +105,7 @@ def get_news_list(
                 logger.update([err.args[0]])
             continue
 
-    # Only show error stats in debug mode.
+    # Only show error statistics in debug mode.
     if debug:
         for k, v in logger.items():
             print(f'{k}: {v}')
@@ -113,10 +117,9 @@ def main(
     current_datetime: datetime,
     db_name: str,
     past_datetime: datetime,
-    *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
-):
+    **kwargs: Final[Optional[Dict]],
+) -> None:
+    # Value check.
     if past_datetime > current_datetime:
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
@@ -137,8 +140,8 @@ def main(
                 category=category,
                 current_datetime=date,
                 api=api,
-                debug=debug,
                 past_datetime=date - timedelta(days=1),
+                **kwargs,
             )
 
             # Write news records to database.

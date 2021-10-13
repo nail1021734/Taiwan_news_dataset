@@ -26,8 +26,7 @@ def merge_db(dir_path: str, save_db: str, reserve_id: bool):
             column_names = list(src_data[0].keys())
             # 建立news table
             news.merge.db.create.create_table(
-                cur=tgt_conn.cursor(),
-                columns=column_names
+                cur=tgt_conn.cursor(), columns=column_names
             )
             create_table = True
 
@@ -38,8 +37,7 @@ def merge_db(dir_path: str, save_db: str, reserve_id: bool):
 
         # 將資料寫入目標資料庫
         news.merge.db.write.write_new_records(
-            cur=tgt_conn.cursor(),
-            news_list=src_data
+            cur=tgt_conn.cursor(), news_list=src_data
         )
 
         # Commit.

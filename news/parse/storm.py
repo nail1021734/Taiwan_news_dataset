@@ -36,10 +36,12 @@ def parse(ori_news: RawNews) -> ParsedNews:
             for related_tag in article_tag.select('.related_copy_content'):
                 related_tag.extract()
         # Joint remaining text.
-        article = ' '.join(filter(
-            bool,
-            map(lambda tag: tag.text.strip(), article_tags),
-        ))
+        article = ' '.join(
+            filter(
+                bool,
+                map(lambda tag: tag.text.strip(), article_tags),
+            )
+        )
         article = unicodedata.normalize('NFKC', article).strip()
     except Exception:
         raise ValueError('Fail to parse STORM news article.')

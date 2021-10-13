@@ -35,10 +35,12 @@ def parse(ori_news: RawNews) -> ParsedNews:
         additional_tag = soup.select_one('div.dictionary')
         if additional_tag:
             article = additional_tag.text
-        article += ' '.join(map(
-            lambda tag: tag.text,
-            soup.select_one('div.centralContent div.paragraph').select('p')
-        ))
+        article += ' '.join(
+            map(
+                lambda tag: tag.text,
+                soup.select_one('div.centralContent div.paragraph').select('p')
+            )
+        )
         article = unicodedata.normalize('NFKC', article).strip()
     except Exception:
         raise ValueError('Fail to parse CNA news article.')
@@ -70,7 +72,7 @@ def parse(ori_news: RawNews) -> ParsedNews:
     reporter = ''
     try:
         match = REPORTER_PATTERN.match(article)
-        reporter = article[match.start() + 1: match.end() - 1]
+        reporter = article[match.start() + 1:match.end() - 1]
         article = article[match.end():]
     except Exception:
         # There may not have reporter.
@@ -88,7 +90,7 @@ def parse(ori_news: RawNews) -> ParsedNews:
     try:
         match = re.search(BAD_ARTICLE_PATTERN, article)
         if match:
-            article = article[: match.start()]
+            article = article[:match.start()]
     except Exception:
         raise ValueError('Fail to remove article bad pattern.')
     parsed_news.article = article

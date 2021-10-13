@@ -13,8 +13,8 @@ def parse_argument():
     parser.add_argument(
         '--src',
         type=str,
-        help='select database to split.(selected ' +
-        'database must under `data` floder).',
+        help='select database to split.(selected '
+        + 'database must under `data` floder).',
     )
     parser.add_argument(
         '--save_dir',
@@ -37,7 +37,5 @@ if __name__ == '__main__':
     args = parse_argument()
 
     split_db(
-        db_path=args.src,
-        save_path=args.save_dir,
-        id_interval=args.id_interval
+        db_path=args.src, save_path=args.save_dir, id_interval=args.id_interval
     )

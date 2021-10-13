@@ -6,6 +6,7 @@ from news.parse.db.schema import ParsedNews
 
 
 class AllRecords:
+
     def __init__(self, db_name: str, cur: sqlite3.Cursor = None):
         # 檢查是否有給予`db_name`或是`cur`，如果都沒有則無法進行後續讀取
         if not db_name and cur is None:
@@ -27,19 +28,19 @@ class AllRecords:
             cur = conn.cursor()
 
         # 將讀取出的資料轉換為ParsedNews物件
-        for (
-            article, category, company_id, datetime,
-            reporter, title, url_pattern
-        ) in cur.execute(sql):
-            self.records.append(ParsedNews(
-                article=article,
-                category=category,
-                company_id=company_id,
-                datetime=datetime,
-                reporter=reporter,
-                title=title,
-                url_pattern=url_pattern,
-            ))
+        for (article, category, company_id, datetime, reporter, title,
+             url_pattern) in cur.execute(sql):
+            self.records.append(
+                ParsedNews(
+                    article=article,
+                    category=category,
+                    company_id=company_id,
+                    datetime=datetime,
+                    reporter=reporter,
+                    title=title,
+                    url_pattern=url_pattern,
+                )
+            )
 
         # 關閉資料庫連線
         if conn is not None:

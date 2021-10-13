@@ -63,14 +63,14 @@ def parse(ori_news: RawNews) -> ParsedNews:
     # News article.
     article = ''
     try:
-        article_tags = soup.select(
-            'div#Content1 > p:not([class]):not([style])'
-        )
+        article_tags = soup.select('div#Content1 > p:not([class]):not([style])')
         # Joint remaining text.
-        article = ' '.join(filter(
-            bool,
-            map(lambda tag: tag.text.strip(), article_tags),
-        ))
+        article = ' '.join(
+            filter(
+                bool,
+                map(lambda tag: tag.text.strip(), article_tags),
+            )
+        )
         article = unicodedata.normalize('NFKC', article).strip()
         for pattern in END_ARTICLE_PATTERNS:
             search_result = pattern.search(article)
