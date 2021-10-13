@@ -8,9 +8,30 @@ from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
 FILTER_WORDS = [
-    '▲', '●', '▼', '★', '►', '※', '【更多新聞】', '以上言論不代表本網立場。', '圖一、',
-    '圖二、', '圖三、', '圖四、', '圖五、', '圖六、', '圖七、', '圖八、', '圖九、',
-    '圖十、', '熱門點閱》', '【延伸閱讀】', '延伸閱讀：', '【】', '授權轉載', '原文出處',
+    '▲',
+    '●',
+    '▼',
+    '★',
+    '►',
+    '※',
+    '【更多新聞】',
+    '以上言論不代表本網立場。',
+    '圖一、',
+    '圖二、',
+    '圖三、',
+    '圖四、',
+    '圖五、',
+    '圖六、',
+    '圖七、',
+    '圖八、',
+    '圖九、',
+    '圖十、',
+    '熱門點閱》',
+    '【延伸閱讀】',
+    '延伸閱讀：',
+    '【】',
+    '授權轉載',
+    '原文出處',
 ]
 REPORTER_WORDS = ['記者', '中央社', '報導']
 NON_REPORTER_WORDS = [',', '。', ':']
@@ -56,20 +77,16 @@ def parse(ori_news: RawNews) -> ParsedNews:
                 for filter_word in FILTER_WORDS:
                     # Check if previous sibiling exists and contains filter
                     # words.
-                    if (
-                        strong_tag.previous_sibling and
-                        filter_word in strong_tag.previous_sibling
-                    ):
+                    if (strong_tag.previous_sibling
+                            and filter_word in strong_tag.previous_sibling):
                         strong_tag.previous_sibling.extract()
                         strong_tag.extract()
                         break
                     # Check if strong tag contains filter words or too short.
                     # When text length equals to 1, it means the text is just a
                     # punctuation mark.
-                    if (
-                        filter_word in strong_tag.text or
-                        len(strong_tag.text) <= 1
-                    ):
+                    if (filter_word in strong_tag.text
+                            or len(strong_tag.text) <= 1):
                         strong_tag.extract()
                         break
 
@@ -86,10 +103,12 @@ def parse(ori_news: RawNews) -> ParsedNews:
                     break
 
         # Joint remaining text.
-        article = ' '.join(filter(
-            bool,
-            map(lambda tag: tag.text.strip(), article_tags),
-        ))
+        article = ' '.join(
+            filter(
+                bool,
+                map(lambda tag: tag.text.strip(), article_tags),
+            )
+        )
         article = unicodedata.normalize('NFKC', article).strip()
     except Exception:
         raise ValueError('Fail to parse ETtoday news article.')
@@ -98,8 +117,8 @@ def parse(ori_news: RawNews) -> ParsedNews:
     category = ''
     try:
         category = (
-            soup.select('div.menu_bread_crumb, div.part_breadcrumb')[-1]
-            .select('div > a > span')[-1].text
+            soup.select('div.menu_bread_crumb, div.part_breadcrumb')
+            [-1].select('div > a > span')[-1].text
         )
         category = unicodedata.normalize('NFKC', category).strip()
     except Exception:
@@ -112,9 +131,8 @@ def parse(ori_news: RawNews) -> ParsedNews:
         time_tag = soup.select('time[datetime]')[0]
         # When datetime is in UTC+8 format.
         if len(time_tag['datetime']) >= 10:
-            news_datetime = dateutil.parser.isoparse(
-                time_tag['datetime']
-            ) - timedelta(hours=8)
+            news_datetime = dateutil.parser.isoparse(time_tag['datetime']
+                                                    ) - timedelta(hours=8)
         # When datetime is useless. Again ETtoday's formatting sucks.
         else:
             news_datetime = time_tag.text.strip()

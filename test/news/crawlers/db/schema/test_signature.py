@@ -30,10 +30,8 @@ def test_instance_method() -> None:
     r"""Ensure instance methods' signature."""
     assert hasattr(news.crawlers.db.schema.RawNews, '__iter__')
     assert inspect.isfunction(news.crawlers.db.schema.RawNews.__iter__)
-    assert (
-        inspect.signature(news.crawlers.db.schema.RawNews.__iter__)
-        ==
-        Signature(
+    assert inspect.signature(news.crawlers.db.schema.RawNews.__iter__) \
+        == Signature(
             parameters=[
                 Parameter(
                     name='self',
@@ -44,4 +42,3 @@ def test_instance_method() -> None:
             ],
             return_annotation=Signature.empty,
         )
-    )

@@ -13,10 +13,7 @@ def test_sleep_enough() -> None:
     time_diff = abs(time_end - time_start)
     assert (
         abs(
-            time_diff -
-            news.crawlers.util.status_code
+            time_diff - news.crawlers.util.status_code
             .SLEEP_SECS_AFTER_429_FASTEST_LOOKUP_TABLE[1]
-        )
-        <
-        tolerance_secs
+        ) < tolerance_secs
     )

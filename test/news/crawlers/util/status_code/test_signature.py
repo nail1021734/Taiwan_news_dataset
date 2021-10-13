@@ -9,10 +9,8 @@ def test_module_function_signature() -> None:
     r"""Ensure module functions' signature."""
     assert hasattr(news.crawlers.util.status_code, 'gen_non_neg')
     assert inspect.isfunction(news.crawlers.util.status_code.gen_non_neg)
-    assert (
-        inspect.signature(news.crawlers.util.status_code.gen_non_neg)
-        ==
-        Signature(
+    assert inspect.signature(news.crawlers.util.status_code.gen_non_neg) \
+        == Signature(
             parameters=[
                 Parameter(
                     name='mu',
@@ -35,15 +33,14 @@ def test_module_function_signature() -> None:
             ],
             return_annotation=float,
         )
-    )
     assert hasattr(news.crawlers.util.status_code, 'sleep_after_banned')
     assert inspect.isfunction(
         news.crawlers.util.status_code.sleep_after_banned,
     )
     assert (
-        inspect.signature(news.crawlers.util.status_code.sleep_after_banned)
-        ==
-        Signature(
+        inspect.signature(
+            news.crawlers.util.status_code.sleep_after_banned,
+        ) == Signature(
             parameters=[
                 Parameter(
                     name='company_id',
@@ -56,13 +53,11 @@ def test_module_function_signature() -> None:
         )
     )
     assert hasattr(news.crawlers.util.status_code, 'sleep_after_429')
-    assert inspect.isfunction(
-        news.crawlers.util.status_code.sleep_after_429,
-    )
+    assert inspect.isfunction(news.crawlers.util.status_code.sleep_after_429,)
     assert (
-        inspect.signature(news.crawlers.util.status_code.sleep_after_429)
-        ==
-        Signature(
+        inspect.signature(
+            news.crawlers.util.status_code.sleep_after_429,
+        ) == Signature(
             parameters=[
                 Parameter(
                     name='company_id',
@@ -79,9 +74,9 @@ def test_module_function_signature() -> None:
         news.crawlers.util.status_code.sleep_before_banned,
     )
     assert (
-        inspect.signature(news.crawlers.util.status_code.sleep_before_banned)
-        ==
-        Signature(
+        inspect.signature(
+            news.crawlers.util.status_code.sleep_before_banned,
+        ) == Signature(
             parameters=[
                 Parameter(
                     name='company_id',
@@ -94,13 +89,11 @@ def test_module_function_signature() -> None:
         )
     )
     assert hasattr(news.crawlers.util.status_code, 'check_status_code')
-    assert inspect.isfunction(
-        news.crawlers.util.status_code.check_status_code,
-    )
+    assert inspect.isfunction(news.crawlers.util.status_code.check_status_code)
     assert (
-        inspect.signature(news.crawlers.util.status_code.check_status_code)
-        ==
-        Signature(
+        inspect.signature(
+            news.crawlers.util.status_code.check_status_code,
+        ) == Signature(
             parameters=[
                 Parameter(
                     name='company_id',
@@ -133,8 +126,7 @@ def test_module_attribute_signature() -> None:
         'SLEEP_SECS_BEFORE_BANNED_LOOKUP_TABLE',
     )
     assert (
-        news.crawlers.util.status_code.SLEEP_SECS_BEFORE_BANNED_LOOKUP_TABLE
-        ==
+        news.crawlers.util.status_code.SLEEP_SECS_BEFORE_BANNED_LOOKUP_TABLE ==
         {
             0: 0.0,
             1: 0.0,
@@ -157,9 +149,7 @@ def test_module_attribute_signature() -> None:
         (
             news.crawlers.util.status_code
             .SLEEP_SECS_BEFORE_BANNED_FASTEST_LOOKUP_TABLE
-        )
-        ==
-        [
+        ) == [
             0.0,
             0.0,
             0.0,
@@ -177,10 +167,9 @@ def test_module_attribute_signature() -> None:
         news.crawlers.util.status_code,
         'SLEEP_SECS_AFTER_BANNED_LOOKUP_TABLE',
     )
-    assert (
-        news.crawlers.util.status_code.SLEEP_SECS_AFTER_BANNED_LOOKUP_TABLE
-        ==
-        {
+    assert \
+        news.crawlers.util.status_code.SLEEP_SECS_AFTER_BANNED_LOOKUP_TABLE \
+        == {
             0: 0.0,
             1: 0.0,
             2: 0.0,
@@ -193,7 +182,6 @@ def test_module_attribute_signature() -> None:
             9: 0.0,
             10: 86400.0,
         }
-    )
     assert hasattr(
         news.crawlers.util.status_code,
         'SLEEP_SECS_AFTER_BANNED_FASTEST_LOOKUP_TABLE',
@@ -202,9 +190,7 @@ def test_module_attribute_signature() -> None:
         (
             news.crawlers.util.status_code
             .SLEEP_SECS_AFTER_BANNED_FASTEST_LOOKUP_TABLE
-        )
-        ==
-        [
+        ) == [
             0.0,
             0.0,
             0.0,
@@ -222,10 +208,8 @@ def test_module_attribute_signature() -> None:
         news.crawlers.util.status_code,
         'SLEEP_SECS_AFTER_429_LOOKUP_TABLE',
     )
-    assert (
-        news.crawlers.util.status_code.SLEEP_SECS_AFTER_429_LOOKUP_TABLE
-        ==
-        {
+    assert news.crawlers.util.status_code.SLEEP_SECS_AFTER_429_LOOKUP_TABLE \
+        == {
             0: 120.0,
             1: 0.0,
             2: 120.0,
@@ -238,7 +222,6 @@ def test_module_attribute_signature() -> None:
             9: 0.0,
             10: 120.0,
         }
-    )
     assert hasattr(
         news.crawlers.util.status_code,
         'SLEEP_SECS_AFTER_429_FASTEST_LOOKUP_TABLE',
@@ -247,9 +230,7 @@ def test_module_attribute_signature() -> None:
         (
             news.crawlers.util.status_code
             .SLEEP_SECS_AFTER_429_FASTEST_LOOKUP_TABLE
-        )
-        ==
-        [
+        ) == [
             120.0,
             0.0,
             120.0,

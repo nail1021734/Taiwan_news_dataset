@@ -4,10 +4,7 @@ from typing import Dict, List, Tuple
 import news.merge.db
 
 
-def dict_factory(
-    cursor: sqlite3.Cursor,
-    row: Tuple
-) -> Dict:
+def dict_factory(cursor: sqlite3.Cursor, row: Tuple) -> Dict:
     r"""將執行完 sql 指令的回傳物件改為 dictionary"""
     data = {}
     for idx, col in enumerate(cursor.description):
@@ -16,6 +13,7 @@ def dict_factory(
 
 
 class AllRecords:
+
     def __init__(self, db_name: str = None, cur: sqlite3.Cursor = None):
         # 檢查是否有給予`db_name`或是`cur`，如果都沒有則無法進行後續讀取
         if not db_name and cur is None:

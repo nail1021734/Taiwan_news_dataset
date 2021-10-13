@@ -21,7 +21,8 @@ REMOVE_ARTICLE_PATTERNS = [
     re.compile(r'（中央社）'),
     re.compile(r'最HOT話題在這！想跟上時事，快點我加入TVBS新聞LINE好友！'),
     re.compile(
-        r'《TVBS》提醒您：因應新冠肺炎疫情，疾管署持續疫情監測與邊境管制措施，如有疑似症狀，請撥打：1922專線，或 0800-001922。'),
+        r'《TVBS》提醒您：因應新冠肺炎疫情，疾管署持續疫情監測與邊境管制措施，如有疑似症狀，請撥打：1922專線，或 0800-001922。'
+    ),
     re.compile(r'(?:實習)?編輯／.*?$'),
 ]
 
@@ -104,8 +105,8 @@ def parse(ori_news: RawNews) -> ParsedNews:
     # News category.
     category = ''
     try:
-        category = CATEGORIES[CATEGORY_PATTERN.match(
-            parsed_news.url_pattern).group(1)]
+        category = CATEGORIES[CATEGORY_PATTERN.match(parsed_news.url_pattern
+                                                    ).group(1)]
         category = unicodedata.normalize('NFKC', category).strip()
     except Exception:
         # There may not have category.

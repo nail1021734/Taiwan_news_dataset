@@ -2,16 +2,16 @@ import test.news.crawlers.conftest
 from datetime import datetime, timedelta, timezone
 from typing import Final
 
-import news.crawlers.chinatimes
+import news.crawlers.cna
 import news.crawlers.db.schema
 import news.crawlers.util.request_url
 
 
 def test_get_news_list() -> None:
     r"""Crawling news on October 12th, 2021, utc."""
-    continue_fail_count = 2
+    continue_fail_count = 3
 
-    news_list = news.crawlers.chinatimes.get_news_list(
+    news_list = news.crawlers.cna.get_news_list(
         continue_fail_count=continue_fail_count,
         current_datetime=datetime(
             year=2021,
@@ -28,7 +28,7 @@ def test_get_news_list() -> None:
     for n in news_list:
         assert isinstance(n, news.crawlers.db.schema.RawNews)
         assert isinstance(n.idx, int)
-        assert n.company_id == news.crawlers.chinatimes.COMPANY_ID
+        assert n.company_id == news.crawlers.cna.COMPANY_ID
         assert isinstance(n.raw_xml, str)
         assert isinstance(n.url_pattern, str)
 
@@ -49,7 +49,7 @@ def test_show_progress_bar(
         mock_get,
     )
 
-    news.crawlers.chinatimes.get_news_list(
+    news.crawlers.cna.get_news_list(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc) - timedelta(days=1),
         debug=True,
@@ -76,13 +76,11 @@ def test_show_error_statistics(
         mock_get,
     )
 
-    news.crawlers.chinatimes.get_news_list(
+    news.crawlers.cna.get_news_list(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc) - timedelta(days=1),
         debug=True,
     )
     captured = capsys.readouterr()
 
-    # Actually, it will output 'URL not found'.  However, since we are mocking
-    # `request_url.get`, `response` is not an instance of `requests.Response`.
-    assert 'Request timeout.' in captured.out
+    assert 'URL not found.' in captured.out

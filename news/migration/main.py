@@ -34,26 +34,20 @@ def parse_argument():
 
 
 def migrate(
-    origin_data: news.migration.db.schema.OldNews,
-    migrate_version: str,
+    origin_data: news.migration.db.schema.OldNews, migrate_version: str,
     save_path: str
 ):
     # 用指定版本的轉換函式，將舊資料
-    raw_news = MIGRATE_VERSION[migrate_version](
-        dataset=origin_data
-    )
+    raw_news = MIGRATE_VERSION[migrate_version](dataset=origin_data)
 
     # Get connection to `save_path`.
     db_path = news.crawlers.db.util.get_db_path(db_name=save_path)
     conn = news.db.get_conn(db_path=db_path)
     # Create table in `save_path`.
-    news.crawlers.db.create.create_table(
-        cur=conn.cursor()
-    )
+    news.crawlers.db.create.create_table(cur=conn.cursor())
     # Write data into db.
     news.crawlers.db.write.write_new_records(
-        cur=conn.cursor(),
-        news_list=raw_news
+        cur=conn.cursor(), news_list=raw_news
     )
 
     # Commit and close connection.
@@ -67,9 +61,7 @@ def main():
     # 檢查輸入的db檔還是資料夾
     if args.src.split('.')[-1] == 'db':
         # 若是db檔則只對單一db做處理，並將處理結果保存在raw資料夾下
-        origin_data = news.migration.db.read.AllRecords(
-            db_name=args.src
-        )
+        origin_data = news.migration.db.read.AllRecords(db_name=args.src)
         migrate(
             origin_data=origin_data,
             save_path=args.save_path,

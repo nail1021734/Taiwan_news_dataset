@@ -6,11 +6,13 @@ def create_table(cur: sqlite3.Cursor):
 
     舊版本格式的資料庫會被轉成 raw data 格式保存
     """
-    cur.execute("""
+    cur.execute(
+        """
         CREATE TABLE IF NOT EXISTS news (
             id INTEGER PRIMARY KEY,
             company_id INTEGER,
             raw_xml TEXT,
             url_pattern TEXT
         );
-    """)
+    """
+    )

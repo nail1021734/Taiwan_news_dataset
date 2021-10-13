@@ -1,7 +1,7 @@
 import re
 from collections import Counter
 from datetime import datetime
-from typing import Dict, Final, List, Optional
+from typing import Dict, Final, List, Optional, Tuple
 
 import dateutil
 import dateutil.parser
@@ -31,8 +31,8 @@ def find_page_range(
     api: str,
     past_datetime: datetime,
     *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
+    debug: Final[Optional[bool]] = False,
+    **kwargs: Final[Optional[Dict]],
 ) -> Tuple[int, int]:
     # Get max page of this category.
     try:
@@ -49,9 +49,9 @@ def find_page_range(
         soup = BeautifulSoup(response.text, 'html.parser')
         max_page = soup.select('div.pagination > a.page-numbers')[-2].text
         max_page = int(max_page.replace(',', ''))
-    except Exception as err:
+    except Exception:
         # Only 1 page is available.
-        return 1
+        return [1, 1]
 
     # Only show progress bar in debug mode.
     iter_range = range(FIRST_PAGE, max_page)
@@ -64,7 +64,7 @@ def find_page_range(
         page_url = f'https://www.ntdtv.com/b5/prog{api}/{page}'
 
         try:
-            response = news.crawlers.util.request_url(url=page_url)
+            response = news.crawlers.util.request_url.get(url=page_url)
 
             # Raise exception if status code is not 200.
             news.crawlers.util.status_code.check_status_code(
@@ -90,29 +90,34 @@ def find_page_range(
                 },
                 matches,
             )
-            news_datetimes = list(map(
-                lambda n: dateutil.parser.isoparse(
-                    f"{n['year']:04d}-{n['month']:02d}-{n['day']:02d}T00:00:00Z"
-                ),
-                news_datetimes,
-            ))
+            news_datetimes = list(
+                map(
+                    lambda n: dateutil.parser.isoparse(
+                        f"{n['year']:04d}-{n['month']:02d}-{n['day']:02d}T00:00:00Z"
+                    ),
+                    news_datetimes,
+                )
+            )
 
             # Break loop if `news_datetime < past_datetime`.
             if news_datetimes[0] < past_datetime:
                 break
             # If this page contains valid news, we start crawling from this
             # page.
-            news_datetimes = filter(bool, map(
-                lambda n: past_datetime <= n <= current_datetime,
-                news_datetimes,
-            ))
+            news_datetimes = filter(
+                bool,
+                map(
+                    lambda n: past_datetime <= n <= current_datetime,
+                    news_datetimes,
+                )
+            )
 
             news_datetimes = list(news_datetimes)
 
             if news_datetimes:
                 start_page = page
                 break
-        except Exception as err:
+        except Exception:
             # Some pages may not be available.
             continue
 
@@ -126,8 +131,8 @@ def get_news_list(
     past_datetime: datetime,
     page_range: List[int],
     *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
+    debug: Final[Optional[bool]] = False,
+    **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -146,7 +151,7 @@ def get_news_list(
         page_url = f'https://www.ntdtv.com/b5/prog{api}/{page}'
 
         try:
-            response = news.crawlers.util.request_url(url=page_url)
+            response = news.crawlers.util.request_url.get(url=page_url)
 
             # Raise exception if status code is not 200.
             news.crawlers.util.status_code.check_status_code(
@@ -169,7 +174,7 @@ def get_news_list(
             try:
                 news_url = a_tag['href']
 
-                response = news.crawlers.util.request_url(url=news_url)
+                response = news.crawlers.util.request_url.get(url=news_url)
 
                 # Raise exception if status code is not 200.
                 news.crawlers.util.status_code.check_status_code(
@@ -188,18 +193,22 @@ def get_news_list(
                     is_datetime_valid = False
                     break
 
-                news_list.append(RawNews(
-                    company_id=COMPANY_ID,
-                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                        raw_xml=response.text),
-                    url_pattern=news.crawlers.util.normalize.compress_url(
-                        url=news_url, company_id=COMPANY_ID),
-                ))
+                news_list.append(
+                    RawNews(
+                        company_id=COMPANY_ID,
+                        raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                            raw_xml=response.text
+                        ),
+                        url_pattern=news.crawlers.util.normalize.compress_url(
+                            url=news_url, company_id=COMPANY_ID
+                        ),
+                    )
+                )
             except Exception as err:
                 if err.args:
                     logger.update([err.args[0]])
 
-    # Only show error stats in debug mode.
+    # Only show error statistics in debug mode.
     if debug:
         for k, v in logger.items():
             print(f'{k}: {v}')
@@ -223,11 +232,9 @@ def main(
     current_datetime: datetime,
     db_name: str,
     past_datetime: datetime,
-    *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
-):
-
+    **kwargs: Final[Optional[Dict]],
+) -> None:
+    # Value check.
     if past_datetime > current_datetime:
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
@@ -246,7 +253,7 @@ def main(
             current_datetime=current_datetime,
             api=api,
             past_datetime=past_datetime,
-            debug=debug,
+            **kwargs,
         )
 
         # Make range inclusive.
@@ -263,10 +270,10 @@ def main(
             news_list = get_news_list(
                 category=category,
                 current_datetime=current_datetime,
-                debug=debug,
                 api=api,
                 past_datetime=past_datetime,
                 page_range=page_range,
+                **kwargs,
             )
 
             # When news violate `past_datetime` break for loop.

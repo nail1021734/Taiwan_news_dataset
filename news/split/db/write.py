@@ -9,15 +9,22 @@ def write_new_records(cur: sqlite3.Cursor, news_list: List[Dict]):
     # 在這邊做辨識
     url_type = 'url_pattern'
     try:
-        existed_url = list(cur.execute(f"""
+        existed_url = list(
+            cur
+            .execute(f"""
             SELECT {url_type} FROM news
-        """))
+        """)
+        )
     except Exception as err:
         if err.args[0] == 'no such column: url_pattern':
             url_type = 'url'
-            existed_url = list(cur.execute(f"""
+            existed_url = list(
+                cur.execute(
+                    f"""
                 SELECT {url_type} FROM news
-            """))
+            """
+                )
+            )
 
     # 取出已存在目標資料庫的url，避免重複保存相同的資料
     existed_url = set(map(lambda url: url[0], existed_url))
@@ -41,6 +48,5 @@ def write_new_records(cur: sqlite3.Cursor, news_list: List[Dict]):
         f"""
         INSERT INTO news({columns_str})
         VALUES ({column_num_str})
-        """,
-        news_list
+        """, news_list
     )

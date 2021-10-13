@@ -19,8 +19,8 @@ COMPANY_ID = news.crawlers.util.normalize.get_company_id(company='三立')
 def get_news_list(
     api: int,
     *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
+    debug: Final[Optional[bool]] = False,
+    **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -40,7 +40,7 @@ def get_news_list(
             for news_url_pattern in news_url_patterns:
                 news_url = 'https://www.setn.com' + news_url_pattern
 
-                response = news.crawlers.util.request_url(url=news_url)
+                response = news.crawlers.util.request_url.get(url=news_url)
 
                 # Raise exception if status code is not 200.
                 news.crawlers.util.status_code.check_status_code(
@@ -49,18 +49,22 @@ def get_news_list(
                     url=news_url,
                 )
 
-                news_list.append(RawNews(
-                    company_id=COMPANY_ID,
-                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                        raw_xml=response.text),
-                    url_pattern=news.crawlers.util.normalize.compress_url(
-                        url=news_url, company_id=COMPANY_ID),
-                ))
+                news_list.append(
+                    RawNews(
+                        company_id=COMPANY_ID,
+                        raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                            raw_xml=response.text
+                        ),
+                        url_pattern=news.crawlers.util.normalize.compress_url(
+                            url=news_url, company_id=COMPANY_ID
+                        ),
+                    )
+                )
         except Exception as err:
             if err.args:
                 logger.update([err.args[0]])
 
-    # Only show error stats in debug mode.
+    # Only show error statistics in debug mode.
     if debug:
         for k, v in logger.items():
             print(f'{k}: {v}')
@@ -87,10 +91,8 @@ CATEGORY = {
 
 def main(
     db_name: str,
-    *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
-):
+    **kwargs: Final[Optional[Dict]],
+) -> None:
     # Get database connection.
     db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
     conn = news.db.get_conn(db_path=db_path)
@@ -101,7 +103,7 @@ def main(
 
     for category, api in CATEGORY.items():
         # Get news list.
-        news_list = get_news_list(debug=debug, api=api)
+        news_list = get_news_list(api=api, **kwargs)
 
         # No more news to crawl.
         if not news_list:

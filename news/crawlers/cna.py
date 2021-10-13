@@ -1,8 +1,8 @@
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Final, List, Optional
 
-from tqdm import tqdm
+from tqdm import trange
 
 import news.crawlers.db.create
 import news.crawlers.db.util
@@ -13,36 +13,36 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-CONTINUE_FAIL_COUNT = 100
-COMPANY_ID = news.crawlers.util.normalize.get_company_id(company='中央社')
+COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
+    company='中央社',
+)
+COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+    company_id=COMPANY_ID,
+)
+MAX_NEWS_PER_DAY: Final[int] = 10000
 
 
 def get_news_list(
-    current_datetime: datetime,
-    past_datetime: datetime,
+    current_datetime: Final[datetime],
     *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
+    continue_fail_count: Final[Optional[int]] = 100,
+    debug: Final[Optional[bool]] = False,
+    **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
 
-    date = current_datetime
-
     fail_count = 0
-    date_str = date.strftime('%Y%m%d')
+    datetime_str = current_datetime.strftime('%Y%m%d')
 
     # Only show progress bar in debug mode.
-    iter_range = range(10000)
-    if debug:
-        iter_range = tqdm(iter_range)
-
-    for i in iter_range:
-        # No more news to crawl.
-        if fail_count >= CONTINUE_FAIL_COUNT:
-            break
-
-        url = f'https://www.cna.com.tw/news/aipl/{date_str}{i:04d}.aspx'
+    for news_idx in trange(
+            MAX_NEWS_PER_DAY,
+            desc='Crawling',
+            disable=not debug,
+            dynamic_ncols=True,
+    ):
+        url = f'{COMPANY_URL}{datetime_str}{news_idx:04d}.aspx'
         try:
             response = news.crawlers.util.request_url.get(url=url)
 
@@ -53,24 +53,32 @@ def get_news_list(
                 url=url,
             )
 
-            # If `status_code == 200`, reset `fail_count`.
-            fail_count = 0
+            news_list.append(
+                RawNews(
+                    company_id=COMPANY_ID,
+                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                        raw_xml=response.text,
+                    ),
+                    url_pattern=news.crawlers.util.normalize.compress_url(
+                        url=url,
+                        company_id=COMPANY_ID,
+                    ),
+                )
+            )
 
-            news_list.append(RawNews(
-                company_id=COMPANY_ID,
-                raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                    raw_xml=response.text),
-                url_pattern=news.crawlers.util.normalize.compress_url(
-                    url=url, company_id=COMPANY_ID),
-            ))
+            # Reset `fail_count` when `status_code == 200`.
+            fail_count = 0
         except Exception as err:
             fail_count += 1
 
             if err.args:
                 logger.update([err.args[0]])
-            continue
 
-    # Only show error stats in debug mode.
+        # No more news to crawl.
+        if fail_count >= continue_fail_count:
+            break
+
+    # Only show error statistics in debug mode.
     if debug:
         for k, v in logger.items():
             print(f'{k}: {v}')
@@ -79,13 +87,16 @@ def get_news_list(
 
 
 def main(
-    current_datetime: datetime,
-    db_name: str,
-    past_datetime: datetime,
-    *,
-    debug: Optional[bool] = False,
-    **kwargs: Optional[Dict],
+    current_datetime: Final[datetime],
+    db_name: Final[str],
+    past_datetime: Final[datetime],
+    **kwargs: Final[Optional[Dict]],
 ) -> None:
+    # Value check.
+    if current_datetime.tzinfo != timezone.utc:
+        raise ValueError('`current_datetime` must in utc timezone.')
+    if past_datetime.tzinfo != timezone.utc:
+        raise ValueError('`past_datetime` must in utc timezone.')
     if past_datetime > current_datetime:
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
@@ -101,11 +112,7 @@ def main(
     loop_datetime = current_datetime
     while loop_datetime >= past_datetime:
         # Get news list.
-        news_list = get_news_list(
-            current_datetime=loop_datetime,
-            debug=debug,
-            past_datetime=loop_datetime - timedelta(days=1),
-        )
+        news_list = get_news_list(current_datetime=loop_datetime, **kwargs)
 
         # Write news records to database.
         news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)

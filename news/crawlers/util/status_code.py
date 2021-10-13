@@ -12,18 +12,29 @@ import news.crawlers.util.normalize
 # banned crawlers.
 ###############################################################################
 SLEEP_SECS_BEFORE_BANNED_LOOKUP_TABLE: Final[Dict[int, float]] = {
-    news.crawlers.util.normalize.get_company_id(company='中時'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='中央社'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='大紀元'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='東森'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='民視'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='自由'): 60.0,
-    news.crawlers.util.normalize.get_company_id(company='新唐人'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='三立'): 60.0,
+    news.crawlers.util.normalize.get_company_id(company='中時'):
+        0.0,
+    news.crawlers.util.normalize.get_company_id(company='中央社'):
+        0.0,
+    news.crawlers.util.normalize.get_company_id(company='大紀元'):
+        0.0,
+    news.crawlers.util.normalize.get_company_id(company='東森'):
+        0.0,
+    news.crawlers.util.normalize.get_company_id(company='民視'):
+        0.0,
+    news.crawlers.util.normalize.get_company_id(company='自由'):
+        60.0,
+    news.crawlers.util.normalize.get_company_id(company='新唐人'):
+        0.0,
+    news.crawlers.util.normalize.get_company_id(company='三立'):
+        60.0,
     # STORM response bad request with status 200.
-    news.crawlers.util.normalize.get_company_id(company='風傳媒'): 1.0,
-    news.crawlers.util.normalize.get_company_id(company='tvbs'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='聯合報'): 0.0,
+    news.crawlers.util.normalize.get_company_id(company='風傳媒'):
+        1.0,
+    news.crawlers.util.normalize.get_company_id(company='tvbs'):
+        0.0,
+    news.crawlers.util.normalize.get_company_id(company='聯合報'):
+        0.0,
 }
 
 # List lookup with index is O(1).  See `news.crawlers.util.normalize` for
@@ -67,7 +78,6 @@ SLEEP_SECS_AFTER_BANNED_FASTEST_LOOKUP_TABLE: List[float] = [
     SLEEP_SECS_AFTER_BANNED_LOOKUP_TABLE[company_id]
     for company_id in sorted(SLEEP_SECS_AFTER_BANNED_LOOKUP_TABLE.keys())
 ]
-
 
 # Seconds to sleep when crawler get banned by 429.  Set to 0.0 if the website
 # is not blocking crawlers.

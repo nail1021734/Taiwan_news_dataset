@@ -58,21 +58,22 @@ def parse(ori_news: RawNews) -> ParsedNews:
             'div[itemprop=articleBody] div.boxText.text.boxTitle > p:not([class])'
         )
         # Drop all p tags after related news.
-        related_news_tag = list(filter(
-            lambda tag: isinstance(tag.previous_sibling, bs4.element.Tag) and
-            '相關新聞' in tag.previous_sibling.text,
-            article_tags,
-        ))
+        related_news_tag = list(
+            filter(
+                lambda tag: isinstance(tag.previous_sibling, bs4.element.Tag)
+                and '相關新聞' in tag.previous_sibling.text,
+                article_tags,
+            )
+        )
         if related_news_tag:
-            article_tags = article_tags[
-                :article_tags.idx(related_news_tag[0])
-            ]
+            article_tags = article_tags[:article_tags.idx(related_news_tag[0])]
         article_tags = filter(
-            lambda tag: all(map(
-                lambda pattern: not bool(pattern.match(tag.text.strip())),
-                BAD_ARTICLE_PATTERNS,
-            )),
-            article_tags
+            lambda tag: all(
+                map(
+                    lambda pattern: not bool(pattern.match(tag.text.strip())),
+                    BAD_ARTICLE_PATTERNS,
+                )
+            ), article_tags
         )
 
         article = ' '.join([i.text.strip() for i in article_tags])

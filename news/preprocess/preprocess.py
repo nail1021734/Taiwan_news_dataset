@@ -23,9 +23,7 @@ def NFKC(dataset: news.parse.db.schema.ParsedNews):
 
 
 def length_filter(
-    dataset: news.parse.db.schema.ParsedNews,
-    min_length: int,
-    max_length: int
+    dataset: news.parse.db.schema.ParsedNews, min_length: int, max_length: int
 ):
     r"""
     Remove articles that are too long or too short.
@@ -96,21 +94,20 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
     r"""
     Replace Japanese or Korean with `<unk>` and english with `<en>`.
     """
+
     def lang_replace(context: str):
         index = 0
         last_type = None
         while index < len(context):
             if context[index] == '<':
-                if any(
-                    (
-                        context[index + 1: index + 4] == 'org',
-                        context[index + 1: index + 4] == 'per',
-                        context[index + 1: index + 4] == 'loc',
-                        context[index + 1: index + 4] == 'num',
-                        context[index + 1: index + 4] == 'unk',
-                        context[index + 1: index + 4] == 'fac',
-                    )
-                ):
+                if any((
+                        context[index + 1:index + 4] == 'org',
+                        context[index + 1:index + 4] == 'per',
+                        context[index + 1:index + 4] == 'loc',
+                        context[index + 1:index + 4] == 'num',
+                        context[index + 1:index + 4] == 'unk',
+                        context[index + 1:index + 4] == 'fac',
+                )):
                     index = context.find('>', index) + 1
                     continue
             try:
@@ -124,7 +121,8 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
                     index -= 1
                 else:
                     context = ''.join(
-                        [context[:index], '<en>', context[index + 1:]])
+                        [context[:index], '<en>', context[index + 1:]]
+                    )
                     index += 3
                 last_type = 'LATIN'
             if char_type == 'HANGUL':
@@ -133,7 +131,8 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
                     index -= 1
                 else:
                     context = ''.join(
-                        [context[:index], '<unk>', context[index + 1:]])
+                        [context[:index], '<unk>', context[index + 1:]]
+                    )
                     index += 4
                 last_type = 'HANGUL'
             if char_type == 'KATAKANA' or char_type == 'HIRAGANA':
@@ -142,7 +141,8 @@ def language_filter(dataset: news.parse.db.schema.ParsedNews):
                     index -= 1
                 else:
                     context = ''.join(
-                        [context[:index], '<unk>', context[index + 1:]])
+                        [context[:index], '<unk>', context[index + 1:]]
+                    )
                     index += 4
                 last_type = 'JAPAN'
             if char_type == 'SPACE' and last_type is not None:
@@ -172,7 +172,8 @@ def deEmojify(text: str):
         u"\U0001F300-\U0001F5FF"  # symbols & pictographs
         u"\U0001F680-\U0001F6FF"  # transport & map symbols
         u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        "]+", flags=re.UNICODE
+        "]+",
+        flags=re.UNICODE
     )
     return regrex_pattern.sub(r'', text)
 
@@ -223,9 +224,7 @@ def not_CJK_filter(dataset: news.parse.db.schema.ParsedNews):
     return dataset
 
 
-def NER_dataset(
-    dataset: news.parse.db.schema.ParsedNews,
-):
+def NER_dataset(dataset: news.parse.db.schema.ParsedNews,):
     # Initial NER model.
     ner_driver = CkipNerChunker(level=3, device=0)
 
@@ -242,23 +241,28 @@ def NER_dataset(
     for d, title_ner, article_ner in zip(data, titles_ner, articles_ner):
         ner_result.append(
             {
-                'id': d[0],
-                'title': d[1],
-                'article': d[2],
-                'title_NER': [
-                    {
-                        'word': e.word,
-                        'ner': e.ner,
-                        'idx': e.idx
-                    } for e in title_ner
-                ],
-                'article_NER': [
-                    {
-                        'word': e.word,
-                        'ner': e.ner,
-                        'idx': e.idx
-                    } for e in article_ner
-                ]
+                'id':
+                    d[0],
+                'title':
+                    d[1],
+                'article':
+                    d[2],
+                'title_NER':
+                    [
+                        {
+                            'word': e.word,
+                            'ner': e.ner,
+                            'idx': e.idx
+                        } for e in title_ner
+                    ],
+                'article_NER':
+                    [
+                        {
+                            'word': e.word,
+                            'ner': e.ner,
+                            'idx': e.idx
+                        } for e in article_ner
+                    ]
             }
         )
 
@@ -271,9 +275,7 @@ def read_NER_result(result_path: str):
 
 
 def ner_tag_subs(
-    dataset: news.parse.db.schema.ParsedNews,
-    tag_dict: List,
-    result_path: str
+    dataset: news.parse.db.schema.ParsedNews, tag_dict: List, result_path: str
 ):
     r"""
     Replace the names of people, places, and organizations based on NER results.
@@ -299,30 +301,33 @@ def ner_tag_subs(
         tot_ner.extend(copy.deepcopy(t_ner))
 
         # Build type table.
-        type_table = dict((
-            k,
-            {
-                'id': idx,
-                'NeedID': tag_dict[idx]['NeedID'],
-                'tag': tag_dict[idx]['tag']
-            }
-        ) for idx in range(len(tag_dict)) for k in tag_dict[idx]['type'])
+        type_table = dict(
+            (
+                k, {
+                    'id': idx,
+                    'NeedID': tag_dict[idx]['NeedID'],
+                    'tag': tag_dict[idx]['tag']
+                }
+            ) for idx in range(len(tag_dict)) for k in tag_dict[idx]['type']
+        )
 
         # Build word to tag table.
         word2tag_dict = [{} for i in range(len(tag_dict))]
         for word in tot_ner:
             if word['ner'] in type_table.keys():
-                if word['word'] not in word2tag_dict[type_table[word['ner']]['id']].keys():
+                if word['word'] not in word2tag_dict[type_table[word['ner']]
+                                                     ['id']].keys():
                     if type_table[word['ner']]['NeedID']:
                         tag_id = len(
-                            word2tag_dict[type_table[word['ner']]['id']])
+                            word2tag_dict[type_table[word['ner']]['id']]
+                        )
                         tag_str = type_table[word['ner']]['tag']
-                        word2tag_dict[type_table[word['ner']]['id']
-                                      ][word['word']] = f'<{tag_str}{tag_id}>'
+                        word2tag_dict[type_table[word['ner']]['id']][
+                            word['word']] = f'<{tag_str}{tag_id}>'
                     else:
                         tag_str = type_table[word['ner']]['tag']
-                        word2tag_dict[type_table[word['ner']]['id']
-                                      ][word['word']] = f'<{tag_str}>'
+                        word2tag_dict[type_table[word['ner']]['id']][
+                            word['word']] = f'<{tag_str}>'
 
         # Get origin title and article.
         ori_title = ner_data['title']
@@ -354,7 +359,8 @@ def ner_tag_subs(
         for k, v in type_table.items():
             tag_dic = word2tag_dict[v['id']]
             tag_dic = sorted(
-                tag_dic.items(), key=lambda x: len(x[0]), reverse=True)
+                tag_dic.items(), key=lambda x: len(x[0]), reverse=True
+            )
             for k, v in tag_dic:
                 rp_title = rp_title.replace(k, v)
                 rp_article = rp_article.replace(k, v)
@@ -365,13 +371,11 @@ def ner_tag_subs(
     return dataset
 
 
-def date_filter(
-    dataset: news.parse.db.schema.ParsedNews,
-    result_path: str
-):
+def date_filter(dataset: news.parse.db.schema.ParsedNews, result_path: str):
     r"""
     Replace number in date tag with `<num>`.
     """
+
     def date_preprocess(date):
         if re.match('.*年.*月.*日', date):
             return r'<num>年<num>月<num>日'
@@ -379,6 +383,7 @@ def date_filter(
             return r'<num>月<num>日'
         else:
             return False
+
     NER_result = read_NER_result(result_path)
     for data in tqdm(dataset):
         index = data.idx

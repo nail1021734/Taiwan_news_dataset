@@ -2,8 +2,9 @@ from tqdm import tqdm
 
 import news.crawlers.db
 import news.migration.db
-from news.crawlers.util.normalize import (compress_raw_xml, compress_url,
-                                          get_company_id)
+from news.crawlers.util.normalize import (
+    compress_raw_xml, compress_url, get_company_id
+)
 
 
 def v1(

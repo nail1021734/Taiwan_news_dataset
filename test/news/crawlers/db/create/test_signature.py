@@ -12,9 +12,7 @@ def test_module_function_signature() -> None:
     assert hasattr(news.crawlers.db.create, 'create_table')
     assert inspect.isfunction(news.crawlers.db.create.create_table)
     assert (
-        inspect.signature(news.crawlers.db.create.create_table)
-        ==
-        Signature(
+        inspect.signature(news.crawlers.db.create.create_table) == Signature(
             parameters=[
                 Parameter(
                     name='cur',
@@ -33,14 +31,14 @@ def test_module_attribute_signature() -> None:
     assert hasattr(news.crawlers.db.create, 'SQL')
     assert isinstance(news.crawlers.db.create.SQL, str)
     assert (
-        re.sub(r'\s+', ' ', news.crawlers.db.create.SQL)
-        ==
-        re.sub(r'\s+', ' ', """
+        re.sub(r'\s+', ' ', news.crawlers.db.create.SQL) == re.sub(
+            r'\s+', ' ', """
             CREATE TABLE IF NOT EXISTS news (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 company_id  INTEGER NOT NULL,
                 raw_xml     TEXT    NOT NULL,
                 url_pattern TEXT    NOT NULL
             );
-        """)
+        """
+        )
     )

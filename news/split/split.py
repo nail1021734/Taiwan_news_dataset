@@ -25,14 +25,14 @@ def split_db(db_path: str, save_path: str, id_interval: int):
         index = offset // id_interval
 
         # Get target db path.
-        tgt_path = os.path.join(
-            save_path, f'{src_db_name}_{index}.db')
+        tgt_path = os.path.join(save_path, f'{src_db_name}_{index}.db')
 
         # Get target db conncetion.
         tgt_conn = news.split.db.util.get_conn(tgt_path)
         # Create table in target db.
         news.split.db.create.create_table(
-            cur=tgt_conn.cursor(), columns=column_names)
+            cur=tgt_conn.cursor(), columns=column_names
+        )
 
         # Save data into db.
         news.split.db.write.write_new_records(
@@ -51,8 +51,4 @@ def split_db(db_path: str, save_path: str, id_interval: int):
 
 
 def main(db_path: str, save_dir: str, id_interval: int):
-    split_db(
-        db_path=db_path,
-        save_path=save_dir,
-        id_interval=id_interval
-    )
+    split_db(db_path=db_path, save_path=save_dir, id_interval=id_interval)

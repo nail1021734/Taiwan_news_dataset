@@ -28,13 +28,11 @@ def write_new_records(
     res = []
     for n in news_list:
         if n.url_pattern not in existed_url:
-            res.append(
-                (
-                    n.company_id,
-                    n.raw_xml,
-                    n.url_pattern,
-                )
-            )
+            res.append((
+                n.company_id,
+                n.raw_xml,
+                n.url_pattern,
+            ))
             existed_url.add(n.url_pattern)
 
     cur.executemany(WRITE_SQL, res)

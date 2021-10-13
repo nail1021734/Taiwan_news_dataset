@@ -51,8 +51,7 @@ def parse_argument():
 
 
 def parse(
-    raw_dataset: news.crawlers.db.schema.RawNews,
-    company: str
+    raw_dataset: news.crawlers.db.schema.RawNews, company: str
 ) -> news.parse.db.schema.ParsedNews:
     r"""根據指定的公司用不同方法 parse 輸入的 `raw_data`"""
     parsed_data = []
@@ -77,23 +76,17 @@ def main():
         raw_dataset = news.crawlers.db.read.read_all_records(db_name=args.raw)
 
         # Parse raw data.
-        parsed_data = parse(
-            raw_dataset=raw_dataset,
-            company=args.company
-        )
+        parsed_data = parse(raw_dataset=raw_dataset, company=args.company)
 
         # Connect to target database.
         parsed_db_conn = news.parse.db.util.get_conn(db_name=args.save_path)
 
         # Create `news` table if target database didn't contain this table.
-        news.parse.db.create.create_table(
-            cur=parsed_db_conn.cursor()
-        )
+        news.parse.db.create.create_table(cur=parsed_db_conn.cursor())
 
         # Write parsed data in target db.
         news.parse.db.write.write_new_records(
-            cur=parsed_db_conn.cursor(),
-            news_list=parsed_data
+            cur=parsed_db_conn.cursor(), news_list=parsed_data
         )
 
         parsed_db_conn.commit()
@@ -110,10 +103,7 @@ def main():
             )
 
             # Parse raw data.
-            parsed_data = parse(
-                raw_dataset=raw_dataset,
-                company=args.company
-            )
+            parsed_data = parse(raw_dataset=raw_dataset, company=args.company)
 
             # Connect to target database.
             parsed_db_conn = news.parse.db.util.get_conn(
@@ -121,14 +111,11 @@ def main():
             )
 
             # Create `news` table if target database didn't contain this table.
-            news.parse.db.create.create_table(
-                cur=parsed_db_conn.cursor()
-            )
+            news.parse.db.create.create_table(cur=parsed_db_conn.cursor())
 
             # Write parsed data in target db.
             news.parse.db.write.write_new_records(
-                cur=parsed_db_conn.cursor(),
-                news_list=parsed_data
+                cur=parsed_db_conn.cursor(), news_list=parsed_data
             )
 
             parsed_db_conn.commit()
