@@ -162,10 +162,10 @@ def get_start_page(
                 break
         except Exception as err:
             # Some pages may not be available.
+            fail_count += 1
+
             if err.args:
                 logger.update([err.args[0]])
-            fail_count += 1
-            continue
 
         # This statement is here to prevent script from stop execution.
         if fail_count >= continue_fail_count:
@@ -229,9 +229,10 @@ def get_news_list(
             news_urls = map(lambda a_tag: a_tag['href'], a_tags)
         # Skip current page if any error occured.
         except Exception as err:
+            fail_count += 1
+
             if err.args:
                 logger.update([f'In page {page}: {err.args[0]}'])
-            fail_count += 1
             continue
 
         # 抓取新聞原始碼
@@ -268,9 +269,10 @@ def get_news_list(
                 # Reset `fail_count` when `status_code == 200`.
                 fail_count = 0
             except Exception as err:
+                fail_count += 1
+
                 if err.args:
                     logger.update([err.args[0]])
-                fail_count += 1
 
             # Cannot get news.  This situation is highly likely due to bugs.
             if fail_count >= continue_fail_count:

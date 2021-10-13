@@ -199,7 +199,7 @@ def test_module_attribute_signature() -> None:
         '台灣': 'ncid1349361',
         '科技': 'nsc419',
         '財經': 'nsc420',
-        '文化': 'nsc2007'
+        '文化': 'nsc2007',
     }
     assert hasattr(news.crawlers.epochtimes, 'COMMIT_PAGE_INTERVAL')
     assert news.crawlers.epochtimes.COMMIT_PAGE_INTERVAL == 10
