@@ -1,12 +1,10 @@
 import re
 from collections import Counter
-from datetime import datetime
-from typing import Dict, Final, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Dict, Final, List, Optional, Union
 
-import dateutil
-import dateutil.parser
 from bs4 import BeautifulSoup
-from tqdm import tqdm
+from tqdm import trange
 
 import news.crawlers.db.create
 import news.crawlers.db.util
@@ -17,51 +15,102 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-FIRST_PAGE = 1
-PAGE_INTERVAL = 100
-URL_PATTERN = re.compile(
-    r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a\d+.html'
+CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
+    '國際': '202',
+    '港澳': '205',
+    '財經': '208',
+    '健康': '1255',
+    '體育': '211',
+    '美國': '203',
+    '大陸': '204',
+    '文史': '647',
+}
+# Commit database when crawling 10 pages.
+COMMIT_PAGE_INTERVAL: Final[int] = 10
+COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
+    company='新唐人',
 )
-COMPANY_ID = news.crawlers.util.normalize.get_company_id(company='新唐人')
+COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+    company_id=COMPANY_ID,
+)
+DATE_PATTERN: Final[re.Pattern] = re.compile(
+    COMPANY_URL + r'(\d+)/(\d+)/(\d+)/a\d+\.html',
+)
+FIRST_PAGE: Final[int] = 1
 
 
-def find_page_range(
-    category: str,
-    current_datetime: datetime,
-    api: str,
-    past_datetime: datetime,
-    *,
-    debug: Final[Optional[bool]] = False,
+def get_datetime_from_url(url: Final[str]) -> Union[datetime, None]:
+    r"""從網址取得 ntdtv 新聞的日期."""
+    match = DATE_PATTERN.match(url)
+
+    if not match:
+        return None
+
+    return datetime(
+        year=int(match.group(1)),
+        month=int(match.group(2)),
+        day=int(match.group(3)),
+        tzinfo=timezone.utc,
+    )
+
+
+def get_max_page(
+    category_api: Final[str],
     **kwargs: Final[Optional[Dict]],
-) -> Tuple[int, int]:
-    # Get max page of this category.
+) -> int:
+    r"""Get total number of pages under specified category."""
     try:
-        url = f'https://www.ntdtv.com/b5/prog{api}/1'
-        response = news.crawlers.util.request_url.get(url=url)
+        page_url = f'{COMPANY_URL}prog{category_api}/1'
+        response = news.crawlers.util.request_url.get(url=page_url)
 
         # Raise exception if status code is not 200.
         news.crawlers.util.status_code.check_status_code(
             company_id=COMPANY_ID,
             status_code=response.status_code,
-            url=url,
+            url=page_url,
         )
 
+        # Total page numbers can be found in the tags `a.page-numbers`.
         soup = BeautifulSoup(response.text, 'html.parser')
-        max_page = soup.select('div.pagination > a.page-numbers')[-2].text
-        max_page = int(max_page.replace(',', ''))
+        max_page = soup.select('a.page-numbers')[-2].text
+        # Numbers are comma separated.
+        return int(max_page.replace(',', ''))
     except Exception:
-        # Only 1 page is available.
-        return [1, 1]
+        # Only 1 page is available.  This situation is unlikely to happen.
+        # It's here to prevent any weird errors happened from codes above.
+        return 1
 
-    # Only show progress bar in debug mode.
-    iter_range = range(FIRST_PAGE, max_page)
-    if debug:
-        iter_range = tqdm(iter_range, desc='Find start page loop')
 
-    # Find start page loop.
-    start_page = 1
-    for page in iter_range:
-        page_url = f'https://www.ntdtv.com/b5/prog{api}/{page}'
+def get_start_page(
+    category_api: Final[str],
+    current_datetime: Final[datetime],
+    max_page: Final[int],
+    past_datetime: Final[datetime],
+    *,
+    continue_fail_count: Final[Optional[int]] = 5,
+    debug: Final[Optional[bool]] = False,
+    **kwargs: Final[Optional[Dict]],
+) -> int:
+    r"""Get first page under specified category satisfying datetime constraint.
+
+    Datetime constraint is the smallest page number contains the first news `n`
+    satisfied `past_datetime <= n.datetime <= current_datetime`.
+
+    `continue_fail_count` is set to small number since it is unlikely to fail.
+    """
+    logger = Counter()
+    fail_count = 0
+
+    # Only show progress bar in debug mode.  Use `max_page + 1` to make range
+    # inclusive.
+    for start_page in trange(
+            FIRST_PAGE,
+            max_page + 1,
+            desc='Find start page',
+            disable=not debug,
+            dynamic_ncols=True,
+    ):
+        page_url = f'{COMPANY_URL}prog{category_api}/{start_page}'
 
         try:
             response = news.crawlers.util.request_url.get(url=page_url)
@@ -78,78 +127,87 @@ def find_page_range(
             a_tags = soup.select(
                 'div.post_list > div.list_wrapper > div.one_post div.title > a'
             )
-            matches = filter(
-                bool,
-                map(lambda a_tag: URL_PATTERN.match(a_tag['href']), a_tags)
-            )
-            news_datetimes = map(
-                lambda match: {
-                    'year': int(match.group(1)),
-                    'month': int(match.group(2)),
-                    'day': int(match.group(3)),
-                },
-                matches,
-            )
-            news_datetimes = list(
-                map(
-                    lambda n: dateutil.parser.isoparse(
-                        f"{n['year']:04d}-{n['month']:02d}-{n['day']:02d}T00:00:00Z"
-                    ),
-                    news_datetimes,
-                )
-            )
+            news_urls = map(lambda a_tag: a_tag['href'], a_tags)
 
-            # Break loop if `news_datetime < past_datetime`.
-            if news_datetimes[0] < past_datetime:
-                break
-            # If this page contains valid news, we start crawling from this
-            # page.
+            # 過濾掉找不到日期的網址.
             news_datetimes = filter(
                 bool,
-                map(
-                    lambda n: past_datetime <= n <= current_datetime,
-                    news_datetimes,
-                )
+                map(get_datetime_from_url, news_urls),
             )
 
             news_datetimes = list(news_datetimes)
 
-            if news_datetimes:
-                start_page = page
+            # Reset fail counter.  Nothing happen means no failure occur.
+            fail_count = 0
+
+            # If dates of all news in the current page is newer than
+            # `current_datetime`, then we keep searching.
+            if min(news_datetimes) > current_datetime:
+                continue
+
+            # If dates of all news in the current page is older than
+            # `past_datetime`, then is very likely the follow up pages does
+            # not have any newer news.  And we simply stop searching.  This
+            # statement is needed since for some datetime ranges there is no
+            # news.
+            if max(news_datetimes) < past_datetime:
                 break
-        except Exception:
+
+            # If dates of some news in the current page is within valid range,
+            # then we found the smallest page to start crawling.
+            if any(map(
+                    lambda n: past_datetime <= n <= current_datetime,
+                    news_datetimes,
+            )):
+                break
+        except Exception as err:
             # Some pages may not be available.
+            if err.args:
+                logger.update([err.args[0]])
+            fail_count += 1
             continue
 
-    return start_page, max_page
+        # This statement is here to prevent script from stop execution.
+        if fail_count >= continue_fail_count:
+            break
+
+    # Only show error statistics in debug mode.
+    if debug:
+        for k, v in logger.items():
+            print(f'{k}: {v}')
+
+    return start_page
 
 
 def get_news_list(
-    category: str,
-    current_datetime: datetime,
-    api: str,
-    past_datetime: datetime,
-    page_range: List[int],
+    category_api: Final[str],
+    current_datetime: Final[datetime],
+    first_page: Final[int],
+    last_page: Final[int],
+    past_datetime: Final[datetime],
     *,
+    continue_fail_count: Final[Optional[int]] = 5,
     debug: Final[Optional[bool]] = False,
     **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
+    fail_count = 0
 
-    iter_range = range(page_range[0], page_range[1])
     # Only show progress bar in debug mode.
-    if debug:
-        iter_range = tqdm(iter_range, desc='Crawling loop.')
-
-    # Crawling loop.
-    is_datetime_valid = True
-    for page in iter_range:
-        if not is_datetime_valid:
+    for page in trange(
+            first_page,
+            last_page,
+            desc='Crawling',
+            disable=not debug,
+            dynamic_ncols=True,
+    ):
+        # Cannot get news.  This situation is highly likely due to bugs.
+        if fail_count >= continue_fail_count:
             break
 
-        page_url = f'https://www.ntdtv.com/b5/prog{api}/{page}'
-
+        # 抓取頁面內所有新聞的網址
+        page_url = f'{COMPANY_URL}prog{category_api}/{page}'
         try:
             response = news.crawlers.util.request_url.get(url=page_url)
 
@@ -160,19 +218,30 @@ def get_news_list(
                 url=page_url,
             )
 
-            # If `status_code == 200`, parse links in this page.
+            # Reset `fail_count` when `status_code == 200`.
+            fail_count = 0
+
+            # Parse links in this page.
             soup = BeautifulSoup(response.text, 'html.parser')
             a_tags = soup.select(
                 'div.post_list > div.list_wrapper > div.one_post div.title > a'
             )
+            news_urls = map(lambda a_tag: a_tag['href'], a_tags)
+        # Skip current page if any error occured.
         except Exception as err:
             if err.args:
-                logger.update([err.args[0]])
+                logger.update([f'In page {page}: {err.args[0]}'])
+            fail_count += 1
             continue
 
-        for a_tag in a_tags:
+        # 抓取新聞原始碼
+        for news_url in news_urls:
             try:
-                news_url = a_tag['href']
+                news_datetime = get_datetime_from_url(url=news_url)
+
+                # Skip if `news_datetime` is not in valid range.
+                if not (past_datetime <= news_datetime <= current_datetime):
+                    continue
 
                 response = news.crawlers.util.request_url.get(url=news_url)
 
@@ -183,30 +252,29 @@ def get_news_list(
                     url=news_url,
                 )
 
-                news_datetime = news.crawlers.util.date_parse.ntdtv(news_url)
-
-                # If `news_datetime > current_datetime` just continue.
-                if news_datetime > current_datetime:
-                    continue
-                # If `past_datetime > news_datetime` stop crawling loop.
-                if past_datetime > news_datetime:
-                    is_datetime_valid = False
-                    break
-
                 news_list.append(
                     RawNews(
                         company_id=COMPANY_ID,
                         raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                            raw_xml=response.text
+                            raw_xml=response.text,
                         ),
                         url_pattern=news.crawlers.util.normalize.compress_url(
-                            url=news_url, company_id=COMPANY_ID
+                            url=news_url,
+                            company_id=COMPANY_ID,
                         ),
                     )
                 )
+
+                # Reset `fail_count` when `status_code == 200`.
+                fail_count = 0
             except Exception as err:
                 if err.args:
                     logger.update([err.args[0]])
+                fail_count += 1
+
+            # Cannot get news.  This situation is highly likely due to bugs.
+            if fail_count >= continue_fail_count:
+                break
 
     # Only show error statistics in debug mode.
     if debug:
@@ -216,25 +284,17 @@ def get_news_list(
     return news_list
 
 
-CATEGORIES = {
-    '國際': 202,
-    '港澳': 205,
-    '財經': 208,
-    '健康': 1255,
-    '體育': 211,
-    '美國': 203,
-    '大陸': 204,
-    '文史': 647,
-}
-
-
 def main(
-    current_datetime: datetime,
-    db_name: str,
-    past_datetime: datetime,
+    current_datetime: Final[datetime],
+    db_name: Final[str],
+    past_datetime: Final[datetime],
     **kwargs: Final[Optional[Dict]],
 ) -> None:
     # Value check.
+    if current_datetime.tzinfo != timezone.utc:
+        raise ValueError('`current_datetime` must in utc timezone.')
+    if past_datetime.tzinfo != timezone.utc:
+        raise ValueError('`past_datetime` must in utc timezone.')
     if past_datetime > current_datetime:
         raise ValueError('Must have `past_datetime <= current_datetime`.')
 
@@ -246,37 +306,38 @@ def main(
     # Ensure news table exists.
     news.crawlers.db.create.create_table(cur=cur)
 
-    for category, api in CATEGORIES.items():
-        # Find page range that consistent with specified time range.
-        start_page, max_page = find_page_range(
-            category=category,
+    for category_api in CATEGORY_API_LOOKUP_TABLE.values():
+        # Get total number of pages.
+        max_page = get_max_page(category_api=category_api, **kwargs)
+
+        # Get starting page.
+        start_page = get_start_page(
+            category_api=category_api,
             current_datetime=current_datetime,
-            api=api,
+            max_page=max_page,
             past_datetime=past_datetime,
             **kwargs,
         )
 
-        # Make range inclusive.
-        max_page += 1
-
-        # Commit database when crawling 10 pages.
-        for page in range(start_page, max_page, PAGE_INTERVAL):
-            page_range = [
-                page,
-                min(page + PAGE_INTERVAL, max_page),
-            ]
-
+        # Commit news list to database when crawling enough pages. Use
+        # `max_page + 1` to make range inclusive.
+        for page in range(
+                start_page,
+                max_page + 1,
+                COMMIT_PAGE_INTERVAL,
+        ):
             # Get news list.
             news_list = get_news_list(
-                category=category,
+                category_api=category_api,
                 current_datetime=current_datetime,
-                api=api,
+                first_page=page,
+                last_page=min(page + COMMIT_PAGE_INTERVAL, max_page),
                 past_datetime=past_datetime,
-                page_range=page_range,
                 **kwargs,
             )
 
-            # When news violate `past_datetime` break for loop.
+            # Stop crawling when `news_list` is empty.  This happens when news
+            # violate `past_datetime` constraint.
             if not news_list:
                 break
 

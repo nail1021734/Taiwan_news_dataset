@@ -3,9 +3,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Final
 
 import news.crawlers.db.schema
-import news.crawlers.epochtimes
+import news.crawlers.ntdtv
 import news.crawlers.util.request_url
-from news.crawlers.epochtimes import (
+from news.crawlers.ntdtv import (
     CATEGORY_API_LOOKUP_TABLE, FIRST_PAGE, get_news_list
 )
 
@@ -30,7 +30,7 @@ def test_get_news_list() -> None:
         for n in news_list:
             assert isinstance(n, news.crawlers.db.schema.RawNews)
             assert isinstance(n.idx, int)
-            assert n.company_id == news.crawlers.epochtimes.COMPANY_ID
+            assert n.company_id == news.crawlers.ntdtv.COMPANY_ID
             assert isinstance(n.raw_xml, str)
             assert isinstance(n.url_pattern, str)
 

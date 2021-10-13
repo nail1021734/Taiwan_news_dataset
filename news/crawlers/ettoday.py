@@ -1,7 +1,7 @@
 from collections import Counter
 from typing import Dict, Final, List, Optional
 
-from tqdm import tqdm
+from tqdm import trange
 
 import news.crawlers.db.create
 import news.crawlers.db.util
@@ -12,27 +12,36 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-RECORD_PER_COMMIT = 1000
-COMPANY_ID = news.crawlers.util.normalize.get_company_id(company='東森')
+COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
+    company='東森',
+)
+COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+    company_id=COMPANY_ID,
+)
+RECORD_PER_COMMIT: Final[int] = 1000
 
 
 def get_news_list(
-    first_idx: int,
-    latest_idx: int,
+    first_idx: Final[int],
+    latest_idx: Final[int],
     *,
+    continue_fail_count: Final[Optional[int]] = 500,
     debug: Final[Optional[bool]] = False,
     **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
+    fail_count = 0
 
-    iter_range = range(first_idx, latest_idx + 1)
-    if debug:
-        iter_range = tqdm(iter_range)
-
-    for idx in iter_range:
-        url = f'https://star.ettoday.net/news/{idx}'
-
+    # Only show progress bar in debug mode.
+    for news_idx in trange(
+            first_idx,
+            latest_idx,
+            desc='Crawling',
+            disable=not debug,
+            dynamic_ncols=True,
+    ):
+        url = f'{COMPANY_URL}{news_idx}'
         try:
             response = news.crawlers.util.request_url.get(url=url)
 
@@ -47,16 +56,26 @@ def get_news_list(
                 RawNews(
                     company_id=COMPANY_ID,
                     raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                        raw_xml=response.text
+                        raw_xml=response.text,
                     ),
                     url_pattern=news.crawlers.util.normalize.compress_url(
-                        url=url, company_id=COMPANY_ID
+                        url=url,
+                        company_id=COMPANY_ID,
                     ),
                 )
             )
+
+            # Reset `fail_count` when `status_code == 200`.
+            fail_count = 0
         except Exception as err:
+            fail_count += 1
+
             if err.args:
                 logger.update([err.args[0]])
+
+        # No more news to crawl.
+        if fail_count >= continue_fail_count:
+            break
 
     # Only show error statistics in debug mode.
     if debug:
@@ -67,16 +86,25 @@ def get_news_list(
 
 
 def main(
-    db_name: str,
-    first_idx: int,
-    latest_idx: int,
+    db_name: Final[str],
+    first_idx: Final[int],
+    latest_idx: Final[int],
     **kwargs: Final[Optional[Dict]],
 ) -> None:
     # Value check.
-    if first_idx > latest_idx and latest_idx != -1:
-        raise ValueError(
-            'Must have `first_idx <= latest_idx` or `latest_idx == -1`'
-        )
+    if first_idx <= 0:
+        raise ValueError('Must have `first_idx > 0`.')
+
+    # `latest_id` 為 -1 表示抓到沒有新聞為止.
+    if latest_idx != -1:
+        if latest_idx <= 0:
+            raise ValueError(
+                'Must have `latest_idx > 0` or `latest_idx == -1`.'
+            )
+        if first_idx > latest_idx:
+            raise ValueError(
+                'Must have `first_idx <= latest_idx` or `latest_idx == -1`.'
+            )
 
     # Get database connection.
     db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
@@ -86,14 +114,17 @@ def main(
     # Ensure news table exists.
     news.crawlers.db.create.create_table(cur=cur)
 
-    # 如果 `latest_id` 為 -1 表示抓到沒有新聞為止.
-    while first_idx <= latest_idx or latest_idx == -1:
-        cur_latest_idx = first_idx + RECORD_PER_COMMIT
+    cur_first_idx = first_idx
+    # `latest_id` 為 -1 表示抓到沒有新聞為止.
+    while cur_first_idx <= latest_idx or latest_idx == -1:
+        cur_latest_idx = cur_first_idx + RECORD_PER_COMMIT
+
+        # `cur_latest_idx` is bounded above by `latest_idx`.
         if latest_idx != -1:
             cur_latest_idx = min(cur_latest_idx, latest_idx)
 
         news_list = get_news_list(
-            first_idx=first_idx,
+            first_idx=cur_first_idx,
             latest_idx=cur_latest_idx,
             **kwargs,
         )
@@ -106,7 +137,8 @@ def main(
         news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)
         conn.commit()
 
-        first_idx += RECORD_PER_COMMIT
+        # Increase crawling index.
+        cur_first_idx += RECORD_PER_COMMIT
 
     # Close database connection.
     conn.close()

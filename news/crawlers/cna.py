@@ -31,7 +31,6 @@ def get_news_list(
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
-
     fail_count = 0
     datetime_str = current_datetime.strftime('%Y%m%d')
 
