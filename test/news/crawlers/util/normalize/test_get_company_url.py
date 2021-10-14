@@ -14,7 +14,7 @@ def test_get_company_url() -> None:
     assert news.crawlers.util.normalize.get_company_url(4) \
         == r'https://www.ftvnews.com.tw/news/detail/'
     assert news.crawlers.util.normalize.get_company_url(5) \
-        == r'https://news.ltn.com.tw/news/'
+        == r'https://news.ltn.com.tw/ajax/breakingnews/'
     assert news.crawlers.util.normalize.get_company_url(6) \
         == r'https://www.ntdtv.com/b5/'
     assert news.crawlers.util.normalize.get_company_url(7) \

@@ -1,37 +1,34 @@
 import test.news.crawlers.conftest
-from datetime import datetime, timedelta, timezone
 from typing import Final
 
-import news.crawlers.cna
 import news.crawlers.db.schema
 import news.crawlers.util.request_url
+import news.crawlers.util.status_code
+from news.crawlers.ltn import (
+    CATEGORY_API_LOOKUP_TABLE, COMPANY_ID, get_news_list
+)
 
 
 def test_get_news_list() -> None:
-    r"""Crawling news on October 12th, 2021, utc."""
-    continue_fail_count = 3
+    r"""Crawling newest news."""
+    for category_api in CATEGORY_API_LOOKUP_TABLE.values():
+        news_list = get_news_list(
+            category_api=category_api,
+            continue_fail_count=1,
+            debug=False,
+            first_page=1,
+            max_page=1,
+        )
 
-    news_list = news.crawlers.cna.get_news_list(
-        continue_fail_count=continue_fail_count,
-        current_datetime=datetime(
-            year=2021,
-            month=10,
-            day=12,
-            tzinfo=timezone.utc,
-        ),
-        debug=False,
-        max_news_per_day=10,
-    )
+        # If news were successfully crawled, then `news_list` is not empty.
+        assert len(news_list) >= 1
 
-    # If news were successfully crawled, then `news_list` is not empty.
-    assert len(news_list) >= 1
-
-    for n in news_list:
-        assert isinstance(n, news.crawlers.db.schema.RawNews)
-        assert isinstance(n.idx, int)
-        assert n.company_id == news.crawlers.cna.COMPANY_ID
-        assert isinstance(n.raw_xml, str)
-        assert isinstance(n.url_pattern, str)
+        for n in news_list:
+            assert isinstance(n, news.crawlers.db.schema.RawNews)
+            assert isinstance(n.idx, int)
+            assert n.company_id == COMPANY_ID
+            assert isinstance(n.raw_xml, str)
+            assert isinstance(n.url_pattern, str)
 
 
 def test_show_progress_bar(
@@ -50,11 +47,12 @@ def test_show_progress_bar(
         mock_get,
     )
 
-    news.crawlers.cna.get_news_list(
+    get_news_list(
+        category_api=list(CATEGORY_API_LOOKUP_TABLE.values())[0],
         continue_fail_count=1,
-        current_datetime=datetime.now(tz=timezone.utc) - timedelta(days=1),
         debug=True,
-        max_news_per_day=1,
+        first_page=1,
+        max_page=1,
     )
     captured = capsys.readouterr()
 
@@ -72,17 +70,27 @@ def test_show_error_statistics(
     def mock_get(**kwargs) -> test.news.crawlers.conftest.MockResponse:
         return response_404
 
+    def mock_check_status_code(**kwargs) -> None:
+        raise Exception('URL not found.')
+
     monkeypatch.setattr(
         news.crawlers.util.request_url,
         'get',
         mock_get,
     )
 
-    news.crawlers.cna.get_news_list(
+    monkeypatch.setattr(
+        news.crawlers.util.status_code,
+        'check_status_code',
+        mock_check_status_code,
+    )
+
+    get_news_list(
+        category_api=list(CATEGORY_API_LOOKUP_TABLE.values())[0],
         continue_fail_count=1,
-        current_datetime=datetime.now(tz=timezone.utc) - timedelta(days=1),
         debug=True,
-        max_news_per_day=1,
+        first_page=1,
+        max_page=1,
     )
     captured = capsys.readouterr()
 

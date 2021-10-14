@@ -95,7 +95,7 @@ def test_module_attribute_signature() -> None:
         2: r'https://www.epochtimes.com/b5/',
         3: r'https://star.ettoday.net/news/',
         4: r'https://www.ftvnews.com.tw/news/detail/',
-        5: r'https://news.ltn.com.tw/news/',
+        5: r'https://news.ltn.com.tw/ajax/breakingnews/',
         6: r'https://www.ntdtv.com/b5/',
         7: r'https://www.setn.com/',
         8: r'https://www.storm.mg/article/',
@@ -112,7 +112,7 @@ def test_module_attribute_signature() -> None:
         r'https://www.epochtimes.com/b5/',
         r'https://star.ettoday.net/news/',
         r'https://www.ftvnews.com.tw/news/detail/',
-        r'https://news.ltn.com.tw/news/',
+        r'https://news.ltn.com.tw/ajax/breakingnews/',
         r'https://www.ntdtv.com/b5/',
         r'https://www.setn.com/',
         r'https://www.storm.mg/article/',
@@ -125,15 +125,21 @@ def test_module_attribute_signature() -> None:
     )
     assert news.crawlers.util.normalize.COMPRESS_URL_PATTERN_LOOKUP_TABLE == {
         0:
-            re.compile(r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)'),
+            re.compile(
+                r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)',
+            ),
         1:
-            re.compile(r'https://www.cna.com.tw/news/aipl/(\d+)\.aspx'),
+            re.compile(
+                r'https://www.cna.com.tw/news/aipl/(\d+)\.aspx',
+            ),
         2:
             re.compile(
                 r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n(\d+)\.htm',
             ),
         3:
-            re.compile(r'https://star.ettoday.net/news/(\d+)'),
+            re.compile(
+                r'https://star.ettoday.net/news/(\d+)',
+            ),
         4:
             re.compile(
                 r'https://www.ftvnews.com.tw/news/detail/(.+)',
@@ -147,13 +153,21 @@ def test_module_attribute_signature() -> None:
                 r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a(\d+)\.html',
             ),
         7:
-            re.compile(r'https://www.setn.com/News.aspx\?NewsID=(\d+)'),
+            re.compile(
+                r'https://www.setn.com/News.aspx\?.*NewsID=(\d+)',
+            ),
         8:
-            re.compile(r'https://www.storm.mg/article/(\d+)'),
+            re.compile(
+                r'https://www.storm.mg/article/(\d+)',
+            ),
         9:
-            re.compile(r'https://news.tvbs.com.tw/(\w+)/(\d+)'),
+            re.compile(
+                r'https://news.tvbs.com.tw/(\w+)/(\d+)',
+            ),
         10:
-            re.compile(r'https://udn.com/news/story/(\d+)/(\d+)'),
+            re.compile(
+                r'https://udn.com/news/story/(\d+)/(\d+)',
+            ),
     }
     assert hasattr(
         news.crawlers.util.normalize,
@@ -162,12 +176,18 @@ def test_module_attribute_signature() -> None:
     assert (
         news.crawlers.util.normalize.COMPRESS_URL_PATTERN_FASTEST_LOOKUP_TABLE
         == [
-            re.compile(r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)'),
-            re.compile(r'https://www.cna.com.tw/news/aipl/(\d+)\.aspx'),
             re.compile(
-                r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n(\d+)\.htm'
+                r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)',
             ),
-            re.compile(r'https://star.ettoday.net/news/(\d+)'),
+            re.compile(
+                r'https://www.cna.com.tw/news/aipl/(\d+)\.aspx',
+            ),
+            re.compile(
+                r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n(\d+)\.htm',
+            ),
+            re.compile(
+                r'https://star.ettoday.net/news/(\d+)',
+            ),
             re.compile(
                 r'https://www.ftvnews.com.tw/news/detail/(.+)',
             ),
@@ -177,10 +197,18 @@ def test_module_attribute_signature() -> None:
             re.compile(
                 r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a(\d+)\.html',
             ),
-            re.compile(r'https://www.setn.com/News.aspx\?NewsID=(\d+)'),
-            re.compile(r'https://www.storm.mg/article/(\d+)'),
-            re.compile(r'https://news.tvbs.com.tw/(\w+)/(\d+)'),
-            re.compile(r'https://udn.com/news/story/(\d+)/(\d+)'),
+            re.compile(
+                r'https://www.setn.com/News.aspx\?.*NewsID=(\d+)',
+            ),
+            re.compile(
+                r'https://www.storm.mg/article/(\d+)',
+            ),
+            re.compile(
+                r'https://news.tvbs.com.tw/(\w+)/(\d+)',
+            ),
+            re.compile(
+                r'https://udn.com/news/story/(\d+)/(\d+)',
+            ),
         ]
     )
     assert hasattr(news.crawlers.util.normalize, 'WHITESPACE_COLLAPSE_PATTERN')

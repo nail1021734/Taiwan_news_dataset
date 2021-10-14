@@ -90,6 +90,12 @@ def test_module_function_signature() -> None:
                 annotation=Final[Optional[bool]],
             ),
             Parameter(
+                name='first_page',
+                kind=Parameter.KEYWORD_ONLY,
+                default=1,
+                annotation=Final[Optional[int]],
+            ),
+            Parameter(
                 name='kwargs',
                 kind=Parameter.VAR_KEYWORD,
                 default=Parameter.empty,
@@ -217,5 +223,3 @@ def test_module_attribute_signature() -> None:
     assert news.crawlers.ntdtv.DATE_PATTERN == re.compile(
         news.crawlers.ntdtv.COMPANY_URL + r'(\d+)/(\d+)/(\d+)/a\d+\.html',
     )
-    assert hasattr(news.crawlers.ntdtv, 'FIRST_PAGE')
-    assert news.crawlers.ntdtv.FIRST_PAGE == 1

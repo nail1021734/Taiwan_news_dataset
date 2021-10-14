@@ -36,8 +36,6 @@ COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
 DATE_PATTERN: Final[re.Pattern] = re.compile(
     COMPANY_URL + r'(\d+)/(\d+)/(\d+)/n\d+\.htm',
 )
-# 大紀元的第 1 頁格式和第 2 頁不一樣, 為了方便處理統一從第 2 頁開始
-FIRST_PAGE: Final[int] = 2
 
 
 def get_datetime_from_url(url: Final[str]) -> Union[datetime, None]:
@@ -90,6 +88,7 @@ def get_start_page(
     *,
     continue_fail_count: Final[Optional[int]] = 5,
     debug: Final[Optional[bool]] = False,
+    first_page: Final[Optional[int]] = 2,
     **kwargs: Final[Optional[Dict]],
 ) -> int:
     r"""Get first page under specified category satisfying datetime constraint.
@@ -98,6 +97,8 @@ def get_start_page(
     satisfied `past_datetime <= n.datetime <= current_datetime`.
 
     `continue_fail_count` is set to small number since it is unlikely to fail.
+
+    大紀元的第 1 頁格式和第 2 頁不一樣, 為了方便處理統一從第 2 頁開始.
     """
     logger = Counter()
     fail_count = 0
@@ -105,7 +106,7 @@ def get_start_page(
     # Only show progress bar in debug mode.  Use `max_page + 1` to make range
     # inclusive.
     for start_page in trange(
-            FIRST_PAGE,
+            first_page,
             max_page + 1,
             desc='Find start page',
             disable=not debug,
@@ -219,9 +220,6 @@ def get_news_list(
                 url=page_url,
             )
 
-            # Reset `fail_count` when `status_code == 200`.
-            fail_count = 0
-
             # Parse links in this page.
             soup = BeautifulSoup(response.text, 'html.parser')
             a_tags = soup.select(
@@ -229,7 +227,10 @@ def get_news_list(
                 + '> div.title > a'
             )
             news_urls = map(lambda a_tag: a_tag['href'], a_tags)
-        # Skip current page if any error occured.
+
+            # Reset `fail_count` if no error occurred.
+            fail_count = 0
+        # Skip current page if any error occurred.
         except Exception as err:
             fail_count += 1
 
@@ -268,7 +269,7 @@ def get_news_list(
                     )
                 )
 
-                # Reset `fail_count` when `status_code == 200`.
+                # Reset `fail_count` if no error occurred.
                 fail_count = 0
             except Exception as err:
                 fail_count += 1

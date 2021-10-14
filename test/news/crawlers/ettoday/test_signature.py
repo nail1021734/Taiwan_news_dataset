@@ -72,6 +72,12 @@ def test_module_function_signature() -> None:
                     annotation=Final[int],
                 ),
                 Parameter(
+                    name='records_per_commit',
+                    kind=Parameter.KEYWORD_ONLY,
+                    default=1000,
+                    annotation=Final[Optional[int]],
+                ),
+                Parameter(
                     name='kwargs',
                     kind=Parameter.VAR_KEYWORD,
                     default=Parameter.empty,
@@ -95,5 +101,3 @@ def test_module_attribute_signature() -> None:
         news.crawlers.ettoday.COMPANY_URL == news.crawlers.util.normalize
         .get_company_url(company_id=news.crawlers.ettoday.COMPANY_ID,)
     )
-    assert hasattr(news.crawlers.ettoday, 'RECORD_PER_COMMIT')
-    assert news.crawlers.ettoday.RECORD_PER_COMMIT == 1000

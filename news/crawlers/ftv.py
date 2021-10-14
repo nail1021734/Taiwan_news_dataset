@@ -56,6 +56,7 @@ def get_news_list(
     *,
     continue_fail_count: Final[Optional[int]] = 100,
     debug: Final[Optional[bool]] = False,
+    first_idx: Final[Optional[int]] = 1,
     **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
@@ -77,9 +78,9 @@ def get_news_list(
     else:
         max_news_per_day = 30
 
-    # `news_idx` start with 1.  Only show progress bar in debug mode.
+    # Only show progress bar in debug mode.
     for news_idx in trange(
-            1,
+            first_idx,
             max_news_per_day,
             desc='Crawling',
             disable=not debug,
@@ -117,7 +118,7 @@ def get_news_list(
                 )
             )
 
-            # Reset `fail_count` when `status_code == 200` and page is found.
+            # Reset `fail_count` if no error occurred.
             fail_count = 0
         except Exception as err:
             fail_count += 1

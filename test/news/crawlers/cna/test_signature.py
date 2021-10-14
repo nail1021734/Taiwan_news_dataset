@@ -34,6 +34,12 @@ def test_module_function_signature() -> None:
                     annotation=Final[Optional[bool]],
                 ),
                 Parameter(
+                    name='max_news_per_day',
+                    kind=Parameter.KEYWORD_ONLY,
+                    default=10000,
+                    annotation=Final[Optional[int]],
+                ),
+                Parameter(
                     name='kwargs',
                     kind=Parameter.VAR_KEYWORD,
                     default=Parameter.empty,
@@ -90,5 +96,3 @@ def test_module_attribute_signature() -> None:
         news.crawlers.cna.COMPANY_URL == news.crawlers.util.normalize
         .get_company_url(company_id=news.crawlers.cna.COMPANY_ID,)
     )
-    assert hasattr(news.crawlers.cna, 'MAX_NEWS_PER_DAY')
-    assert news.crawlers.cna.MAX_NEWS_PER_DAY == 10000

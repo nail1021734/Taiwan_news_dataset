@@ -5,9 +5,7 @@ from typing import Final
 import news.crawlers.db.schema
 import news.crawlers.ntdtv
 import news.crawlers.util.request_url
-from news.crawlers.ntdtv import (
-    CATEGORY_API_LOOKUP_TABLE, FIRST_PAGE, get_news_list
-)
+from news.crawlers.ntdtv import CATEGORY_API_LOOKUP_TABLE, get_news_list
 
 
 def test_get_news_list() -> None:
@@ -19,8 +17,8 @@ def test_get_news_list() -> None:
             continue_fail_count=1,
             current_datetime=datetime.now(tz=timezone.utc),
             debug=False,
-            first_page=FIRST_PAGE,
-            last_page=FIRST_PAGE + 1,
+            first_page=1,
+            last_page=2,
             past_datetime=datetime.now(tz=timezone.utc) - timedelta(days=30),
         )
 
@@ -56,8 +54,8 @@ def test_show_progress_bar(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc),
         debug=True,
-        first_page=FIRST_PAGE,
-        last_page=FIRST_PAGE + 1,
+        first_page=1,
+        last_page=2,
         past_datetime=datetime.now(tz=timezone.utc) - timedelta(days=2),
     )
     captured = capsys.readouterr()
@@ -87,8 +85,8 @@ def test_show_error_statistics(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc),
         debug=True,
-        first_page=FIRST_PAGE,
-        last_page=FIRST_PAGE + 1,
+        first_page=1,
+        last_page=2,
         past_datetime=datetime.now(tz=timezone.utc) - timedelta(days=2),
     )
     captured = capsys.readouterr()

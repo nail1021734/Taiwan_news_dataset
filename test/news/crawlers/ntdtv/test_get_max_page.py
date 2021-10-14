@@ -4,7 +4,7 @@ from news.crawlers.ntdtv import CATEGORY_API_LOOKUP_TABLE, get_max_page
 def test_get_max_page() -> None:
     r"""Each category must have at least 100 pages.
 
-    100 is choose by observation.  If any error occured, `get_max_page` must
+    100 is choose by observation.  If any error occurred, `get_max_page` must
     return `1`.
     """
     for category_api in CATEGORY_API_LOOKUP_TABLE.values():

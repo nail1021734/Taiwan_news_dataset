@@ -1,26 +1,18 @@
 import test.news.crawlers.conftest
-from datetime import datetime, timedelta, timezone
 from typing import Final
 
-import news.crawlers.cna
 import news.crawlers.db.schema
+import news.crawlers.storm
 import news.crawlers.util.request_url
 
 
 def test_get_news_list() -> None:
-    r"""Crawling news on October 12th, 2021, utc."""
-    continue_fail_count = 3
-
-    news_list = news.crawlers.cna.get_news_list(
-        continue_fail_count=continue_fail_count,
-        current_datetime=datetime(
-            year=2021,
-            month=10,
-            day=12,
-            tzinfo=timezone.utc,
-        ),
+    r"""Crawling news with index ranging from 3992300 to 3992400."""
+    news_list = news.crawlers.storm.get_news_list(
+        continue_fail_count=50,
         debug=False,
-        max_news_per_day=10,
+        first_idx=3992300,
+        latest_idx=3992400,
     )
 
     # If news were successfully crawled, then `news_list` is not empty.
@@ -29,7 +21,7 @@ def test_get_news_list() -> None:
     for n in news_list:
         assert isinstance(n, news.crawlers.db.schema.RawNews)
         assert isinstance(n.idx, int)
-        assert n.company_id == news.crawlers.cna.COMPANY_ID
+        assert n.company_id == news.crawlers.storm.COMPANY_ID
         assert isinstance(n.raw_xml, str)
         assert isinstance(n.url_pattern, str)
 
@@ -50,11 +42,11 @@ def test_show_progress_bar(
         mock_get,
     )
 
-    news.crawlers.cna.get_news_list(
+    news.crawlers.storm.get_news_list(
         continue_fail_count=1,
-        current_datetime=datetime.now(tz=timezone.utc) - timedelta(days=1),
         debug=True,
-        max_news_per_day=1,
+        first_idx=1,
+        latest_idx=2,
     )
     captured = capsys.readouterr()
 
@@ -63,14 +55,14 @@ def test_show_progress_bar(
 
 
 def test_show_error_statistics(
-    response_404: Final[test.news.crawlers.conftest.MockResponse],
+    response_410: Final[test.news.crawlers.conftest.MockResponse],
     capsys: Final,
     monkeypatch: Final,
 ) -> None:
     r"""Must show error statistics when `debug = True`."""
 
     def mock_get(**kwargs) -> test.news.crawlers.conftest.MockResponse:
-        return response_404
+        return response_410
 
     monkeypatch.setattr(
         news.crawlers.util.request_url,
@@ -78,11 +70,11 @@ def test_show_error_statistics(
         mock_get,
     )
 
-    news.crawlers.cna.get_news_list(
+    news.crawlers.storm.get_news_list(
         continue_fail_count=1,
-        current_datetime=datetime.now(tz=timezone.utc) - timedelta(days=1),
         debug=True,
-        max_news_per_day=1,
+        first_idx=1,
+        latest_idx=2,
     )
     captured = capsys.readouterr()
 
