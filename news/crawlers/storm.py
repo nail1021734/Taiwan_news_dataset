@@ -133,9 +133,10 @@ def main(
     while cur_first_idx <= latest_idx or latest_idx == -1:
         cur_latest_idx = cur_first_idx + records_per_commit
 
-        # `cur_latest_idx` is bounded above by `latest_idx`.
+        # `cur_latest_idx` is bounded above by `latest_idx`. Use
+        # `latest_idx + 1` to make range inclusive.
         if latest_idx != -1:
-            cur_latest_idx = min(cur_latest_idx, latest_idx)
+            cur_latest_idx = min(cur_latest_idx, latest_idx + 1)
 
         # Get news list.
         news_list = get_news_list(

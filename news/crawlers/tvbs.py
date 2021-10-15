@@ -315,8 +315,9 @@ def main(
 
     cur_latest_idx = latest_idx
     while first_idx <= cur_latest_idx:
+        # Use `first_idx - 1` to make range inclusive.
         cur_first_idx = cur_latest_idx - records_per_commit
-        cur_first_idx = max(cur_first_idx, first_idx)
+        cur_first_idx = max(cur_first_idx, first_idx - 1)
 
         # Get news list with respect to each category.
         for category, category_api in CATEGORY_API_LOOKUP_TABLE.items():

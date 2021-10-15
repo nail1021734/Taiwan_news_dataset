@@ -74,14 +74,15 @@ def get_news_list(
 
     # W 類別的新聞 index 範圍比較大.
     if category_api == 'W':
-        max_news_per_day = 10000
+        max_news_per_day = 9999
     else:
         max_news_per_day = 30
 
-    # Only show progress bar in debug mode.
+    # Only show progress bar in debug mode.  Use `max_news_per_day + 1` to make
+    # range inclusive.
     for news_idx in trange(
             first_idx,
-            max_news_per_day,
+            max_news_per_day + 1,
             desc='Crawling',
             disable=not debug,
             dynamic_ncols=True,

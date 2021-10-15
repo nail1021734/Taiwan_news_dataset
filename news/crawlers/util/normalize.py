@@ -42,7 +42,7 @@ COMPANY_URL_LOOKUP_TABLE: Final[Dict[int, str]] = {
     COMPANY_ID_LOOKUP_TABLE['tvbs']:
         r'https://news.tvbs.com.tw/',
     COMPANY_ID_LOOKUP_TABLE['聯合報']:
-        r'https://udn.com/news/',
+        r'https://udn.com/',
 }
 
 # List lookup with index is O(1).

@@ -333,7 +333,7 @@ def main(
                 category_api=category_api,
                 current_datetime=current_datetime,
                 first_page=page,
-                last_page=min(page + COMMIT_PAGE_INTERVAL, max_page),
+                last_page=min(page + COMMIT_PAGE_INTERVAL, max_page + 1),
                 past_datetime=past_datetime,
                 **kwargs,
             )

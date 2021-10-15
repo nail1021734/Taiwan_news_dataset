@@ -100,7 +100,7 @@ def test_module_attribute_signature() -> None:
         7: r'https://www.setn.com/',
         8: r'https://www.storm.mg/article/',
         9: r'https://news.tvbs.com.tw/',
-        10: r'https://udn.com/news/',
+        10: r'https://udn.com/',
     }
     assert hasattr(
         news.crawlers.util.normalize,
@@ -117,7 +117,7 @@ def test_module_attribute_signature() -> None:
         r'https://www.setn.com/',
         r'https://www.storm.mg/article/',
         r'https://news.tvbs.com.tw/',
-        r'https://udn.com/news/',
+        r'https://udn.com/',
     ]
     assert hasattr(
         news.crawlers.util.normalize,
