@@ -179,7 +179,7 @@ def test_module_attribute_signature() -> None:
             6: 0.0,
             7: 86400.0,
             8: 0.0,
-            9: 0.0,
+            9: 120.0,
             10: 86400.0,
         }
     assert hasattr(
@@ -200,7 +200,7 @@ def test_module_attribute_signature() -> None:
             0.0,
             86400.0,
             0.0,
-            0.0,
+            120.0,
             86400.0,
         ]
     )
@@ -219,7 +219,7 @@ def test_module_attribute_signature() -> None:
             6: 120.0,
             7: 120.0,
             8: 0.0,
-            9: 0.0,
+            9: 120.0,
             10: 120.0,
         }
     assert hasattr(
@@ -240,7 +240,7 @@ def test_module_attribute_signature() -> None:
             120.0,
             120.0,
             0.0,
-            0.0,
+            120.0,
             120.0,
         ]
     )
