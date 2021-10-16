@@ -2,7 +2,6 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Dict, Final, List, Optional
 
-import dateutil.parser
 from tqdm import trange
 
 import news.crawlers.db.create
@@ -283,9 +282,6 @@ def get_news_list(
                 news_datetime = datetime.strptime(
                     f"{o['time']['date']} +0000",
                     '%Y-%m-%d %H:%M %z',
-                )
-                news_datetime = dateutil.parser.isoparse(
-                    news_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                 )
 
                 # News return from API will change through time.
