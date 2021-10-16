@@ -1,7 +1,7 @@
 from collections import Counter
 from typing import Dict, Final, List, Optional
 
-from tqdm import tqdm
+from tqdm import trange
 
 import news.crawlers.db.create
 import news.crawlers.db.util
@@ -12,31 +12,49 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-FIRST_PAGE = 1
-MAX_PAGE = 26
-COMPANY_ID = news.crawlers.util.normalize.get_company_id(company='自由')
+CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
+    '政治': 'politics',
+    '社會': 'society',
+    '生活': 'life',
+    '國際': 'world',
+    '地方': 'local',
+    '蒐奇': 'novelty',
+}
+COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
+    company='自由',
+)
+COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+    company_id=COMPANY_ID,
+)
 
 
 def get_news_list(
-    category: str,
-    api: str,
+    category_api: Final[str],
     *,
+    continue_fail_count: Final[Optional[int]] = 5,
     debug: Final[Optional[bool]] = False,
+    first_page: Final[Optional[int]] = 1,
+    max_page: Final[Optional[int]] = 25,
     **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
+    fail_count = 0
 
-    # Only show progress bar in debug mode.
-    iter_range = range(FIRST_PAGE, MAX_PAGE)
-    if debug:
-        iter_range = tqdm(iter_range, desc='Crawling loop.')
+    # Only show progress bar in debug mode.  Use `max_page + 1` to make range
+    # inclusive.
+    for page in trange(
+            first_page,
+            max_page + 1,
+            desc='Crawling',
+            disable=not debug,
+            dynamic_ncols=True,
+    ):
+        # Cannot get news.  This situation is highly likely due to bugs.
+        if fail_count >= continue_fail_count:
+            break
 
-    # Crawling loop.
-    for page in iter_range:
-
-        page_url = f'https://news.ltn.com.tw/ajax/breakingnews/{api}/{page}'
-
+        page_url = f'{COMPANY_URL}{category_api}/{page}'
         try:
             response = news.crawlers.util.request_url.get(url=page_url)
 
@@ -49,17 +67,24 @@ def get_news_list(
 
             # If `status_code == 200`, parse links in this page.
             api_json = response.json()['data']
-            # Inconsistent api format.
-            if page != 1:
+
+            # API format of first page is inconsistent with the rest.
+            if page != first_page:
                 api_json = api_json.values()
+
+            news_urls = map(lambda news_dict: news_dict['url'], api_json)
+
+            # Reset `fail_count` if no error occurred.
+            fail_count = 0
         except Exception as err:
+            fail_count += 1
+
             if err.args:
                 logger.update([err.args[0]])
             continue
 
-        for news_dict in api_json:
+        for news_url in news_urls:
             try:
-                news_url = news_dict['url']
                 response = news.crawlers.util.request_url.get(url=news_url)
 
                 # Raise exception if status code is not 200.
@@ -73,16 +98,26 @@ def get_news_list(
                     RawNews(
                         company_id=COMPANY_ID,
                         raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                            raw_xml=response.text
+                            raw_xml=response.text,
                         ),
                         url_pattern=news.crawlers.util.normalize.compress_url(
-                            url=news_url, company_id=COMPANY_ID
+                            url=news_url,
+                            company_id=COMPANY_ID,
                         ),
                     )
                 )
+
+                # Reset `fail_count` if no error occurred.
+                fail_count = 0
             except Exception as err:
+                fail_count += 1
+
                 if err.args:
                     logger.update([err.args[0]])
+
+            # Cannot get news.  This situation is highly likely due to bugs.
+            if fail_count >= continue_fail_count:
+                break
 
     # Only show error statistics in debug mode.
     if debug:
@@ -92,18 +127,8 @@ def get_news_list(
     return news_list
 
 
-CATEGORIES = {
-    '政治': 'politics',
-    '社會': 'society',
-    '生活': 'life',
-    '國際': 'world',
-    '地方': 'local',
-    '蒐奇': 'novelty',
-}
-
-
 def main(
-    db_name: str,
+    db_name: Final[str],
     **kwargs: Final[Optional[Dict]],
 ) -> None:
     # Get database connection.
@@ -114,13 +139,9 @@ def main(
     # Ensure news table exists.
     news.crawlers.db.create.create_table(cur=cur)
 
-    for category, api in CATEGORIES.items():
+    for category_api in CATEGORY_API_LOOKUP_TABLE.values():
         # Get news list.
-        news_list = get_news_list(
-            api=api,
-            category=category,
-            **kwargs,
-        )
+        news_list = get_news_list(category_api=category_api, **kwargs)
 
         # Write news records to database.
         news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)

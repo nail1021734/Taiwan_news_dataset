@@ -68,7 +68,7 @@ SLEEP_SECS_AFTER_BANNED_LOOKUP_TABLE: Final[Dict[int, float]] = {
     news.crawlers.util.normalize.get_company_id(company='新唐人'): 0.0,
     news.crawlers.util.normalize.get_company_id(company='三立'): 86400.0,
     news.crawlers.util.normalize.get_company_id(company='風傳媒'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='tvbs'): 0.0,
+    news.crawlers.util.normalize.get_company_id(company='tvbs'): 120.0,
     news.crawlers.util.normalize.get_company_id(company='聯合報'): 86400.0,
 }
 
@@ -96,7 +96,7 @@ SLEEP_SECS_AFTER_429_LOOKUP_TABLE: Final[Dict[int, float]] = {
     news.crawlers.util.normalize.get_company_id(company='新唐人'): 120.0,
     news.crawlers.util.normalize.get_company_id(company='三立'): 120.0,
     news.crawlers.util.normalize.get_company_id(company='風傳媒'): 0.0,
-    news.crawlers.util.normalize.get_company_id(company='tvbs'): 0.0,
+    news.crawlers.util.normalize.get_company_id(company='tvbs'): 120.0,
     news.crawlers.util.normalize.get_company_id(company='聯合報'): 120.0,
 }
 

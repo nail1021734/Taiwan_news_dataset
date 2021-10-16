@@ -20,6 +20,7 @@ def test_get_start_page() -> None:
             continue_fail_count=5,
             current_datetime=current_datetime - timedelta(days=90),
             debug=False,
+            first_page=1,
             max_page=10,
             past_datetime=current_datetime - timedelta(days=91),
         )
@@ -47,6 +48,7 @@ def test_show_progress_bar(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc),
         debug=True,
+        first_page=1,
         max_page=10,
         past_datetime=datetime.now(tz=timezone.utc) - timedelta(days=2),
     )
@@ -77,6 +79,7 @@ def test_show_error_statistics(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc),
         debug=True,
+        first_page=1,
         max_page=10,
         past_datetime=datetime.now(tz=timezone.utc) - timedelta(days=2),
     )

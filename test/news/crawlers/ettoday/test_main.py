@@ -93,16 +93,16 @@ def test_save_news_to_db(
             ),
         ]
 
-    news.crawlers.ettoday.main(
-        db_name=db_name,
-        first_idx=1,
-        latest_idx=3,
-    )
-
     monkeypatch.setattr(
         news.crawlers.ettoday,
         'get_news_list',
         mock_get_news_list,
+    )
+
+    news.crawlers.ettoday.main(
+        db_name=db_name,
+        first_idx=1,
+        latest_idx=3,
     )
 
     all_records = news.crawlers.db.read.read_all_records(db_name=db_name)

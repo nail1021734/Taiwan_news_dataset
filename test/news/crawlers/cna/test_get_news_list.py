@@ -20,6 +20,7 @@ def test_get_news_list() -> None:
             tzinfo=timezone.utc,
         ),
         debug=False,
+        max_news_per_day=10,
     )
 
     # If news were successfully crawled, then `news_list` is not empty.
@@ -53,6 +54,7 @@ def test_show_progress_bar(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc) - timedelta(days=1),
         debug=True,
+        max_news_per_day=1,
     )
     captured = capsys.readouterr()
 
@@ -80,6 +82,7 @@ def test_show_error_statistics(
         continue_fail_count=1,
         current_datetime=datetime.now(tz=timezone.utc) - timedelta(days=1),
         debug=True,
+        max_news_per_day=1,
     )
     captured = capsys.readouterr()
 

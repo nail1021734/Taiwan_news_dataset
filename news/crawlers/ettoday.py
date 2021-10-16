@@ -18,7 +18,6 @@ COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
 COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
-RECORD_PER_COMMIT: Final[int] = 1000
 
 
 def get_news_list(
@@ -65,7 +64,7 @@ def get_news_list(
                 )
             )
 
-            # Reset `fail_count` when `status_code == 200`.
+            # Reset `fail_count` if no error occurred.
             fail_count = 0
         except Exception as err:
             fail_count += 1
@@ -89,6 +88,8 @@ def main(
     db_name: Final[str],
     first_idx: Final[int],
     latest_idx: Final[int],
+    *,
+    records_per_commit: Final[Optional[int]] = 1000,
     **kwargs: Final[Optional[Dict]],
 ) -> None:
     # Value check.
@@ -117,11 +118,12 @@ def main(
     cur_first_idx = first_idx
     # `latest_id` 為 -1 表示抓到沒有新聞為止.
     while cur_first_idx <= latest_idx or latest_idx == -1:
-        cur_latest_idx = cur_first_idx + RECORD_PER_COMMIT
+        cur_latest_idx = cur_first_idx + records_per_commit
 
-        # `cur_latest_idx` is bounded above by `latest_idx`.
+        # `cur_latest_idx` is bounded above by `latest_idx`.  Use
+        # `latest_idx + 1` to make range inclusive.
         if latest_idx != -1:
-            cur_latest_idx = min(cur_latest_idx, latest_idx)
+            cur_latest_idx = min(cur_latest_idx, latest_idx + 1)
 
         news_list = get_news_list(
             first_idx=cur_first_idx,
@@ -138,7 +140,7 @@ def main(
         conn.commit()
 
         # Increase crawling index.
-        cur_first_idx += RECORD_PER_COMMIT
+        cur_first_idx += records_per_commit
 
     # Close database connection.
     conn.close()

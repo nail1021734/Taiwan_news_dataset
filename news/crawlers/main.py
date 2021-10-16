@@ -1,12 +1,12 @@
 import argparse
+import sys
 from datetime import datetime, timedelta, timezone
+from typing import Callable, Dict, Final, List
 
-import dateutil.parser
-
-import news.crawlers
 import news.crawlers.chinatimes
 import news.crawlers.cna
 import news.crawlers.epochtimes
+import news.crawlers.ettoday
 import news.crawlers.ftv
 import news.crawlers.ltn
 import news.crawlers.ntdtv
@@ -15,7 +15,7 @@ import news.crawlers.storm
 import news.crawlers.tvbs
 import news.crawlers.udn
 
-CRAWLER_DICT = {
+CRAWLER_LOOKUP_TABLE: Final[Dict[str, Callable]] = {
     'chinatimes': news.crawlers.chinatimes.main,
     'cna': news.crawlers.cna.main,
     'epochtimes': news.crawlers.epochtimes.main,
@@ -30,29 +30,35 @@ CRAWLER_DICT = {
 }
 
 
-def parse_argument():
-    r"""
-    `crawler_name` example: 'cna'
-    `current_datetime` example: 2021-06-24T00:00:00Z
-    `first_id` example: 55688
+def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
+    r"""Parse command line arguments.
+
+    Example
+    =======
+    python -m news.crawlers.main \
+        --crawler_name chinatimes \
+        --current_datetime 2010-01-02+0000
+        --db_name chinatimes.db \
+        --debug True \
+        --past_datetime 2010-01-01+0000
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--crawler_name',
-        choices=CRAWLER_DICT.keys(),
+        choices=CRAWLER_LOOKUP_TABLE.keys(),
         type=str,
         help='Select crawler.',
     )
     parser.add_argument(
         '--db_name',
         type=str,
-        help='Assign database to store news.',
+        help='Name of the database to store news.',
     )
     parser.add_argument(
         '--debug',
-        type=bool,
-        default=False,
-        help='Select whether use debug mode.',
+        action='store_true',
+        help='Select whether use debug mode.  In debug mode it outputs '
+        'progress bar and error messages.',
     )
     parser.add_argument(
         '--current_datetime',
@@ -70,34 +76,42 @@ def parse_argument():
         '--first_idx',
         type=int,
         default=1,
-        help='Specify first index id. (smallest)',
+        help='Specify first news index. (smallest)',
     )
     parser.add_argument(
         '--latest_idx',
         type=int,
         default=-1,
-        help='Specify latest index id. (largest)',
+        help='Specify latest news index. (largest)',
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args(argv)
 
 
-if __name__ == '__main__':
+def main(argv: Final[List[str]]) -> None:
+    args = parse_args(argv=argv)
 
-    args = parse_argument()
-
-    # Defaule `current_datetime` now.
+    # `current_datetime` is default to now.
     if not args.current_datetime:
-        args.current_datetime = datetime.now(timezone.utc)
+        args.current_datetime = datetime.now(tz=timezone.utc)
     else:
-        args.current_datetime = dateutil.parser.isoparse(args.current_datetime)
+        args.current_datetime = datetime.strptime(
+            args.current_datetime,
+            '%Y-%m-%d%z',
+        )
 
-    # Default crawl one day news.
+    # `past_datetime` is default to yesterday.
     if not args.past_datetime:
         args.past_datetime = args.current_datetime - timedelta(days=1)
     else:
-        args.past_datetime = dateutil.parser.isoparse(args.past_datetime)
+        args.past_datetime = datetime.strptime(
+            args.past_datetime,
+            '%Y-%m-%d%z',
+        )
 
     # Run crawler.
-    crawler_script = CRAWLER_DICT[args.crawler_name]
+    crawler_script = CRAWLER_LOOKUP_TABLE[args.crawler_name]
     crawler_script(**args.__dict__)
+
+
+if __name__ == '__main__':
+    main(argv=sys.argv)

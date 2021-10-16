@@ -56,6 +56,7 @@ def get_news_list(
     *,
     continue_fail_count: Final[Optional[int]] = 100,
     debug: Final[Optional[bool]] = False,
+    first_idx: Final[Optional[int]] = 1,
     **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
@@ -73,14 +74,15 @@ def get_news_list(
 
     # W 類別的新聞 index 範圍比較大.
     if category_api == 'W':
-        max_news_per_day = 10000
+        max_news_per_day = 9999
     else:
         max_news_per_day = 30
 
-    # `news_idx` start with 1.  Only show progress bar in debug mode.
+    # Only show progress bar in debug mode.  Use `max_news_per_day + 1` to make
+    # range inclusive.
     for news_idx in trange(
-            1,
-            max_news_per_day,
+            first_idx,
+            max_news_per_day + 1,
             desc='Crawling',
             disable=not debug,
             dynamic_ncols=True,
@@ -117,7 +119,7 @@ def get_news_list(
                 )
             )
 
-            # Reset `fail_count` when `status_code == 200` and page is found.
+            # Reset `fail_count` if no error occurred.
             fail_count = 0
         except Exception as err:
             fail_count += 1

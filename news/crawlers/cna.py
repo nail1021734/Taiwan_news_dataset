@@ -19,7 +19,6 @@ COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
 COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
-MAX_NEWS_PER_DAY: Final[int] = 10000
 
 
 def get_news_list(
@@ -27,6 +26,7 @@ def get_news_list(
     *,
     continue_fail_count: Final[Optional[int]] = 100,
     debug: Final[Optional[bool]] = False,
+    max_news_per_day: Final[Optional[int]] = 10000,
     **kwargs: Final[Optional[Dict]],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
@@ -36,7 +36,7 @@ def get_news_list(
 
     # Only show progress bar in debug mode.
     for news_idx in trange(
-            MAX_NEWS_PER_DAY,
+            max_news_per_day,
             desc='Crawling',
             disable=not debug,
             dynamic_ncols=True,
@@ -65,7 +65,7 @@ def get_news_list(
                 )
             )
 
-            # Reset `fail_count` when `status_code == 200`.
+            # Reset `fail_count` if no error occurred.
             fail_count = 0
         except Exception as err:
             fail_count += 1

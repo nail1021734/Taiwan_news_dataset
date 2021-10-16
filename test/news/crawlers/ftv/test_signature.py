@@ -52,6 +52,12 @@ def test_module_function_signature() -> None:
                 annotation=Final[Optional[bool]],
             ),
             Parameter(
+                name='first_idx',
+                kind=Parameter.KEYWORD_ONLY,
+                default=1,
+                annotation=Final[Optional[int]],
+            ),
+            Parameter(
                 name='kwargs',
                 kind=Parameter.VAR_KEYWORD,
                 default=Parameter.empty,
