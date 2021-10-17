@@ -23,19 +23,6 @@ news
 |	   |- formatter.py
 |    |- schema.py
 |- crawlers
-|    |- README.md
-|    |- company.py
-|    |- main.py
-|    |- db
-|    |    |- read.py
-|    |    |- write.py
-|    |    |- schema.py
-|    |    |- util.py
-|    |- util
-|    |    |- normalize.py
-|    |    |- date_parse.py
-|    |    |- pre_parse.py
-|    |    |- status_code.py
 |- parse
 |    |- README.md
 |    |- company.py
