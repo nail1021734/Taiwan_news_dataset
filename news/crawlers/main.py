@@ -15,7 +15,7 @@ import news.crawlers.storm
 import news.crawlers.tvbs
 import news.crawlers.udn
 
-CRAWLER_LOOKUP_TABLE: Final[Dict[str, Callable]] = {
+CRAWLER_SCRIPT_LOOKUP_TABLE: Final[Dict[str, Callable]] = {
     'chinatimes': news.crawlers.chinatimes.main,
     'cna': news.crawlers.cna.main,
     'epochtimes': news.crawlers.epochtimes.main,
@@ -45,7 +45,7 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--crawler_name',
-        choices=CRAWLER_LOOKUP_TABLE.keys(),
+        choices=CRAWLER_SCRIPT_LOOKUP_TABLE.keys(),
         type=str,
         help='Select crawler.',
     )
@@ -109,7 +109,7 @@ def main(argv: Final[List[str]]) -> None:
         )
 
     # Run crawler.
-    crawler_script = CRAWLER_LOOKUP_TABLE[args.crawler_name]
+    crawler_script = CRAWLER_SCRIPT_LOOKUP_TABLE[args.crawler_name]
     crawler_script(**args.__dict__)
 
 
