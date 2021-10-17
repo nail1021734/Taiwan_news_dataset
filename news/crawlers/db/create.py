@@ -24,7 +24,7 @@ import sqlite3
 from typing import Final
 
 SQL: Final[str] = """
-    CREATE TABLE IF NOT EXISTS news (
+    CREATE TABLE IF NOT EXISTS raw_news (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         company_id  INTEGER NOT NULL,
         raw_xml     TEXT    NOT NULL,

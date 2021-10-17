@@ -5,10 +5,10 @@ from dataclasses import dataclass
 class ParsedNews:
     idx: int = 0
     article: str = ''
-    category: str = ''
+    category: str = None  # Some `RawNews` does not have category.
     company_id: int = 0
     datetime: int = 0
-    reporter: str = ''
+    reporter: str = None  # Some `RawNews` does not have reporter.
     title: str = ''
     url_pattern: str = ''
 

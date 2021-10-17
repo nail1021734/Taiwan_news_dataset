@@ -40,7 +40,7 @@ def test_module_attribute_signature() -> None:
         re.sub(r'\s+', ' ', news.crawlers.db.write.READ_SQL) == re.sub(
             r'\s+', ' ', """
             SELECT url_pattern
-            FROM news;
+            FROM   raw_news;
         """
         )
     )
@@ -49,8 +49,8 @@ def test_module_attribute_signature() -> None:
     assert (
         re.sub(r'\s+', ' ', news.crawlers.db.write.WRITE_SQL) == re.sub(
             r'\s+', ' ', """
-            INSERT INTO news(company_id, raw_xml, url_pattern)
-            VALUES          (?         , ?      , ?          );
+            INSERT INTO raw_news(company_id, raw_xml, url_pattern)
+            VALUES              (?         , ?      , ?          );
         """
         )
     )

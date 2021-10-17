@@ -33,7 +33,7 @@ def test_module_attribute_signature() -> None:
     assert (
         re.sub(r'\s+', ' ', news.crawlers.db.create.SQL) == re.sub(
             r'\s+', ' ', """
-            CREATE TABLE IF NOT EXISTS news (
+            CREATE TABLE IF NOT EXISTS raw_news (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 company_id  INTEGER NOT NULL,
                 raw_xml     TEXT    NOT NULL,
