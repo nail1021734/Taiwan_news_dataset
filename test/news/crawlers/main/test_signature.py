@@ -1,7 +1,7 @@
 import argparse
 import inspect
 from inspect import Parameter, Signature
-from typing import Callable, Dict, Final, List
+from typing import Final, List
 
 import news.crawlers.chinatimes
 import news.crawlers.cna
@@ -50,8 +50,8 @@ def test_module_function_signature() -> None:
 
 def test_module_attribute_signature() -> None:
     r"""Ensure module attributes' signature."""
-    assert hasattr(news.crawlers.main, 'CRAWLER_LOOKUP_TABLE')
-    assert news.crawlers.main.CRAWLER_LOOKUP_TABLE == {
+    assert hasattr(news.crawlers.main, 'CRAWLER_SCRIPT_LOOKUP_TABLE')
+    assert news.crawlers.main.CRAWLER_SCRIPT_LOOKUP_TABLE == {
         'chinatimes': news.crawlers.chinatimes.main,
         'cna': news.crawlers.cna.main,
         'epochtimes': news.crawlers.epochtimes.main,
