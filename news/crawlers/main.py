@@ -200,4 +200,4 @@ def main(argv: Final[List[str]]) -> None:
 
 
 if __name__ == '__main__':
-    main(argv=sys.argv)
+    main(argv=sys.argv[1:])

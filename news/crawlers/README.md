@@ -25,7 +25,7 @@
 - **最早**可以爬到的新聞日期為 `2010-01-01`.
 
 ```sh
-python -m news.crawlers.main --crawler_name chinatimes --db_name chinatimes.db --debug True --past_datetime 2010-01-01+0000
+python -m news.crawlers.main --crawler_name chinatimes --db_name chinatimes.db --debug --past_datetime 2010-01-01+0000
 ```
 
 ## 中央社 CNA
@@ -37,7 +37,7 @@ python -m news.crawlers.main --crawler_name chinatimes --db_name chinatimes.db -
 - **最早**可以爬到的新聞日期為 `2014-01-01`.
 
 ```sh
-python -m news.crawlers.main --crawler_name cna --db_name cna.db --debug True --past_datetime 2014-01-01+0000
+python -m news.crawlers.main --crawler_name cna --db_name cna.db --debug --past_datetime 2014-01-01+0000
 ```
 
 ## 大紀元 Epochtimes
@@ -47,7 +47,7 @@ python -m news.crawlers.main --crawler_name cna --db_name cna.db --debug True --
 - **最早**可以爬到的新聞日期為 `2001-01-01`.
 
 ```sh
-python -m news.crawlers.main --crawler_name epochtimes --db_name epochtimes.db --debug True --past_datetime 2001-01-01+0000
+python -m news.crawlers.main --crawler_name epochtimes --db_name epochtimes.db --debug --past_datetime 2001-01-01+0000
 ```
 
 ## 東森 ETtoday
@@ -57,7 +57,7 @@ python -m news.crawlers.main --crawler_name epochtimes --db_name epochtimes.db -
 - **最早**可以爬到的新聞流水號為 `1`.
 
 ```sh
-python -m news.crawlers.main --crawler_name ettoday --db_name ettoday.db --debug True --first_idx 1
+python -m news.crawlers.main --crawler_name ettoday --db_name ettoday.db --debug --first_idx 1
 ```
 
 ## 民視 FTV
@@ -68,7 +68,7 @@ python -m news.crawlers.main --crawler_name ettoday --db_name ettoday.db --debug
 - **最早**可以爬到的新聞日期為 `2017-09-17`.
 
 ```sh
-python -m news.crawlers.main --crawler_name ftv --db_name ftv.db --debug True --past_datetime 2017-09-17+0000
+python -m news.crawlers.main --crawler_name ftv --db_name ftv.db --debug --past_datetime 2017-09-17+0000
 ```
 
 ## 自由 LTN
@@ -78,7 +78,7 @@ python -m news.crawlers.main --crawler_name ftv --db_name ftv.db --debug True --
 - 所有的新聞都是**流水號**, 分配到不同的**類別**之下.
 
 ```sh
-python -m news.crawlers.main --crawler_name ltn --db_name ftv.db --debug True
+python -m news.crawlers.main --crawler_name ltn --db_name ftv.db --debug
 ```
 
 ## 新唐人 NTDTV
@@ -88,7 +88,7 @@ python -m news.crawlers.main --crawler_name ltn --db_name ftv.db --debug True
 - **最早**可以爬到的新聞日期為 `2002-01-01`.
 
 ```sh
-python -m news.crawlers.main --crawler_name ntdtv --db_name ntdtv.db --debug True --past_datetime 2002-01-01+0000
+python -m news.crawlers.main --crawler_name ntdtv --db_name ntdtv.db --debug --past_datetime 2002-01-01+0000
 ```
 
 ## 三立 SETN
@@ -98,7 +98,7 @@ python -m news.crawlers.main --crawler_name ntdtv --db_name ntdtv.db --debug Tru
 - 所有的新聞都是**流水號**, 分配到不同的**類別**之下.
 
 ```sh
-python -m news.crawlers.main --crawler_name setn --db_name setn.db --debug True --first_idx 1
+python -m news.crawlers.main --crawler_name setn --db_name setn.db --debug --first_idx 1
 ```
 
 ## 風傳媒 STORM
@@ -108,7 +108,7 @@ python -m news.crawlers.main --crawler_name setn --db_name setn.db --debug True 
 
 ```sh
 # The first available index of storm is 21016.
-python -m news.crawlers.main --crawler_name storm --db_name storm.db --debug True --first_idx 21016
+python -m news.crawlers.main --crawler_name storm --db_name storm.db --debug --first_idx 21016
 ```
 
 ## TVBS
@@ -120,7 +120,7 @@ python -m news.crawlers.main --crawler_name storm --db_name storm.db --debug Tru
 - 所有的新聞都是**流水號**, 分配到不同的**類別**之下.
 
 ```sh
-python -m news.crawlers.main --crawler_name tvbs --db_name tvbs.db --debug True --first_idx 1
+python -m news.crawlers.main --crawler_name tvbs --db_name tvbs.db --debug --first_idx 1
 ```
 
 ## 聯合報 UDN
@@ -130,5 +130,5 @@ python -m news.crawlers.main --crawler_name tvbs --db_name tvbs.db --debug True 
 - 所有的新聞都是**流水號**, 分配到不同的**類別**之下.
 
 ```sh
-python -m news.crawlers.main --crawler_name udn --db_name udn.db --debug True --past_datetime 2014-01-01+0000
+python -m news.crawlers.main --crawler_name udn --db_name udn.db --debug --past_datetime 2014-01-01+0000
 ```
