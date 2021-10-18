@@ -13,7 +13,7 @@ import news.crawlers.db.util
 def cleanup_db_file(db_name: Final[str], request: Final) -> None:
     r"""Delete testing database files."""
 
-    def remove():
+    def remove() -> None:
         db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
         db_dir = os.path.abspath(os.path.join(db_path, os.pardir))
 

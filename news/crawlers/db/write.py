@@ -5,12 +5,12 @@ import news.crawlers.db.schema
 
 READ_SQL: Final[str] = """
     SELECT url_pattern
-    FROM   news;
+    FROM   raw_news;
 """
 
 WRITE_SQL: Final[str] = """
-    INSERT INTO news(company_id, raw_xml, url_pattern)
-    VALUES          (?         , ?      , ?          );
+    INSERT INTO raw_news(company_id, raw_xml, url_pattern)
+    VALUES              (?         , ?      , ?          );
 """
 
 

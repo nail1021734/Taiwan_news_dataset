@@ -9,12 +9,12 @@ import news.db
 # 讀取用的 SQL 指令
 SQL: Final[str] = """
     SELECT id, company_id, raw_xml, url_pattern
-    FROM   news;
+    FROM   raw_news;
 """
 
 
 def read_all_records(
-    db_name: Final[str]
+    db_name: Final[str],
 ) -> List[news.crawlers.db.schema.RawNews]:
     r"""讀取指定 `db_name` 中所有的 `RawNews`."""
 

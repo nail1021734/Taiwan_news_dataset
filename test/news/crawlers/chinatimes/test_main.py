@@ -10,7 +10,10 @@ import news.crawlers.db.schema
 import news.crawlers.util.request_url
 
 
-def test_utc_timezone(db_name: Final[str]) -> None:
+def test_utc_timezone(
+    db_name: Final[str],
+    cleanup_db_file: Final,
+) -> None:
     r"""`current_datetime` and `past_datetime` must in utc timezone."""
     taiwan_current_datetime = datetime.now(
         tz=timezone(offset=timedelta(hours=8)),
@@ -37,7 +40,10 @@ def test_utc_timezone(db_name: Final[str]) -> None:
     assert '`past_datetime` must in utc timezone.' in str(excinfo.value)
 
 
-def test_datetime_order(db_name: Final[str]) -> None:
+def test_datetime_order(
+    db_name: Final[str],
+    cleanup_db_file: Final,
+) -> None:
     r"""Must have `past_datetime <= current_datetime`."""
     with pytest.raises(ValueError) as excinfo:
         news.crawlers.chinatimes.main(

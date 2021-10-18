@@ -8,7 +8,10 @@ import news.crawlers.ettoday
 import news.crawlers.util.request_url
 
 
-def test_first_idx(db_name: Final[str]) -> None:
+def test_first_idx(
+    db_name: Final[str],
+    cleanup_db_file: Final,
+) -> None:
     r"""Must have `first_idx > 0`."""
     with pytest.raises(ValueError) as excinfo:
         news.crawlers.ettoday.main(
@@ -55,7 +58,10 @@ def test_latest_idx(
     )
 
 
-def test_idx_order(db_name: Final[str]) -> None:
+def test_idx_order(
+    db_name: Final[str],
+    cleanup_db_file: Final,
+) -> None:
     r"""Must have `first_idx <= latest_idx`."""
     with pytest.raises(ValueError) as excinfo:
         news.crawlers.ettoday.main(
