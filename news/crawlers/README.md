@@ -120,7 +120,7 @@ python -m news.crawlers.main --crawler_name storm --db_name storm.db --debug --f
 - 所有的新聞都是**流水號**, 分配到不同的**類別**之下.
 
 ```sh
-python -m news.crawlers.main --crawler_name tvbs --db_name tvbs.db --debug --first_idx 1
+python -m news.crawlers.main --crawler_name tvbs --db_name tvbs.db --debug --first_idx 1 --latest_idx 1611612
 ```
 
 ## 聯合報 UDN
