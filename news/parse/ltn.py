@@ -1,6 +1,7 @@
 import re
 import unicodedata
 from datetime import datetime, timedelta
+from typing import Final
 
 import bs4
 from bs4 import BeautifulSoup
@@ -33,7 +34,7 @@ REPORTER_PATTERNS = [
 ]
 
 
-def parse(ori_news: RawNews) -> ParsedNews:
+def parser(raw_news: Final[RawNews]) -> ParsedNews:
     """Parse ltn news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these
@@ -41,13 +42,13 @@ def parse(ori_news: RawNews) -> ParsedNews:
     """
     # Information which cannot be parsed.
     parsed_news = ParsedNews(
-        url_pattern=ori_news.url_pattern,
-        company_id=ori_news.company_id,
+        url_pattern=raw_news.url_pattern,
+        company_id=raw_news.company_id,
     )
 
     soup = None
     try:
-        soup = BeautifulSoup(ori_news.raw_xml, 'html.parser')
+        soup = BeautifulSoup(raw_news.raw_xml, 'html.parser')
     except Exception:
         raise ValueError('Invalid html format.')
 

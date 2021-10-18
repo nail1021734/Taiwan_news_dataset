@@ -1,126 +1,297 @@
 import argparse
-import os
+import sys
+import textwrap
+from typing import Callable, Dict, Final, List, Optional
 
 from tqdm import tqdm
 
-import news.crawlers.db
-import news.parse
-import news.parse.db
+import news.crawlers.db.read
+import news.crawlers.db.util
+import news.crawlers.util.normalize
+import news.db
+import news.parse.chinatimes
+import news.parse.cna
+import news.parse.db.create
+import news.parse.db.util
+import news.parse.db.write
+import news.parse.epochtimes
+import news.parse.ettoday
+import news.parse.ftv
+import news.parse.ltn
+import news.parse.ntdtv
+import news.parse.setn
+import news.parse.storm
+import news.parse.tvbs
+import news.parse.udn
+import news.path
+from news.crawlers.db.schema import RawNews
+from news.parse.db.schema import ParsedNews
 
-COMPANY_DICT = {
-    'chinatimes': news.parse.chinatimes.parse,
-    'cna': news.parse.cna.parse,
-    'epochtimes': news.parse.epochtimes.parse,
-    'ettoday': news.parse.ettoday.parse,
-    'ftv': news.parse.ftv.parse,
-    'ltn': news.parse.ltn.parse,
-    'ntdtv': news.parse.ntdtv.parse,
-    'setn': news.parse.setn.parse,
-    'storm': news.parse.storm.parse,
-    'tvbs': news.parse.tvbs.parse,
-    'udn': news.parse.udn.parse,
+PARSER_LOOKUP_TABLE: Final[Dict[int, Callable[[RawNews], ParsedNews]]] = {
+    news.crawlers.util.normalize.get_company_id(company='中時'):
+        news.parse.chinatimes.parser,
+    news.crawlers.util.normalize.get_company_id(company='中央社'):
+        news.parse.cna.parser,
+    news.crawlers.util.normalize.get_company_id(company='大紀元'):
+        news.parse.epochtimes.parser,
+    news.crawlers.util.normalize.get_company_id(company='東森'):
+        news.parse.ettoday.parser,
+    news.crawlers.util.normalize.get_company_id(company='民視'):
+        news.parse.ftv.parser,
+    news.crawlers.util.normalize.get_company_id(company='自由'):
+        news.parse.ltn.parser,
+    news.crawlers.util.normalize.get_company_id(company='新唐人'):
+        news.parse.ntdtv.parser,
+    news.crawlers.util.normalize.get_company_id(company='三立'):
+        news.parse.setn.parser,
+    news.crawlers.util.normalize.get_company_id(company='風傳媒'):
+        news.parse.storm.parser,
+    news.crawlers.util.normalize.get_company_id(company='tvbs'):
+        news.parse.tvbs.parser,
+    news.crawlers.util.normalize.get_company_id(company='聯合報'):
+        news.parse.udn.parser,
 }
 
 
-def parse_argument():
-    r"""
-    `company` example: 'cna'
-    `raw` example: `chinatimes.db`
-    `save_path` example: `chinatimes.db`
+def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
+    r"""Parse command line arguments.
+
+    Example
+    =======
+    python -m news.parse.main \
+        --db_name rel/my.db   \
+        --db_name /abs/my.db  \
+        --db_dir rel_dir      \
+        --db_dir /abs_dir     \
+        --debug               \
+        --save_db_name out.db
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--company',
-        choices=COMPANY_DICT.keys(),
+        '--db_name',
+        action='append',
         type=str,
-        help='Select parser.',
+        help=textwrap.dedent(
+            f"""\
+            sqlite database file name wanted to parse.  If absolute path is
+            given, then use the given path as database file and read records
+            from the given path.
+
+            For example, excuting
+
+                --db_name /abs/my.db
+
+            will collect the file
+
+                /abs/my.db
+
+            If relative path is given, then we assume the given path is under
+            the path `PROJECT_ROOT/data/raw`.  Currently project root is set to
+            {news.path.PROJECT_ROOT}.
+
+            For example, executing
+
+                --db_name rel/my.db
+
+            will collect the file
+
+                PROJECT_ROOT/data/raw/rel/my.db
+
+            One can specify multiple database files at the same time using
+            multiple `--db_name`.
+
+            For example, executing
+
+                --db_name rel/a.db --db_name rel/b.db --db_name /abs/c.db
+
+            will collect all the following files
+
+                PROJECT_ROOT/data/raw/rel/a.db
+                PROJECT_ROOT/data/raw/rel/b.db
+                /abs/c.db
+            """
+        ),
     )
     parser.add_argument(
-        '--raw',
+        '--db_dir',
+        action='append',
         type=str,
-        help='Select db or dir to parse.(From `data/raw` folder.)',
+        help=textwrap.dedent(
+            f"""\
+            Directory contains sqlite database files.  If absolute path is
+            given, then recursively search the directory to find all sqlite
+            database files.
+
+            For example, if `/abs/dir` contains
+
+                a.db
+                b.db
+                subdir/c.db
+                subdir/d.db
+
+            then executing
+
+                --db_dir /abs/dir
+
+            will collect all the following files
+
+                /abs/dir/a.db
+                /abs/dir/b.db
+                /abs/dir/subdir/c.db
+                /abs/dir/subdir/d.db
+
+            If relative path is given, then we assume the given directory is
+            under the path `PROJECT_ROOT/data/raw`.  Currently project root is
+            set to {news.path.PROJECT_ROOT}.
+
+            For example, if `PROJECT_ROOT/data/raw/rel/dir` contains
+
+                a.db
+                b.db
+                subdir/c.db
+                subdir/d.db
+
+            then executing
+
+                --db_dir rel/dir
+
+            will collect all the following files
+
+                PROJECT_ROOT/data/raw/rel/dir/a.db
+                PROJECT_ROOT/data/raw/rel/dir/b.db
+                PROJECT_ROOT/data/raw/rel/dir/subdir/c.db
+                PROJECT_ROOT/data/raw/rel/dir/subdir/d.db
+
+            One can specify multiple directory at the same time using multiple
+            `--db_dir`.
+
+            Continue from previouse example, excuting
+
+                --db_dir rel/dir --db_dir /abs/dir
+
+            will collect all the following files
+
+                /abs/dir/a.db
+                /abs/dir/b.db
+                /abs/dir/subdir/c.db
+                /abs/dir/subdir/d.db
+                PROJECT_ROOT/data/raw/rel/dir/a.db
+                PROJECT_ROOT/data/raw/rel/dir/b.db
+                PROJECT_ROOT/data/raw/rel/dir/subdir/c.db
+                PROJECT_ROOT/data/raw/rel/dir/subdir/d.db
+            """
+        ),
     )
     parser.add_argument(
-        '--save_path',
+        '--debug',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            Select whether to use debug mode.  In debug mode it outputs
+            progress bar to stderr and error messages to stdout.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--save_db_name',
         type=str,
-        help='Specify save path.',
+        required=True,
+        help=textwrap.dedent(
+            f"""\
+            Name of the database to save parsing results.  Create file if given
+            path does not exist (along with non-existed directories in the
+            path).  If absolute path is given, then treat the given path as
+            sqlite database file.
+
+            For example, executing
+
+                --save_db_name /abs/my.db
+
+            will output parsed news to the file
+
+                /abs/my.db
+
+            If relative path is given, then we assume the given path is under
+            the path `PROJECT_ROOT/data/parsed`. Currently project root is set
+            to {news.path.PROJECT_ROOT}.
+
+            For example, executing
+
+                --save_db_name rel/my.db
+
+            will output parsed news to the file
+
+                PROJECT_ROOT/data/parsed/rel/my.db
+            """
+        ),
     )
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args(argv)
 
 
-def parse(
-    raw_dataset: news.crawlers.db.schema.RawNews, company: str
-) -> news.parse.db.schema.ParsedNews:
-    r"""根據指定的公司用不同方法 parse 輸入的 `raw_data`"""
-    parsed_data = []
-    for raw_data in tqdm(raw_dataset):
+def parse_raw_news(
+    db_path: Final[str],
+    *,
+    debug: Final[Optional[bool]] = False,
+) -> List[ParsedNews]:
+    r"""根據公司用不同方法 parse `RawNews`."""
+    # `read_all_records` use `news.crawlers.db.util.get_db_path`
+    # internally, so its okay to pass absolute path `db_path`.
+    try:
+        raw_news_list = news.crawlers.db.read.read_all_records(db_name=db_path)
+    except Exception as err:
+        print(f'Failed to read records in {db_path}: {err}')
+        return []
+
+    parsed_news_list: List[ParsedNews] = []
+    for raw_news in tqdm(
+            raw_news_list,
+            desc='Parsing',
+            disable=not debug,
+            dynamic_ncols=True,
+    ):
         try:
-            parsed_data.append(COMPANY_DICT[company](raw_data))
-        except Exception:
-            continue
-
-    return parsed_data
-
-
-def main():
-    args = parse_argument()
-
-    # 確認輸入的`raw`路徑是db檔還是資料夾
-    if args.raw.split('.')[-1] == 'db':
-        # 如果輸入的`raw`路徑是db檔則只對這個檔案做parse，
-        # 並把資料存在`data/parsed`資料夾下
-
-        # Read raw data.
-        raw_dataset = news.crawlers.db.read.read_all_records(db_name=args.raw)
-
-        # Parse raw data.
-        parsed_data = parse(raw_dataset=raw_dataset, company=args.company)
-
-        # Connect to target database.
-        parsed_db_conn = news.parse.db.util.get_conn(db_name=args.save_path)
-
-        # Create `news` table if target database didn't contain this table.
-        news.parse.db.create.create_table(cur=parsed_db_conn.cursor())
-
-        # Write parsed data in target db.
-        news.parse.db.write.write_new_records(
-            cur=parsed_db_conn.cursor(), news_list=parsed_data
-        )
-
-        parsed_db_conn.commit()
-        parsed_db_conn.close()
-    else:
-        # 如果輸入的`raw`路徑是資料夾則將資料夾內的所有db都做parse，
-        # 並把資料存在`data/parsed`資料夾下
-
-        raw_path = os.path.join('data', 'raw', args.raw)
-        for filename in os.listdir(raw_path):
-            # Read raw data.
-            raw_dataset = news.crawlers.db.read.AllRecords(
-                db_name=os.path.join(args.raw, filename)
+            parsed_news_list.append(
+                PARSER_LOOKUP_TABLE[raw_news.company_id](raw_news=raw_news)
             )
+        except Exception as err:
+            print(f'Failed to parse idx {raw_news.idx} in {db_path}: {err}')
 
-            # Parse raw data.
-            parsed_data = parse(raw_dataset=raw_dataset, company=args.company)
+    return parsed_news_list
 
-            # Connect to target database.
-            parsed_db_conn = news.parse.db.util.get_conn(
-                db_name=os.path.join(args.save_path, filename)
+
+def main(argv: Final[List[str]]) -> None:
+    args = parse_args(argv=argv)
+
+    # Map relative paths to absolute paths under `PROJECT_ROOT/data/raw`.
+    db_paths = news.db.get_db_paths(
+        file_paths=list(
+            map(
+                news.crawlers.db.util.get_db_path,
+                args.db_name + args.db_dir,
             )
+        ),
+    )
 
-            # Create `news` table if target database didn't contain this table.
-            news.parse.db.create.create_table(cur=parsed_db_conn.cursor())
+    save_db_path = news.parse.db.util.get_db_path(db_name=args.save_db_name)
+    save_conn = news.db.get_conn(db_path=save_db_path)
+    save_cur = save_conn.cursor()
 
-            # Write parsed data in target db.
+    for db_path in db_paths:
+        try:
             news.parse.db.write.write_new_records(
-                cur=parsed_db_conn.cursor(), news_list=parsed_data
+                cur=save_cur,
+                news_list=parse_raw_news(
+                    db_path=db_path,
+                    debug=args.debug,
+                ),
             )
+            save_conn.commit()
+        except Exception as err:
+            print(f'Failed to write records after parsing {db_path}: {err}')
 
-            parsed_db_conn.commit()
-            parsed_db_conn.close()
+    save_conn.close()
 
 
 if __name__ == '__main__':
-    main()
+    main(argv=sys.argv)

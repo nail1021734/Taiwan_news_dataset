@@ -38,11 +38,11 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
     Example
     =======
-    python -m news.crawlers.main \
-        --crawler_name chinatimes \
-        --current_datetime 2010-01-02+0000
-        --db_name chinatimes.db \
-        --debug True \
+    python -m news.crawlers.main           \
+        --crawler_name chinatimes          \
+        --current_datetime 2010-01-02+0000 \
+        --db_name chinatimes.db            \
+        --debug True                       \
         --past_datetime 2010-01-01+0000
     """
     parser = argparse.ArgumentParser()
@@ -50,6 +50,7 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
         '--crawler_name',
         choices=CRAWLER_SCRIPT_LOOKUP_TABLE.keys(),
         type=str,
+        required=True,
         help=textwrap.dedent(
             """\
             Name of the crawler.  See `news/crawlers/README.md` for all
@@ -60,6 +61,7 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
     parser.add_argument(
         '--db_name',
         type=str,
+        required=True,
         help=textwrap.dedent(
             f"""\
             Name of the database to save crawled news.  Create file if given
@@ -71,19 +73,19 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
                 --db_name /abs/my.db
 
-            will output crawling news to the file
+            will output crawled news to the file
 
                 /abs/my.db
 
-            If relative path is given, then we assume
-            the given path is under the path `PROJECT_ROOT/data/raw`.
-            Currently project root is set to {news.path.PROJECT_ROOT}.
+            If relative path is given, then we assume the given path is under
+            the path `PROJECT_ROOT/data/raw`. Currently project root is set to
+            {news.path.PROJECT_ROOT}.
 
             For example, executing
 
                 --db_name rel/my.db
 
-            will output crawling news to the file
+            will output crawled news to the file
 
                 PROJECT_ROOT/data/raw/rel/my.db
             """
@@ -136,7 +138,8 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
             News published earlier than `past_datetime` will be discard.  Not
             all crawler use `past_datetime` argument.  To see which crawler use
-            `past_datetime` argument, see `news/crawlers` for details.
+            `past_datetime` argument, see `news/crawlers` for details. Set to
+            `datetime.now(tz=timezone.utc) - timedelta(days=1)` if not present.
             """
         ),
     )
