@@ -10,12 +10,12 @@ def get_conn(db_path: Final[str]) -> sqlite3.Connection:
     """
     db_dir = os.path.dirname(db_path)
 
+    if os.path.exists(db_path) and not os.path.isfile(db_path):
+        raise FileExistsError(f'{db_path} is not file.')
+
     # Create database directory if not exists.
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)
-
-    if os.path.exists(db_path) and not os.path.isfile(db_path):
-        raise FileExistsError(f'{db_path} is not file.')
 
     # Create sqlite database file and return connection.
     return sqlite3.connect(db_path)
