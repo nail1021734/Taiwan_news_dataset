@@ -52,6 +52,12 @@ PARSER_LOOKUP_TABLE: Final[Dict[int, Callable[[RawNews], ParsedNews]]] = {
         news.parse.udn.parser,
 }
 
+# List lookup with index is O(1).
+PARSER_FASTEST_LOOKUP_TABLE: Final[List[Callable[[RawNews], ParsedNews]]] = [
+    PARSER_LOOKUP_TABLE[company_id]
+    for company_id in sorted(PARSER_LOOKUP_TABLE.keys())
+]
+
 
 def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
     r"""Parse command line arguments.
@@ -252,7 +258,9 @@ def parse_raw_news(
     ):
         try:
             parsed_news_list.append(
-                PARSER_LOOKUP_TABLE[raw_news.company_id](raw_news=raw_news)
+                PARSER_FASTEST_LOOKUP_TABLE[raw_news.company_id](
+                    raw_news=raw_news
+                )
             )
         except Exception as err:
             print(f'Failed to parse idx {raw_news.idx} in {db_path}: {err}')
@@ -294,4 +302,4 @@ def main(argv: Final[List[str]]) -> None:
 
 
 if __name__ == '__main__':
-    main(argv=sys.argv)
+    main(argv=sys.argv[1:])
