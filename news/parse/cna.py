@@ -1,15 +1,15 @@
 import re
-import unicodedata
 from datetime import datetime, timedelta
 from typing import Final
 
 from bs4 import BeautifulSoup
 
+import news.parse.util.normalize
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-REPORTER_PATTERN = re.compile(r'\((.*?)\)')
-BAD_ARTICLE_PATTERN = re.compile(r'\((編輯|譯者).*?\)')
+REPORTER_PATTERN: Final[re.Pattern] = re.compile(r'\((.*?)\)')
+BAD_ARTICLE_PATTERN: Final[re.Pattern] = re.compile(r'\((編輯|譯者).*?\)')
 
 
 def parser(raw_news: Final[RawNews]) -> ParsedNews:
@@ -35,13 +35,20 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         additional_tag = soup.select_one('div.dictionary')
         if additional_tag:
             article = additional_tag.text
+
+        # Only first `div.centralContent div.paragraph` contains news.  News
+        # are splitted into paragraph by `p` tags, which happens to be the
+        # direct children of `div.centralContent div.paragraph`.  This
+        # observation is made with `url_pattern = 201501010002`.
         article += ' '.join(
             map(
                 lambda tag: tag.text,
-                soup.select_one('div.centralContent div.paragraph').select('p')
+                soup.select(
+                    'div.centralContent div:nth-child(1 of .paragraph) > p',
+                )
             )
         )
-        article = unicodedata.normalize('NFKC', article).strip()
+        article = news.parse.util.normalize.NFKC(article)
     except Exception:
         raise ValueError('Fail to parse CNA news article.')
 
@@ -49,7 +56,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     category = ''
     try:
         category = soup.select('div.breadcrumb > a')[1].text
-        category = unicodedata.normalize('NFKC', category).strip()
+        category = news.parse.util.normalize.NFKC(category)
     except Exception:
         # There may not have category.
         category = ''
@@ -82,7 +89,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     title = ''
     try:
         title = soup.select('div.centralContent h1 span')[0].text
-        title = unicodedata.normalize('NFKC', title).strip()
+        title = news.parse.util.normalize.NFKC(title)
     except Exception:
         raise ValueError('Fail to parse CNA news title.')
 
@@ -93,6 +100,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
             article = article[:match.start()]
     except Exception:
         raise ValueError('Fail to remove article bad pattern.')
+
     parsed_news.article = article
     parsed_news.category = category
     parsed_news.datetime = news_datetime

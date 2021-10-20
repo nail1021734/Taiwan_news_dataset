@@ -87,7 +87,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
                 continue
             article = article[search_result.end():]
             reporter = search_result.group(1)
-    except Exception as err:
+    except Exception:
         # There may not have reporter.
         reporter = ''
 
