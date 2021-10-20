@@ -34,7 +34,7 @@ python -m news.crawlers.main --crawler_name chinatimes --db_name chinatimes.db -
 - 所有的新聞都是**流水號**, 分配到不同的**類別**之下.
   - 但是類別轉換有漏洞, 意即所有流水號都能對到任意類別.
 - 每天新聞數的最大上限為 `10000`.
-- **最早**可以爬到的新聞日期為 `2014-01-01`.
+- **最早**可以爬到的新聞日期為 `2014-03-06`.
 
 ```sh
 python -m news.crawlers.main --crawler_name cna --db_name cna.db --debug --past_datetime 2014-01-01+0000

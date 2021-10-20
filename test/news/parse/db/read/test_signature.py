@@ -72,49 +72,47 @@ def test_module_attribute_signature() -> None:
     r"""Ensure module attributes' signature."""
     assert hasattr(news.parse.db.read, 'READ_ALL_RECORDS_SQL')
     assert isinstance(news.parse.db.read.READ_ALL_RECORDS_SQL, str)
-    assert (
-        re.sub(r'\s+', ' ', news.parse.db.read.READ_ALL_RECORDS_SQL) == re.sub(
-            r'\s+',
-            ' ',
-            """
-            SELECT id, article, category, company_id, datetime, reporter,
-                   title, url_pattern
-            FROM   parsed_news;
-            """,
-        )
+    assert re.sub(
+        r'\s+',
+        ' ',
+        news.parse.db.read.READ_ALL_RECORDS_SQL,
+    ) == re.sub(
+        r'\s+',
+        ' ',
+        """
+        SELECT id, article, category, company_id, datetime, reporter,
+                title, url_pattern
+        FROM   parsed_news;
+        """,
     )
     assert hasattr(news.parse.db.read, 'READ_SOME_RECORDS_SQL')
     assert isinstance(news.parse.db.read.READ_SOME_RECORDS_SQL, str)
-    assert (
-        re.sub(
-            r'\s+',
-            ' ',
-            news.parse.db.read.READ_SOME_RECORDS_SQL,
-        ) == re.sub(
-            r'\s+',
-            ' ',
-            """
-            SELECT id, article, category, company_id, datetime, reporter, title,
-                   url_pattern
-            FROM   parsed_news
-            LIMIT  :limit
-            OFFSET :offset;
-            """,
-        )
+    assert re.sub(
+        r'\s+',
+        ' ',
+        news.parse.db.read.READ_SOME_RECORDS_SQL,
+    ) == re.sub(
+        r'\s+',
+        ' ',
+        """
+        SELECT id, article, category, company_id, datetime, reporter,
+                title, url_pattern
+        FROM   parsed_news
+        LIMIT  :limit
+        OFFSET :offset;
+        """,
     )
     assert hasattr(news.parse.db.read, 'READ_NUM_OF_RECORDS_SQL')
     assert isinstance(news.parse.db.read.READ_NUM_OF_RECORDS_SQL, str)
-    assert (
-        re.sub(
-            r'\s+',
-            ' ',
-            news.parse.db.read.READ_NUM_OF_RECORDS_SQL,
-        ) == re.sub(
-            r'\s+',
-            ' ',
-            """
-            SELECT COUNT(id)
-            FROM   parsed_news;
-            """,
-        )
+    assert re.sub(
+        r'\s+',
+        ' ',
+        news.parse.db.read.READ_NUM_OF_RECORDS_SQL,
+    ) == re.sub(
+        r'\s+',
+        ' ',
+        """
+        SELECT COUNT(id)
+        FROM   parsed_news;
+        """,
     )
