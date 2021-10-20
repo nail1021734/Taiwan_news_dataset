@@ -86,13 +86,12 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     Input news must contain `raw_xml` and `url` since these
     information cannot be retrieved from `raw_xml`.
     """
-    # Information which cannot be parsed.
+    # Information which cannot be parsed from `raw_xml`.
     parsed_news = ParsedNews(
         url_pattern=raw_news.url_pattern,
         company_id=raw_news.company_id,
     )
 
-    soup = None
     try:
         soup = BeautifulSoup(raw_news.raw_xml, 'html.parser')
     except Exception:
