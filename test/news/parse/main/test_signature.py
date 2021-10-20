@@ -1,7 +1,7 @@
 import argparse
 import inspect
 from inspect import Parameter, Signature
-from typing import Final, List, Optional
+from typing import Final, List
 
 import news.parse.chinatimes
 import news.parse.cna
@@ -46,10 +46,10 @@ def test_module_function_signature() -> None:
                     annotation=Final[str],
                 ),
                 Parameter(
-                    name='debug',
-                    kind=Parameter.KEYWORD_ONLY,
-                    default=False,
-                    annotation=Final[Optional[bool]],
+                    name='raw_news_list',
+                    kind=Parameter.POSITIONAL_OR_KEYWORD,
+                    default=Parameter.empty,
+                    annotation=Final[List[news.crawlers.db.schema.RawNews]],
                 ),
             ],
             return_annotation=List[news.parse.db.schema.ParsedNews],

@@ -1,9 +1,10 @@
 import argparse
+import gc
 import sys
 import textwrap
-from typing import Callable, Dict, Final, List, Optional
+from typing import Callable, Dict, Final, List
 
-from tqdm import tqdm
+from tqdm import trange
 
 import news.crawlers.db.read
 import news.crawlers.db.util
@@ -65,6 +66,7 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
     Example
     =======
     python -m news.parse.main \
+        --batch_size 1000     \
         --db_name rel/my.db   \
         --db_name /abs/my.db  \
         --db_dir rel_dir      \
@@ -73,6 +75,18 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
         --save_db_name out.db
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=1000,
+        help=textwrap.dedent(
+            """\
+            Parsing batch size.  Normally database containing `RawNews` records
+            will consume large memories.  Thus we will parse `RawNews` by batch
+            with each batch has `--batch_size` number of records.
+            """
+        ),
+    )
     parser.add_argument(
         '--db_name',
         action='append',
@@ -237,25 +251,11 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
 def parse_raw_news(
     db_path: Final[str],
-    *,
-    debug: Final[Optional[bool]] = False,
+    raw_news_list: Final[List[RawNews]],
 ) -> List[ParsedNews]:
     r"""根據公司用不同方法 parse `RawNews`."""
-    # `read_all_records` use `news.crawlers.db.util.get_db_path`
-    # internally, so its okay to pass absolute path `db_path`.
-    try:
-        raw_news_list = news.crawlers.db.read.read_all_records(db_name=db_path)
-    except Exception as err:
-        print(f'Failed to read records in {db_path}: {err}')
-        return []
-
     parsed_news_list: List[ParsedNews] = []
-    for raw_news in tqdm(
-            raw_news_list,
-            desc='Parsing',
-            disable=not debug,
-            dynamic_ncols=True,
-    ):
+    for raw_news in raw_news_list:
         try:
             parsed_news_list.append(
                 PARSER_FASTEST_LOOKUP_TABLE[raw_news.company_id](
@@ -271,6 +271,11 @@ def parse_raw_news(
 def main(argv: Final[List[str]]) -> None:
     args = parse_args(argv=argv)
 
+    if args.db_name is None:
+        args.db_name = []
+    if args.db_dir is None:
+        args.db_dir = []
+
     # Map relative paths to absolute paths under `PROJECT_ROOT/data/raw`.
     db_paths = news.db.get_db_paths(
         file_paths=list(
@@ -284,19 +289,50 @@ def main(argv: Final[List[str]]) -> None:
     save_db_path = news.parse.db.util.get_db_path(db_name=args.save_db_name)
     save_conn = news.db.get_conn(db_path=save_db_path)
     save_cur = save_conn.cursor()
+    news.parse.db.create.create_table(cur=save_cur)
 
     for db_path in db_paths:
         try:
-            news.parse.db.write.write_new_records(
-                cur=save_cur,
-                news_list=parse_raw_news(
-                    db_path=db_path,
-                    debug=args.debug,
-                ),
+            # Must use absolute path `db_path` since some absolute paths is not
+            # in default locations (which is `PROJECT_ROOT/data/raw`).  This is
+            # fine since `get_num_of_records` use `get_db_path` internally.
+            # Note that this statement usually take a long times.
+            num_of_records = news.crawlers.db.read.get_num_of_records(
+                db_name=db_path,
             )
-            save_conn.commit()
         except Exception as err:
-            print(f'Failed to write records after parsing {db_path}: {err}')
+            print(f'Failed to get number of records in {db_path}: {err}')
+
+        # Parsing `RawNews` by batch.
+        for offset in trange(
+                0,
+                num_of_records,
+                args.batch_size,
+                desc=f'Parsing {db_path}',
+                disable=not args.debug,
+                dynamic_ncols=True,
+        ):
+            try:
+                raw_news_list = news.crawlers.db.read.read_some_records(
+                    db_name=db_path,
+                    offset=offset,
+                    limit=args.batch_size,
+                )
+
+                news.parse.db.write.write_new_records(
+                    cur=save_cur,
+                    news_list=parse_raw_news(
+                        db_path=db_path,
+                        raw_news_list=raw_news_list,
+                    ),
+                )
+
+                save_conn.commit()
+
+                # Avoid using too many memories.
+                gc.collect()
+            except Exception:
+                print(f'Failed to write records at id {offset} of {db_path}.')
 
     save_conn.close()
 

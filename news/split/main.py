@@ -1,4 +1,5 @@
 import argparse
+import gc
 import os
 import pathlib
 import sys
@@ -281,15 +282,22 @@ def get_output_db_path(
 def main(argv: Final[List[str]]) -> None:
     args = parse_args(argv=argv)
 
+    if args.db_name is None:
+        args.db_name = []
+    if args.db_dir is None:
+        args.db_dir = []
+
     if args.db_type == 'raw':
-        read_some_records = news.crawlers.db.read.read_some_records
+        create_table = news.crawlers.db.create.create_table
         get_num_of_records = news.crawlers.db.read.get_num_of_records
         get_db_path = news.crawlers.db.util.get_db_path
+        read_some_records = news.crawlers.db.read.read_some_records
         write_new_records = news.crawlers.db.write.write_new_records
     elif args.db_type == 'parsed':
-        read_some_records = news.parse.db.read.read_some_records
+        create_table = news.parse.db.create.create_table
         get_num_of_records = news.parse.db.read.get_num_of_records
         get_db_path = news.parse.db.util.get_db_path
+        read_some_records = news.parse.db.read.read_some_records
         write_new_records = news.parse.db.write.write_new_records
     else:
         raise ValueError('Invalid `db_type`.')
@@ -351,7 +359,12 @@ def main(argv: Final[List[str]]) -> None:
                 )
                 conn = news.db.get_conn(db_path=output_db_path)
                 cur = conn.cursor()
+                create_table(cur=cur)
                 write_new_records(cur=cur, news_list=news_list)
+
+                # Avoid using too many memories.
+                del news_list
+                gc.collect()
             except Exception:
                 print(f'Failed to split {db_name} into {output_db_path}')
             finally:
