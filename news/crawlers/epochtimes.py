@@ -25,8 +25,8 @@ CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
     '財經': 'nsc420',
     '文化': 'nsc2007',
 }
-# Commit database when crawling 10 pages.
-COMMIT_PAGE_INTERVAL: Final[int] = 10
+# Commit database when crawling 100 pages.
+COMMIT_PAGE_INTERVAL: Final[int] = 100
 COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
     company='大紀元',
 )

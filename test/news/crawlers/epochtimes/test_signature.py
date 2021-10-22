@@ -208,7 +208,7 @@ def test_module_attribute_signature() -> None:
         '文化': 'nsc2007',
     }
     assert hasattr(news.crawlers.epochtimes, 'COMMIT_PAGE_INTERVAL')
-    assert news.crawlers.epochtimes.COMMIT_PAGE_INTERVAL == 10
+    assert news.crawlers.epochtimes.COMMIT_PAGE_INTERVAL == 100
     assert hasattr(news.crawlers.epochtimes, 'COMPANY_ID')
     assert (
         news.crawlers.epochtimes.COMPANY_ID ==
