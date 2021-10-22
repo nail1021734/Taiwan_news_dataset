@@ -1,6 +1,6 @@
 import re
-from datetime import datetime, timedelta
-from typing import Final
+from datetime import datetime
+from typing import Final, List, Tuple
 
 from bs4 import BeautifulSoup
 
@@ -8,8 +8,65 @@ import news.parse.util.normalize
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-REPORTER_PATTERN: Final[re.Pattern] = re.compile(r'\((.*?)\)')
-BAD_ARTICLE_PATTERN: Final[re.Pattern] = re.compile(r'\((編輯|譯者).*?\)')
+###############################################################################
+#                                 WARNING:
+# Patterns MUST remain unordered, in other words, the order of execution
+# WILL NOT and MUST NOT effect the parsing results.
+###############################################################################
+REPORTER_PATTERNS: Final[List[re.Pattern]] = [
+    # This observation is made with `url_pattern = 202110200353, 201501010021`.
+    re.compile(r'\(中央社記者([^()]*?)\d+?日專?電\)'),
+    # This observation is made with `url_pattern = 201501010071, 201501010087`.
+    re.compile(r'\(中央社(?:記者)?([^()]*?)特稿\)'),
+    # This observation is made with `url_pattern = 201501010002, 201412310239`.
+    re.compile(r'\(中央社([^()]*?)\d+?日電?\)'),
+    # This observation is made with `url_pattern = 201412300008, 201412300122`.
+    re.compile(r'\(中央社([^()]*?)\d+?日綜合(?:外電)?(?:報導)?\)'),
+    # This observation is made with `url_pattern = 201501010257, 201412300220`.
+    re.compile(r'\(中央社([^()]*?)\d+?日[^()]*?電\)'),
+]
+ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+    (
+        re.compile(r'(\(編輯.*?\))'),
+        '',
+    ),
+    (
+        re.compile(r'(\(譯者.*?\))'),
+        '',
+    ),
+    # Remove datetime strings at the end of article. This observation is made
+    # with `url_pattern = 201501010002`.
+    (
+        re.compile(r'(\d+)$'),
+        '',
+    ),
+    # Remove datetime strings at the end of paragraph. This observation is made
+    # with `url_pattern = 201501010002`.
+    (
+        re.compile(r'。(\d+) '),
+        '。 ',
+    ),
+    # Remove update hints. This observation is made with
+    # `url_pattern = 201412300008`.
+    (
+        re.compile(r'(\(即時更新\))'),
+        '',
+    ),
+]
+TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+    # Remove update hints. This observation is made with
+    # `url_pattern = 201412300008`.
+    (
+        re.compile(r'【更新】'),
+        '',
+    ),
+    # Remove video hints. This observation is made with
+    # `url_pattern = 201412280286`.
+    (
+        re.compile(r'【影片】'),
+        '',
+    ),
+]
 
 
 def parser(raw_news: Final[RawNews]) -> ParsedNews:
@@ -29,7 +86,9 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     except Exception:
         raise ValueError('Invalid html format.')
 
-    # News article.
+    ###########################################################################
+    # Parsing news article.
+    ###########################################################################
     article = ''
     try:
         additional_tag = soup.select_one('div.dictionary')
@@ -52,58 +111,105 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     except Exception:
         raise ValueError('Fail to parse CNA news article.')
 
-    # News category.
+    ###########################################################################
+    # Parsing news category.
+    ###########################################################################
     category = ''
     try:
+        # There are only two tags in the breadcrumb links
+        # `div.centralContent > div.breadcrumb > a`.  Category is contained in
+        # the second tag of the breadcrumb links.  This
+        # observation is made with `url_pattern = 201501010002`.
         category = soup.select('div.breadcrumb > a')[1].text
         category = news.parse.util.normalize.NFKC(category)
     except Exception:
         # There may not have category.
         category = ''
 
-    # News datetime.
-    news_datetime = ''
+    ###########################################################################
+    # Parsing news datetime.
+    ###########################################################################
+    news_datetime = 0
     try:
-        news_datetime = datetime.strptime(
-            parsed_news.url_pattern.split('/')[-1][:8],
-            '%Y%m%d',
+        # Some news publishing date time are different to URL pattern.  For
+        # simplicity we only use URL pattern to represent the same news.  News
+        # datetime will convert to POSIX time (which is under UTC time zone).
+        news_datetime = int(
+            datetime.strptime(
+                parsed_news.url_pattern[:8],
+                '%Y%m%d',
+            ).timestamp()
         )
-        # Convert to UTC.
-        news_datetime = news_datetime - timedelta(hours=8)
-        news_datetime = news_datetime.timestamp()
     except Exception:
-        # There may not have category.
-        news_datetime = ''
+        ValueError('Fail to parse CNA news datetime.')
 
-    # News reporter.
+    ###########################################################################
+    # Parsing news reporter.
+    ###########################################################################
+    reporter_list = []
     reporter = ''
     try:
-        match = REPORTER_PATTERN.match(article)
-        reporter = article[match.start() + 1:match.end() - 1]
-        article = article[match.end():]
+        for reporter_pattern in REPORTER_PATTERNS:
+            # There might have more than one pattern matched.
+            reporter_list.extend(reporter_pattern.findall(article))
+            # Remove reporter text from article.
+            article = news.parse.util.normalize.NFKC(
+                reporter_pattern.sub('', article)
+            )
+
+        # Reporters are comma seperated.
+        reporter = ','.join(reporter_list)
     except Exception:
         # There may not have reporter.
         reporter = ''
 
-    # News title.
+    ###########################################################################
+    # Parsing news title.
+    ###########################################################################
     title = ''
     try:
-        title = soup.select('div.centralContent h1 span')[0].text
+        # Title is in `div.centralContent h1 span`. This observation is made
+        # with `url_pattern = 201501010002`.
+        title = soup.select_one('div.centralContent h1 span').text
         title = news.parse.util.normalize.NFKC(title)
     except Exception:
         raise ValueError('Fail to parse CNA news title.')
 
-    # Remove article bad pattern
+    ###########################################################################
+    # Remove bad article pattern.
+    ###########################################################################
     try:
-        match = re.search(BAD_ARTICLE_PATTERN, article)
-        if match:
-            article = article[:match.start()]
+        for pttn, sub_str in ARTICLE_SUB_PATTERNS:
+            article = news.parse.util.normalize.NFKC(
+                pttn.sub(
+                    sub_str,
+                    article,
+                )
+            )
     except Exception:
-        raise ValueError('Fail to remove article bad pattern.')
+        raise ValueError('Fail to substitude article pattern.')
+
+    ###########################################################################
+    # Remove bad title pattern.
+    ###########################################################################
+    try:
+        for pttn, sub_str in TITLE_SUB_PATTERNS:
+            title = news.parse.util.normalize.NFKC(pttn.sub(
+                sub_str,
+                title,
+            ))
+    except Exception:
+        raise ValueError('Fail to substitude title pattern.')
 
     parsed_news.article = article
-    parsed_news.category = category
+    if category:
+        parsed_news.category = category
+    else:
+        parsed_news.category = ParsedNews.category
     parsed_news.datetime = news_datetime
-    parsed_news.reporter = reporter
+    if reporter:
+        parsed_news.reporter = reporter
+    else:
+        parsed_news.reporter = ParsedNews.reporter
     parsed_news.title = title
     return parsed_news
