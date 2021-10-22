@@ -25,7 +25,7 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
     Example
     =======
-    python -m news.parse.main    \
+    python -m news.split.main    \
         --db_name rel/my.db      \
         --db_name /abs/my.db     \
         --db_dir rel_dir         \
@@ -55,9 +55,9 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
             into
 
-                PROJECT_ROOT/data/split/parsed/abs/my__1_1000.db
-                PROJECT_ROOT/data/split/parsed/abs/my__1001_2000.db
-                PROJECT_ROOT/data/split/parsed/abs/my__2001_3000.db
+                PROJECT_ROOT/data/parsed/split/abs/my__1_1000.db
+                PROJECT_ROOT/data/parsed/split/abs/my__1001_2000.db
+                PROJECT_ROOT/data/parsed/split/abs/my__2001_3000.db
                 ...
 
             If relative path is given, then we assume the given path is under
@@ -75,9 +75,9 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
             into
 
-                PROJECT_ROOT/data/split/raw/rel/my__1_1000.db
-                PROJECT_ROOT/data/split/raw/rel/my__1001_2000.db
-                PROJECT_ROOT/data/split/raw/rel/my__2001_3000.db
+                PROJECT_ROOT/data/raw/split/rel/my__1_1000.db
+                PROJECT_ROOT/data/raw/split/rel/my__1001_2000.db
+                PROJECT_ROOT/data/raw/split/rel/my__2001_3000.db
                 ...
 
             One can specify multiple database files at the same time using
@@ -94,13 +94,13 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
             into
 
-                PROJECT_ROOT/data/split/raw/rel/a__1_1000.db
-                PROJECT_ROOT/data/split/raw/rel/a__1001_2000.db
-                PROJECT_ROOT/data/split/raw/rel/a__2001_3000.db
+                PROJECT_ROOT/data/raw/split/rel/a__1_1000.db
+                PROJECT_ROOT/data/raw/split/rel/a__1001_2000.db
+                PROJECT_ROOT/data/raw/split/rel/a__2001_3000.db
                 ...
-                PROJECT_ROOT/data/split/raw/abs/b__1_1000.db
-                PROJECT_ROOT/data/split/raw/abs/b__1001_2000.db
-                PROJECT_ROOT/data/split/raw/abs/b__2001_3000.db
+                PROJECT_ROOT/data/raw/split/abs/b__1_1000.db
+                PROJECT_ROOT/data/raw/split/abs/b__1001_2000.db
+                PROJECT_ROOT/data/raw/split/abs/b__2001_3000.db
                 ...
             """
         ),
@@ -131,13 +131,13 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
             into
 
-                PROJECT_ROOT/data/split/raw/abs/dir/a__1_1000.db
-                PROJECT_ROOT/data/split/raw/abs/dir/a__1001_2000.db
-                PROJECT_ROOT/data/split/raw/abs/dir/a__2001_3000.db
+                PROJECT_ROOT/data/raw/split/abs/dir/a__1_1000.db
+                PROJECT_ROOT/data/raw/split/abs/dir/a__1001_2000.db
+                PROJECT_ROOT/data/raw/split/abs/dir/a__2001_3000.db
                 ...
-                PROJECT_ROOT/data/split/raw/abs/dir/subsir/b__1_1000.db
-                PROJECT_ROOT/data/split/raw/abs/dir/subsir/b__1001_2000.db
-                PROJECT_ROOT/data/split/raw/abs/dir/subsir/b__2001_3000.db
+                PROJECT_ROOT/data/raw/split/abs/dir/subsir/b__1_1000.db
+                PROJECT_ROOT/data/raw/split/abs/dir/subsir/b__1001_2000.db
+                PROJECT_ROOT/data/raw/split/abs/dir/subsir/b__2001_3000.db
                 ...
 
             If relative path is given, then we assume the given directory is
@@ -161,13 +161,13 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
             into
 
-                PROJECT_ROOT/data/split/parsed/rel/dir/c__1_1000.db
-                PROJECT_ROOT/data/split/parsed/rel/dir/c__1001_2000.db
-                PROJECT_ROOT/data/split/parsed/rel/dir/c__2001_3000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/c__1_1000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/c__1001_2000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/c__2001_3000.db
                 ...
-                PROJECT_ROOT/data/split/parsed/rel/dir/subsir/d__1_1000.db
-                PROJECT_ROOT/data/split/parsed/rel/dir/subsir/d__1001_2000.db
-                PROJECT_ROOT/data/split/parsed/rel/dir/subsir/d__2001_3000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/subsir/d__1_1000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/subsir/d__1001_2000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/subsir/d__2001_3000.db
                 ...
 
             One can specify multiple directory at the same time using multiple
@@ -186,21 +186,21 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
             into
 
-                PROJECT_ROOT/data/split/parsed/abs/dir/a__1_1000.db
-                PROJECT_ROOT/data/split/parsed/abs/dir/a__1001_2000.db
-                PROJECT_ROOT/data/split/parsed/abs/dir/a__2001_3000.db
+                PROJECT_ROOT/data/parsed/split/abs/dir/a__1_1000.db
+                PROJECT_ROOT/data/parsed/split/abs/dir/a__1001_2000.db
+                PROJECT_ROOT/data/parsed/split/abs/dir/a__2001_3000.db
                 ...
-                PROJECT_ROOT/data/split/parsed/abs/dir/subsir/b__1_1000.db
-                PROJECT_ROOT/data/split/parsed/abs/dir/subsir/b__1001_2000.db
-                PROJECT_ROOT/data/split/parsed/abs/dir/subsir/b__2001_3000.db
+                PROJECT_ROOT/data/parsed/split/abs/dir/subsir/b__1_1000.db
+                PROJECT_ROOT/data/parsed/split/abs/dir/subsir/b__1001_2000.db
+                PROJECT_ROOT/data/parsed/split/abs/dir/subsir/b__2001_3000.db
                 ...
-                PROJECT_ROOT/data/split/parsed/rel/dir/c__1_1000.db
-                PROJECT_ROOT/data/split/parsed/rel/dir/c__1001_2000.db
-                PROJECT_ROOT/data/split/parsed/rel/dir/c__2001_3000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/c__1_1000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/c__1001_2000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/c__2001_3000.db
                 ...
-                PROJECT_ROOT/data/split/parsed/rel/dir/subsir/d__1_1000.db
-                PROJECT_ROOT/data/split/parsed/rel/dir/subsir/d__1001_2000.db
-                PROJECT_ROOT/data/split/parsed/rel/dir/subsir/d__2001_3000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/subsir/d__1_1000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/subsir/d__1001_2000.db
+                PROJECT_ROOT/data/parsed/split/rel/dir/subsir/d__2001_3000.db
                 ...
             """
         ),
@@ -273,8 +273,8 @@ def get_output_db_path(
     # file name `{filename}__{start_idx}_{end_idx}.{fileext}`.
     return os.path.join(
         news.path.DATA_PATH,
-        'split',
         db_type,
+        'split',
         f'{db_name_no_ext}__{start_idx}_{end_idx}{db_name_ext}',
     )
 
@@ -319,9 +319,9 @@ def main(argv: Final[List[str]]) -> None:
         # `db_path_prefix`.  In this case we remove the root symbol (which is
         # os dependent) and use all the path from the root as part of database
         # file name.
-        if os.path.isabs(db_path):
-            root = pathlib.PurePath(db_path).anchor
-            db_name = db_path[len(root):]
+        if os.path.isabs(db_name):
+            root = pathlib.PurePath(db_name).anchor
+            db_name = db_name[len(root):]
 
         db_paths_and_names.append((db_path, db_name))
 
@@ -346,6 +346,7 @@ def main(argv: Final[List[str]]) -> None:
                     limit=args.records_per_split,
                     offset=offset,
                 )
+
                 # Use `offset + 1` since sqlite id start with 1 but offset
                 # start with 0.
                 output_db_path = get_output_db_path(
@@ -353,14 +354,17 @@ def main(argv: Final[List[str]]) -> None:
                     db_type=args.db_type,
                     start_idx=offset + 1,
                     end_idx=min(
-                        offset + 1 + args.records_per_split,
+                        offset + args.records_per_split,
                         num_of_records,
                     ),
                 )
+
                 conn = news.db.get_conn(db_path=output_db_path)
                 cur = conn.cursor()
                 create_table(cur=cur)
+
                 write_new_records(cur=cur, news_list=news_list)
+                conn.commit()
 
                 # Avoid using too many memories.
                 del news_list

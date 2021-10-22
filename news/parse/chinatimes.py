@@ -53,7 +53,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
             if search_result:
                 article = article[:search_result.start()]
                 break
-    except Exception as err:
+    except Exception:
         raise ValueError('Fail to parse Chinatimes news article.')
 
     # News category.
