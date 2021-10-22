@@ -18,12 +18,16 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     re.compile(r'\(中央社記者([^()]*?)\d+?日專?電\)'),
     # This observation is made with `url_pattern = 201501010071, 201501010087`.
     re.compile(r'\(中央社(?:記者)?([^()]*?)特稿\)'),
-    # This observation is made with `url_pattern = 201501010002, 201412310239`.
-    re.compile(r'\(中央社([^()]*?)\d+?日電?\)'),
-    # This observation is made with `url_pattern = 201412300008, 201412300122`.
-    re.compile(r'\(中央社([^()]*?)\d+?日綜合(?:外電)?(?:報導)?\)'),
+    # This observation is made with `url_pattern = 201501010002, 201412310239,
+    # 201411100229, 201411100306`.
+    re.compile(r'\(中央社(?:記者)([^()]*?)\d+?日\d*?電?\)'),
+    # This observation is made with `url_pattern = 201412300008, 201412300122,
+    # 201412260115, 201411100007`.
+    re.compile(r'\(中央社?([^()]*?)\d*?日綜合(?:外電)?(?:報導)?\)'),
     # This observation is made with `url_pattern = 201501010257, 201412300220`.
     re.compile(r'\(中央社([^()]*?)\d+?日[^()]*?電\)'),
+    # This observation is made with `url_pattern = 201412030042`.
+    re.compile(r'\(中央社([^()]*?)\d+?年\d+?月[^()]*?電\)'),
 ]
 ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     (
@@ -52,6 +56,17 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'(\(即時更新\))'),
         '',
     ),
+    # Remove stars. This observation is made with `url_pattern = 201412040065`.
+    (
+        re.compile(r'★'),
+        '',
+    ),
+    # Remove recommendations. This observation is made with `url_pattern =
+    # 201412030008`.
+    (
+        re.compile(r'※你可能還想看:.*'),
+        '',
+    ),
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove update hints. This observation is made with
@@ -64,6 +79,11 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # `url_pattern = 201412280286`.
     (
         re.compile(r'【影片】'),
+        '',
+    ),
+    # Remove stars. This observation is made with `url_pattern = 201412260020`.
+    (
+        re.compile(r'★'),
         '',
     ),
 ]
