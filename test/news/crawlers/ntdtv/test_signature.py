@@ -208,7 +208,7 @@ def test_module_attribute_signature() -> None:
         '文史': '647',
     }
     assert hasattr(news.crawlers.ntdtv, 'COMMIT_PAGE_INTERVAL')
-    assert news.crawlers.ntdtv.COMMIT_PAGE_INTERVAL == 10
+    assert news.crawlers.ntdtv.COMMIT_PAGE_INTERVAL == 100
     assert hasattr(news.crawlers.ntdtv, 'COMPANY_ID')
     assert (
         news.crawlers.ntdtv.COMPANY_ID ==
