@@ -30,6 +30,7 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     re.compile(r'\(中央社([^()]*?)\d+?年\d+?月[^()]*?電\)'),
 ]
 ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+    # This observation is made with `url_pattern = 201901010005`.
     (
         re.compile(r'(\(編輯.*?\))'),
         '',
@@ -76,15 +77,15 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008`.
+    # `url_pattern = 201412300008, 201901010005`.
     (
-        re.compile(r'【更新】'),
+        re.compile(r'(\[更新\]|【更新】)'),
         '',
     ),
     # Remove video hints. This observation is made with
-    # `url_pattern = 201412280286`.
+    # `url_pattern = 201412280286, 201901010013`.
     (
-        re.compile(r'【影片】'),
+        re.compile(r'(【影片】|\[影\])'),
         '',
     ),
     # Remove stars. This observation is made with `url_pattern = 201412260020`.
