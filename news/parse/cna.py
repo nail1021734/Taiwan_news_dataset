@@ -14,8 +14,9 @@ from news.parse.db.schema import ParsedNews
 # WILL NOT and MUST NOT effect the parsing results.
 ###############################################################################
 REPORTER_PATTERNS: Final[List[re.Pattern]] = [
-    # This observation is made with `url_pattern = 202110200353, 201501010021`.
-    re.compile(r'\(中央社(?:記者)([^()]*?)\d+?日專?電\)'),
+    # This observation is made with `url_pattern = 202110200353, 201501010021,
+    # 201411080177`.
+    re.compile(r'\(中央社(?:記者)([^()]*?)\d+?\s*日專?電\)'),
     # This observation is made with `url_pattern = 201501010071, 201501010087`.
     re.compile(r'\(中央社(?:記者)?([^()]*?)特稿\)'),
     # This observation is made with `url_pattern = 201501010002, 201412310239,
@@ -41,13 +42,13 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove datetime strings at the end of article. This observation is made
     # with `url_pattern = 201501010002`.
     (
-        re.compile(r'(\d+)$'),
+        re.compile(r'\d+$'),
         '',
     ),
     # Remove datetime strings at the end of paragraph. This observation is made
     # with `url_pattern = 201412300008`.
     (
-        re.compile(r'。(\d+) '),
+        re.compile(r'。\d+ '),
         '。 ',
     ),
     # Remove datetime strings at the end of paragraph. This observation is made
@@ -57,9 +58,9 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '」 ',
     ),
     # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008`.
+    # `url_pattern = 201412300008, 201411090158`.
     (
-        re.compile(r'(\(即時更新\))'),
+        re.compile(r'\((?:賽況)?即時更新\)'),
         '',
     ),
     # Remove stars. This observation is made with `url_pattern = 201412040065`.
