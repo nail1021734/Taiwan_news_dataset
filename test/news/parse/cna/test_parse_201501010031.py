@@ -1,10 +1,11 @@
 import re
+import textwrap
+
+import news.crawlers.db.schema
+import news.crawlers.util.normalize
+import news.crawlers.util.request_url
 import news.parse.cna
 import news.parse.db.schema
-import news.crawlers.db.schema
-import news.crawlers.util.request_url
-import news.crawlers.util.normalize
-import textwrap
 
 
 def test_parsing_result() -> None:
@@ -65,6 +66,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '重點新聞'
     assert parsed_news.company_id == company_id
     assert parsed_news.datetime == 1420041600
-    assert parsed_news.reporter == '高照芬上海,台北,台北'
+    assert parsed_news.reporter == '台北,台北,高照芬上海'
     assert parsed_news.title == '上海跨年夜踩死人 釀35死48傷'
     assert parsed_news.url_pattern == '201501010031'

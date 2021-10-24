@@ -14,22 +14,24 @@ from news.parse.db.schema import ParsedNews
 # WILL NOT and MUST NOT effect the parsing results.
 ###############################################################################
 REPORTER_PATTERNS: Final[List[re.Pattern]] = [
-    # This observation is made with `url_pattern = 202110200353, 201501010021`.
-    re.compile(r'\(中央社(?:記者)?([^()]*?)\d+?日專?電\)'),
+    # This observation is made with `url_pattern = 202110200353, 201501010021,
+    # 201411080177, 201411100229`.
+    re.compile(r'\(中央社?(?:記者)?([^()0-9日]*?)\d*?\s*日?\d*?專?電\)'),
     # This observation is made with `url_pattern = 201501010071, 201501010087`.
-    re.compile(r'\(中央社(?:記者)?([^()]*?)特稿\)'),
+    re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)特稿\)'),
     # This observation is made with `url_pattern = 201501010002, 201412310239,
-    # 201411100229, 201411100306, 201411100454`.
-    re.compile(r'\(中央社(?:記者)?([^()]*?)\d+?日?\d*?電?\)'),
+    # 201411100306, 201411100454`.
+    re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d+?日?\d*?電?\)'),
     # This observation is made with `url_pattern = 201412300008, 201412300122,
-    # 201412260115, 201411100007, 201701010094`.
-    re.compile(r'\(中央社?(?:記者)?([^()]*?)\d*?日綜合(?:外電)?(?:報導)?\)'),
+    # 201412260115, 201411100007`.
+    re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d*?日綜合(?:外電)?(?:報導)?\)'),
     # This observation is made with `url_pattern = 201501010257, 201412300220`.
-    re.compile(r'\(中央社([^()]*?)\d+?日[^()]*?電\)'),
+    re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d+?日[^()]*?電\)'),
     # This observation is made with `url_pattern = 201412030042`.
-    re.compile(r'\(中央社([^()]*?)\d+?年\d+?月[^()]*?電\)'),
+    re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d+?年\d+?月[^()]*?電\)'),
 ]
 ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+    # This observation is made with `url_pattern = 201901010005`.
     (
         re.compile(r'(\(編輯.*?\))'),
         '',
@@ -41,13 +43,13 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove datetime strings at the end of article. This observation is made
     # with `url_pattern = 201501010002`.
     (
-        re.compile(r'(\d+)$'),
+        re.compile(r'\d+$'),
         '',
     ),
     # Remove datetime strings at the end of paragraph. This observation is made
     # with `url_pattern = 201412300008`.
     (
-        re.compile(r'。(\d+) '),
+        re.compile(r'。\d+ '),
         '。 ',
     ),
     # Remove datetime strings at the end of paragraph. This observation is made
@@ -57,9 +59,9 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '」 ',
     ),
     # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008`.
+    # `url_pattern = 201412300008, 201411090158, 201612180139`.
     (
-        re.compile(r'(\(即時更新\))'),
+        re.compile(r'\((?:賽況)?(?:即時)?更新\)'),
         '',
     ),
     # Remove stars. This observation is made with `url_pattern = 201412040065`.
@@ -73,18 +75,24 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'※你可能還想看:.*'),
         '',
     ),
+    # Remove link. This observation is made with `url_pattern =
+    # 201701010131`.
+    (
+        re.compile(r'。\s*\S*連結點這裡'),
+        '。',
+    ),
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008`.
+    # `url_pattern = 201412300008, 201901010005`.
     (
-        re.compile(r'【更新】'),
+        re.compile(r'(\[更新\]|【更新】)'),
         '',
     ),
     # Remove video hints. This observation is made with
-    # `url_pattern = 201412280286`.
+    # `url_pattern = 201412280286, 201901010013, 201701010135`.
     (
-        re.compile(r'【影片】'),
+        re.compile(r'(【影片?】|\[影\])'),
         '',
     ),
     # Remove stars. This observation is made with `url_pattern = 201412260020`.
