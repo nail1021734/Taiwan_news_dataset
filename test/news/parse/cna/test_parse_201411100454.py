@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201411090158.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201411100454.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -32,13 +32,14 @@ def test_parsing_result() -> None:
         '',
         textwrap.dedent(
             '''\
-            詹詠然在女單冠軍戰,先贏一盤,但連輸兩盤的情況下,敗給狄亞琴柯,拿到亞軍。
+            媒體報導,21U中華隊晚餐只給1個漢堡,球員喊吃不飽;總教練郭李建夫今天賽後特別
+            澄清,漢堡是點心,選手村的晚餐球員吃很飽。
             '''
         ),
     )
     assert parsed_news.category == '運動'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1415462400
-    assert parsed_news.reporter is None
-    assert parsed_news.title == '海碩單打冠軍戰 詹詠然贏首盤'
-    assert parsed_news.url_pattern == '201411090158'
+    assert parsed_news.datetime == 1415548800
+    assert parsed_news.reporter == '林宏翰台中'
+    assert parsed_news.title == '用餐風波 教頭:中華隊吃很飽'
+    assert parsed_news.url_pattern == '201411100454'

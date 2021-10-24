@@ -1,10 +1,11 @@
 import re
+import textwrap
+
+import news.crawlers.db.schema
+import news.crawlers.util.normalize
+import news.crawlers.util.request_url
 import news.parse.cna
 import news.parse.db.schema
-import news.crawlers.db.schema
-import news.crawlers.util.request_url
-import news.crawlers.util.normalize
-import textwrap
 
 
 def test_parsing_result() -> None:
@@ -39,6 +40,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
     assert parsed_news.datetime == 1546272000
-    assert parsed_news.reporter == None
+    assert parsed_news.reporter is None
     assert parsed_news.title == '新加坡迎接2019年 濱海灣煙火秀超嗨'
     assert parsed_news.url_pattern == '201901010013'

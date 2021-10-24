@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201411090158.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201412300220.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -32,13 +32,14 @@ def test_parsing_result() -> None:
         '',
         textwrap.dedent(
             '''\
-            詹詠然在女單冠軍戰,先贏一盤,但連輸兩盤的情況下,敗給狄亞琴柯,拿到亞軍。
+            印尼電視台畫面顯示,爪哇海(Java Sea)海面今天出現物體漂流,1名官員表示,可能是
+            失聯的亞洲航空(AirAsia)客機殘骸。根據推測,飛機恐已墜毀在印尼外海的深海地區。
             '''
         ),
     )
-    assert parsed_news.category == '運動'
+    assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1415462400
-    assert parsed_news.reporter is None
-    assert parsed_news.title == '海碩單打冠軍戰 詹詠然贏首盤'
-    assert parsed_news.url_pattern == '201411090158'
+    assert parsed_news.datetime == 1419868800
+    assert parsed_news.reporter == '雅加達'
+    assert parsed_news.title == '電視台:疑亞洲航空物體在爪哇海漂流'
+    assert parsed_news.url_pattern == '201412300220'

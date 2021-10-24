@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201411090158.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201412310239.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -32,13 +32,14 @@ def test_parsing_result() -> None:
         '',
         textwrap.dedent(
             '''\
-            詹詠然在女單冠軍戰,先贏一盤,但連輸兩盤的情況下,敗給狄亞琴柯,拿到亞軍。
+            澎湖縣政府警察局最近在縣內各易肇事路段設置「紅藍LED爆閃式夜間警示燈」,提醒駕駛
+            人行車時減速慢行、以降低交通事故,維護人車安全。
             '''
         ),
     )
-    assert parsed_news.category == '運動'
+    assert parsed_news.category == '地方'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1415462400
-    assert parsed_news.reporter is None
-    assert parsed_news.title == '海碩單打冠軍戰 詹詠然贏首盤'
-    assert parsed_news.url_pattern == '201411090158'
+    assert parsed_news.datetime == 1419955200
+    assert parsed_news.reporter == '澎湖縣'
+    assert parsed_news.title == '澎湖設夜間警示燈 促降低肇事'
+    assert parsed_news.url_pattern == '201412310239'

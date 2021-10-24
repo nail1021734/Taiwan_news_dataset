@@ -1,12 +1,13 @@
 r"""Positive case."""
 
 import re
+import textwrap
+
+import news.crawlers.db.schema
+import news.crawlers.util.normalize
+import news.crawlers.util.request_url
 import news.parse.cna
 import news.parse.db.schema
-import news.crawlers.db.schema
-import news.crawlers.util.request_url
-import news.crawlers.util.normalize
-import textwrap
 
 
 def test_parsing_result() -> None:

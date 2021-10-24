@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201411090158.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201412300122.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -32,13 +32,14 @@ def test_parsing_result() -> None:
         '',
         textwrap.dedent(
             '''\
-            詹詠然在女單冠軍戰,先贏一盤,但連輸兩盤的情況下,敗給狄亞琴柯,拿到亞軍。
+            本地外交界消息指出,西班牙跨國電話公司西班牙電信(Telefónica)今年已斥資1億
+            美元,在瓜地馬拉擴大3G行動電話的覆蓋率及發展本地的4G技術。
             '''
         ),
     )
-    assert parsed_news.category == '運動'
+    assert parsed_news.category == '產經'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1415462400
-    assert parsed_news.reporter is None
-    assert parsed_news.title == '海碩單打冠軍戰 詹詠然贏首盤'
-    assert parsed_news.url_pattern == '201411090158'
+    assert parsed_news.datetime == 1419868800
+    assert parsed_news.reporter == '瓜地馬拉'
+    assert parsed_news.title == '西企業斥資 發展瓜地馬拉4G'
+    assert parsed_news.url_pattern == '201412300122'
