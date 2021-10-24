@@ -115,3 +115,6 @@ log/
 
 # Mac OS
 .DS_Store
+
+# Test script
+output.py

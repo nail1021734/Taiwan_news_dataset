@@ -15,15 +15,15 @@ from news.parse.db.schema import ParsedNews
 ###############################################################################
 REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # This observation is made with `url_pattern = 202110200353, 201501010021`.
-    re.compile(r'\(中央社(?:記者)([^()]*?)\d+?日專?電\)'),
+    re.compile(r'\(中央社(?:記者)?([^()]*?)\d+?日專?電\)'),
     # This observation is made with `url_pattern = 201501010071, 201501010087`.
     re.compile(r'\(中央社(?:記者)?([^()]*?)特稿\)'),
     # This observation is made with `url_pattern = 201501010002, 201412310239,
     # 201411100229, 201411100306, 201411100454`.
-    re.compile(r'\(中央社(?:記者)([^()]*?)\d+?日?\d*?電?\)'),
+    re.compile(r'\(中央社(?:記者)?([^()]*?)\d+?日?\d*?電?\)'),
     # This observation is made with `url_pattern = 201412300008, 201412300122,
-    # 201412260115, 201411100007`.
-    re.compile(r'\(中央社?([^()]*?)\d*?日綜合(?:外電)?(?:報導)?\)'),
+    # 201412260115, 201411100007, 201701010094`.
+    re.compile(r'\(中央社?(?:記者)?([^()]*?)\d*?日綜合(?:外電)?(?:報導)?\)'),
     # This observation is made with `url_pattern = 201501010257, 201412300220`.
     re.compile(r'\(中央社([^()]*?)\d+?日[^()]*?電\)'),
     # This observation is made with `url_pattern = 201412030042`.
