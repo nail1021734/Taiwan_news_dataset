@@ -10,8 +10,11 @@ from news.parse.db.schema import ParsedNews
 
 ###############################################################################
 #                                 WARNING:
-# Patterns MUST remain unordered, in other words, the order of execution
-# WILL NOT and MUST NOT effect the parsing results.
+# Patterns (including `REPORTER_PATTERNS`, `ARTICLE_SUB_PATTERNS`,
+# `TITLE_SUB_PATTERNS`) MUST remain unordered, in other words, the order of
+# execution WILL NOT and MUST NOT effect the parsing results.
+# `REPORTER_PATTERNS` MUST have exactly ONE group.  You can use `(?...)`
+# pattern as non-capture group, see python's re module for details.
 ###############################################################################
 REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # This observation is made with `url_pattern = 202110200353, 201501010021,
@@ -64,7 +67,8 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'\((?:賽況)?(?:即時)?更新\)'),
         '',
     ),
-    # Remove stars. This observation is made with `url_pattern = 201412040065`.
+    # Remove meaningless symbols. This observation is made with
+    # `url_pattern = 201412040065`.
     (
         re.compile(r'★'),
         '',
@@ -95,7 +99,8 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'(【影片?】|\[影\])'),
         '',
     ),
-    # Remove stars. This observation is made with `url_pattern = 201412260020`.
+    # Remove meaningless symbols. This observation is made with
+    # `url_pattern = 201412260020`.
     (
         re.compile(r'★'),
         '',
@@ -106,8 +111,8 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
 def parser(raw_news: Final[RawNews]) -> ParsedNews:
     """Parse CNA news from raw HTML.
 
-    Input news must contain `raw_xml` and `url` since these
-    information cannot be retrieved from `raw_xml`.
+    Input news must contain `raw_xml` and `url` since these information cannot
+    be retrieved from `raw_xml`.
     """
     # Information which cannot be parsed from `raw_xml`.
     parsed_news = ParsedNews(
@@ -175,7 +180,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
             ).timestamp()
         )
     except Exception:
-        ValueError('Fail to parse CNA news datetime.')
+        raise ValueError('Fail to parse CNA news datetime.')
 
     ###########################################################################
     # Parsing news reporter.
@@ -183,12 +188,12 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     reporter_list = []
     reporter = ''
     try:
-        for reporter_pattern in REPORTER_PATTERNS:
+        for reporter_pttn in REPORTER_PATTERNS:
             # There might have more than one pattern matched.
-            reporter_list.extend(reporter_pattern.findall(article))
+            reporter_list.extend(reporter_pttn.findall(article))
             # Remove reporter text from article.
             article = news.parse.util.normalize.NFKC(
-                reporter_pattern.sub('', article)
+                reporter_pttn.sub('', article)
             )
 
         # Reporters are comma seperated.
@@ -210,30 +215,32 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         raise ValueError('Fail to parse CNA news title.')
 
     ###########################################################################
-    # Remove bad article pattern.
+    # Substitude some article pattern.
     ###########################################################################
     try:
-        for pttn, sub_str in ARTICLE_SUB_PATTERNS:
+        for article_pttn, article_sub_str in ARTICLE_SUB_PATTERNS:
             article = news.parse.util.normalize.NFKC(
-                pttn.sub(
-                    sub_str,
+                article_pttn.sub(
+                    article_sub_str,
                     article,
                 )
             )
     except Exception:
-        raise ValueError('Fail to substitude article pattern.')
+        raise ValueError('Fail to substitude CNA article pattern.')
 
     ###########################################################################
-    # Remove bad title pattern.
+    # Substitude some title pattern.
     ###########################################################################
     try:
-        for pttn, sub_str in TITLE_SUB_PATTERNS:
-            title = news.parse.util.normalize.NFKC(pttn.sub(
-                sub_str,
-                title,
-            ))
+        for title_pttn, title_sub_str in TITLE_SUB_PATTERNS:
+            title = news.parse.util.normalize.NFKC(
+                title_pttn.sub(
+                    title_sub_str,
+                    title,
+                )
+            )
     except Exception:
-        raise ValueError('Fail to substitude title pattern.')
+        raise ValueError('Fail to substitude CNA title pattern.')
 
     parsed_news.article = article
     if category:

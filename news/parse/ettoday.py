@@ -42,8 +42,8 @@ TYPICAL_REPORTER_LENGTH = 20
 def parser(raw_news: Final[RawNews]) -> ParsedNews:
     """Parse ETtoday news from raw HTML.
 
-    Input news must contain `raw_xml` and `url` since these
-    information cannot be retrieved from `raw_xml`.
+    Input news must contain `raw_xml` and `url` since these information cannot
+    be retrieved from `raw_xml`.
     """
     # Information which cannot be parsed from `raw_xml`.
     parsed_news = ParsedNews(
