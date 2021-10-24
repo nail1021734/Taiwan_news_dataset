@@ -23,12 +23,18 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # 201411100306, 201411100454`.
     re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d+?日?\d*?電?\)'),
     # This observation is made with `url_pattern = 201412300008, 201412300122,
-    # 201412260115, 201411100007`.
-    re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d*?日綜合(?:外電)?(?:報導)?\)'),
+    # 201412260115, 201411100007, 201801240404, 201807110318, 201801010009,
+    # 201801010165, 201812310105`.
+    re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d*?月?\d*?日?綜合?(?:外電|外)?(?:報導)?\)'),
     # This observation is made with `url_pattern = 201501010257, 201412300220`.
     re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d+?日[^()]*?電\)'),
     # This observation is made with `url_pattern = 201412030042`.
     re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d+?年\d+?月[^()]*?電\)'),
+    # This observation is made with `url_pattern = 201807110178`.
+    re.compile(r'中央社?駐.*?特派員(.*?)/\d+?月\d+?日'),
+    # This observation is made with `url_pattern = 201812310105`.
+    re.compile(r'\(中央社?(?:記者)?([^()0-9]*?)\d*?月?\d*?日?(?:連線)?(?:報導)?\)'),
+
 ]
 ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # This observation is made with `url_pattern = 201901010005`.
