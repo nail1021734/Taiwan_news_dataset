@@ -63,7 +63,7 @@ def test_module_attribute_signature() -> None:
             '」 ',
         ),
         (
-            re.compile(r'\((?:賽況)?即時更新\)'),
+            re.compile(r'\((?:賽況)?(?:即時)?更新\)'),
             '',
         ),
         (
@@ -74,6 +74,10 @@ def test_module_attribute_signature() -> None:
             re.compile(r'※你可能還想看:.*'),
             '',
         ),
+        (
+            re.compile(r'。\s?\S*?連結點這裡'),
+            '。',
+        ),
     ]
     assert hasattr(news.parse.cna, 'TITLE_SUB_PATTERNS')
     assert news.parse.cna.TITLE_SUB_PATTERNS == [
@@ -82,7 +86,7 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'(【影片】|\[影\])'),
+            re.compile(r'(【影片?】|\[影\])'),
             '',
         ),
         (

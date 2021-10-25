@@ -69,7 +69,7 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove update hints. This observation is made with
     # `url_pattern = 201412300008, 201411090158, 201612180139`.
     (
-        re.compile(r'\((?:賽況)?(即時)?更新\)'),
+        re.compile(r'\((?:賽況)?(?:即時)?更新\)'),
         '',
     ),
     # Remove meaningless symbols. This observation is made with
@@ -87,7 +87,7 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove link. This observation is made with `url_pattern =
     # 201701010131`.
     (
-        re.compile(r'。\s*\S*連結點這裡'),
+        re.compile(r'。\s?\S*?連結點這裡'),
         '。',
     ),
 ]
