@@ -1,6 +1,7 @@
 import re
-from typing import Final, List, Tuple
 from datetime import datetime
+from typing import Final, List, Tuple
+
 from bs4 import BeautifulSoup
 
 import news.parse.util.normalize

@@ -1,8 +1,9 @@
 import textwrap
-from typing import Final
 from datetime import datetime, timezone
-import news.parse.db.schema
+from typing import Final
+
 import news.crawlers.util.normalize
+import news.parse.db.schema
 
 
 def pretty_print(parsed_news: Final[news.parse.db.schema.ParsedNews]) -> None:
