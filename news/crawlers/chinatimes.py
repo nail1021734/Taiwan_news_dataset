@@ -113,14 +113,14 @@ def get_news_list(
                 break
             except Exception as err:
                 if err.args \
-                        and isinstance(response, requests.Response) \
+                        and response is not None \
                         and response.status_code != 404:
                     fail_count += 1
                     logger.update([err.args[0]])
                     break
 
         # Request timeout.
-        if not isinstance(response, requests.Response):
+        if response is None:
             fail_count += 1
             logger.update(['Request timeout.'])
         # `news_idx` does not exist.
