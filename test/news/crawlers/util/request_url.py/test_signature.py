@@ -26,6 +26,12 @@ def test_module_function_signature() -> None:
                     default=20.0,
                     annotation=Final[Optional[float]],
                 ),
+                Parameter(
+                    name='use_cloudscraper',
+                    kind=Parameter.KEYWORD_ONLY,
+                    default=False,
+                    annotation=Final[bool],
+                ),
             ],
             return_annotation=requests.Response,
         )

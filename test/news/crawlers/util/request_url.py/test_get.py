@@ -17,20 +17,36 @@ def test_timeout() -> None:
 
     time_start = time()
     with pytest.raises(requests.Timeout):
-        news.crawlers.util.request_url.get(
-            timeout=timeout_secs,
-            url='http://10.0.0.0:12345',
-        )
+        news.crawlers.util.request_url.get(timeout=timeout_secs,
+                                           url='http://10.0.0.0:12345',
+                                           use_cloudscraper=False)
     time_end = time()
 
     time_diff = abs(time_end - time_start)
     assert abs(timeout_secs - time_diff) <= tolerance_secs, \
         'Timeout occur beyond tolerance.'
 
+    time_start = time()
+    with pytest.raises(requests.Timeout):
+        news.crawlers.util.request_url.get(timeout=timeout_secs,
+                                           url='http://10.0.0.0:12345',
+                                           use_cloudscraper=True)
+    time_end = time()
+
+    time_diff = abs(time_end - time_start)
+    assert abs(timeout_secs - time_diff) <= tolerance_secs, \
+        'Timeout occur beyond tolerance for cloudscraper.'
+
 
 def test_response() -> None:
     r"""Ensure GET request work."""
     # Launch request to a server which is almost impossible to shutdown.
-    response = news.crawlers.util.request_url.get(url='https://google.com')
+    response = news.crawlers.util.request_url.get(url='https://google.com',
+                                                  use_cloudscraper=False)
+    assert isinstance(response, requests.Response)
+    assert 'google' in response.text
+
+    response = news.crawlers.util.request_url.get(url='https://google.com',
+                                                  use_cloudscraper=True)
     assert isinstance(response, requests.Response)
     assert 'google' in response.text

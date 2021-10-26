@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 bs4 = "*"
 ckip-transformers = "*"
+cloudscraper = "*"
 python-dateutil = "*"
 requests = "*"
 torch = "*"
