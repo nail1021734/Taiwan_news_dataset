@@ -18,25 +18,29 @@ from news.parse.db.schema import ParsedNews
 ###############################################################################
 REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # This observation is made with `url_pattern = 202110200353, 201501010021,
-    # 201411080177, 201411100229`.
-    re.compile(r'\(中央社?(?:記者)?([^)0-9日]*?)\d*?\s*日?\d*?專?電\)'),
-    # This observation is made with `url_pattern = 201501010071, 201501010087`.
-    re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)特稿\)'),
+    # 201411080177, 201411100229, 201806280284`.
+    re.compile(r'\(中央社?(?:記者)?([^)0-9日]*?)\d*?\s*日?\d*?專?(?:電|家)\)'),
+    # This observation is made with `url_pattern = 201501010071, 201501010087,
+    # 201903240113`.
+    re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d*?日?特稿\)'),
     # This observation is made with `url_pattern = 201501010002, 201412310239,
-    # 201411100306, 201411100454`.
-    re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d+?日?\d*?電?\)'),
+    # 201411100306, 201411100454, 201808210054`.
+    re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d+?月?\d+?日?\d*?電?\)'),
     # This observation is made with `url_pattern = 201412300008, 201412300122,
     # 201412260115, 201411100007, 201801240404, 201807110318, 201801010009,
-    # 201801010165, 201812310105`.
-    re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d*?月?\d*?日?綜合?(?:外電|外)?(?:報導)?\)'),
-    # This observation is made with `url_pattern = 201501010257, 201412300220`.
-    re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d+?日[^)]*?電\)'),
+    # 201801010165, 201801040371, 201911100105`.
+    re.compile(
+        r'\(中央社?(?:記者)?\d*?日?([^)0-9]*?)\d*?月?\d*?日?綜合?(?:外電|外)?(?:報導)?.*?\)'
+    ),
+    # This observation is made with `url_pattern = 201501010257, 201412300220,
+    # 201908030093, 201912070131, 201602120188`.
+    re.compile(r'\(\s?中?央社?(?:記者)?([^)0-9]*?)\d*?月?\d+?日[^)]*?電\)'),
     # This observation is made with `url_pattern = 201412030042`.
     re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d+?年\d+?月[^)]*?電\)'),
     # This observation is made with `url_pattern = 201807110178`.
     re.compile(r'中央社?駐.*?特派員(.*?)/\d+?月\d+?日'),
-    # This observation is made with `url_pattern = 201812310105`.
-    re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d*?月?\d*?日?(?:連線)?(?:報導)?\)'),
+    # This observation is made with `url_pattern = 201812310105, 201909290214`.
+    re.compile(r'\(中央社?(?:記者|網站)?([^)0-9]*?)\d*?月?\d*?日?(?:連線|更新)?(?:報導)?\)'),
 ]
 ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # This observation is made with `url_pattern = 201901010005`.
@@ -90,25 +94,40 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'。\s?\S*?連結點這裡'),
         '。',
     ),
-    # Remove prefix. This observation is made with `url_pattern =
-    # 201612260025, 201609300395, 201609300396, 201609300393`.
+    # Remove update hints. This observation is made with
+    # `url_pattern = 201412300008, 201901010005`.
+    # Remove url. This observation is made with `url_pattern =
+    # 201911110278`.
     (
-        re.compile(r'^[^\s。,]*?(?:專欄|專題)(?:之[一二三四五六七八九十]+)?'),
+        re.compile(r'([,。]募資連結https?:\/\/[\da-z\.-_\/]+)'),
+        '',
+    ),
+    # Remove special column. This observation is made with `url_pattern =
+    # 201810030025, 201612260025`.
+    (
+        re.compile(r'^\(?特派員[^\s。,]*?專欄\)?'),
+        '',
+    ),
+    # Remove special column. This observation is made with `url_pattern =
+    # 201910250015`.
+    (
+        re.compile(r'\(延伸閱讀:.*?\)'),
+        '',
+    ),
+    # Remove prefix. This observation is made with `url_pattern =
+    # 201609300395, 201609300396, 201609300393, 201603130226, 201603130227`.
+    (
+        re.compile(r'^[^\s。,]*?專題(?:之[一二三四五六七八九十]+)?(?:\(\d+\))?'),
         '',
     ),
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
-    # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008, 201901010005`.
+    # Remove content hints. This observation is made with
+    # `url_pattern = 201412280286, 201412300008, 201701010135, 201801190132,
+    # 201802070327, 201803060174, 201901010005, 201901010013, 202001010027,
+    # 201910250015, 201911080011, 201912310042`.
     (
-        re.compile(r'(\[更新\]|【更新】)'),
-        '',
-    ),
-    # Remove video hints. This observation is made with
-    # `url_pattern = 201412280286, 201901010013, 201701010135,
-    # 201612260022`.
-    (
-        re.compile(r'(【影片?】|\[(影|直播)\])'),
+        re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
         '',
     ),
     # Remove meaningless symbols. This observation is made with

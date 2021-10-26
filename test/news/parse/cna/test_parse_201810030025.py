@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201612180139.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201810030025.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -30,14 +30,16 @@ def test_parsing_result() -> None:
     assert parsed_news.article == re.sub(
         r'\n',
         '',
-        textwrap
-        .dedent('''\
-            美國地質調查所已將規模下修至芮氏規模5.8。
-            '''),
+        textwrap.dedent(
+            '''\
+            粵深港高鐵已於9月23日投入服務,有人說,連同預定稍後通車的港珠澳大橋,粵港澳大灣區
+            規畫已經有了必須的交通基礎,下一步就看具體推動內容。
+            '''
+        ),
     )
-    assert parsed_news.category == '國際'
+    assert parsed_news.category == '兩岸'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1481990400
+    assert parsed_news.datetime == 1538496000
     assert parsed_news.reporter is None
-    assert parsed_news.title == '6.0強震襲索羅門群島外海'
-    assert parsed_news.url_pattern == '201612180139'
+    assert parsed_news.title == '粵深港高鐵通車 落實大灣區理念'
+    assert parsed_news.url_pattern == '201810030025'

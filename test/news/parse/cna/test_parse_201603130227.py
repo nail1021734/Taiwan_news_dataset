@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201612180139.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201603130227.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -30,14 +30,17 @@ def test_parsing_result() -> None:
     assert parsed_news.article == re.sub(
         r'\n',
         '',
-        textwrap
-        .dedent('''\
-            美國地質調查所已將規模下修至芮氏規模5.8。
-            '''),
+        textwrap.dedent(
+            '''\
+            中國大陸雲南九河鄉龍應村由於地處偏遠,村民多出外打工
+            ,壯年人口嚴重外移,村裡兒童及老人比例極高,長時間看不到自己爸媽的兒童,在
+            幼兒發展期間衍生的問題比比皆是。
+            '''
+        ),
     )
-    assert parsed_news.category == '國際'
+    assert parsed_news.category == '生活'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1481990400
-    assert parsed_news.reporter is None
-    assert parsed_news.title == '6.0強震襲索羅門群島外海'
-    assert parsed_news.url_pattern == '201612180139'
+    assert parsed_news.datetime == 1457798400
+    assert parsed_news.reporter == "吳欣紜台北"
+    assert parsed_news.title == '留守兒童問題多 角落教學滿足需求'
+    assert parsed_news.url_pattern == '201603130227'

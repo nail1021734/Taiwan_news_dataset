@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201612180139.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201602120188.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -30,14 +30,16 @@ def test_parsing_result() -> None:
     assert parsed_news.article == re.sub(
         r'\n',
         '',
-        textwrap
-        .dedent('''\
-            美國地質調查所已將規模下修至芮氏規模5.8。
-            '''),
+        textwrap.dedent(
+            '''\
+            中華職棒Lamigo桃猿隊赴日本石垣島與羅德隊交流比賽,現場有攤位為台南地震募款
+            ,桃猿副領隊浦韋青說,日方希望這樣的舉動能帶給災民勇氣。
+            '''
+        ),
     )
-    assert parsed_news.category == '國際'
+    assert parsed_news.category == '運動'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1481990400
-    assert parsed_news.reporter is None
-    assert parsed_news.title == '6.0強震襲索羅門群島外海'
-    assert parsed_news.url_pattern == '201612180139'
+    assert parsed_news.datetime == 1455206400
+    assert parsed_news.reporter == "林宏翰石垣市"
+    assert parsed_news.title == '日職羅德為台灣地震募款 盼給災民勇氣'
+    assert parsed_news.url_pattern == '201602120188'

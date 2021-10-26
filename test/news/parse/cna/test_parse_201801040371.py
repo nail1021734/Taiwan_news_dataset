@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201612180139.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201801040371.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -30,14 +30,16 @@ def test_parsing_result() -> None:
     assert parsed_news.article == re.sub(
         r'\n',
         '',
-        textwrap
-        .dedent('''\
-            美國地質調查所已將規模下修至芮氏規模5.8。
-            '''),
+        textwrap.dedent(
+            '''\
+            南非官員表示,今天一列客運列車與卡車相撞後起火,造成至少12人死亡,180人受傷,救援
+            人員正在找尋倖存者。
+            '''
+        ),
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1481990400
-    assert parsed_news.reporter is None
-    assert parsed_news.title == '6.0強震襲索羅門群島外海'
-    assert parsed_news.url_pattern == '201612180139'
+    assert parsed_news.datetime == 1514995200
+    assert parsed_news.reporter == '約翰尼斯堡'
+    assert parsed_news.title == '南非火車與卡車相撞 至少12死180傷'
+    assert parsed_news.url_pattern == '201801040371'

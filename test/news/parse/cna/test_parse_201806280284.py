@@ -11,7 +11,7 @@ import news.parse.db.schema
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='中央社')
-    url = r'https://www.cna.com.tw/news/aipl/201612180139.aspx'
+    url = r'https://www.cna.com.tw/news/aipl/201806280284.aspx'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
@@ -30,14 +30,16 @@ def test_parsing_result() -> None:
     assert parsed_news.article == re.sub(
         r'\n',
         '',
-        textwrap
-        .dedent('''\
-            美國地質調查所已將規模下修至芮氏規模5.8。
-            '''),
+        textwrap.dedent(
+            '''\
+            在泰北清萊洞穴失聯近5天的13人,泰國動員全力搜救至今仍未有消息,泰國政府向外求援,
+            包括30名美軍和3名英國潛水專家趕到現場協助搜救。
+            '''
+        ),
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1481990400
-    assert parsed_news.reporter is None
-    assert parsed_news.title == '6.0強震襲索羅門群島外海'
-    assert parsed_news.url_pattern == '201612180139'
+    assert parsed_news.datetime == 1530115200
+    assert parsed_news.reporter == '劉得倉曼谷'
+    assert parsed_news.title == '美軍和英國專家加入泰北洞穴搜救'
+    assert parsed_news.url_pattern == '201806280284'
