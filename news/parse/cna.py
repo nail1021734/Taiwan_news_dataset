@@ -11,10 +11,10 @@ from news.parse.db.schema import ParsedNews
 ###############################################################################
 #                                 WARNING:
 # Patterns (including `REPORTER_PATTERNS`, `ARTICLE_SUB_PATTERNS`,
-# `TITLE_SUB_PATTERNS`) MUST remain unordered, in other words, the order of
-# execution WILL NOT and MUST NOT effect the parsing results.
-# `REPORTER_PATTERNS` MUST have exactly ONE group.  You can use `(?...)`
-# pattern as non-capture group, see python's re module for details.
+# `TITLE_SUB_PATTERNS`) MUST remain their relative ordered, in other words,
+# the order of execution may effect the parsing results. `REPORTER_PATTERNS`
+# MUST have exactly ONE group.  You can use `(?...)` pattern as non-capture
+# group, see python's re module for details.
 ###############################################################################
 REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # This observation is made with `url_pattern = 202110200353, 201501010021,
