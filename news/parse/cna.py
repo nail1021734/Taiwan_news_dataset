@@ -67,9 +67,9 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '」 ',
     ),
     # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008, 201411090158, 201612180139`.
+    # `url_pattern = 201412300008, 201411090158, 201612180139, 201612070380`.
     (
-        re.compile(r'\((?:賽況)?(?:即時)?更新\)'),
+        re.compile(r'(\((?:賽況)?(?:即時)?更新\)|【更新】)'),
         '',
     ),
     # Remove meaningless symbols. This observation is made with
@@ -90,6 +90,12 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'。\s?\S*?連結點這裡'),
         '。',
     ),
+    # Remove prefix. This observation is made with `url_pattern =
+    # 201612260025, 201609300395, 201609300396, 201609300393`.
+    (
+        re.compile(r'^[^\s。,]*?(?:專欄|專題)(?:之[一二三四五六七八九十]+)?'),
+        '',
+    ),
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove update hints. This observation is made with
@@ -99,15 +105,22 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
     # Remove video hints. This observation is made with
-    # `url_pattern = 201412280286, 201901010013, 201701010135`.
+    # `url_pattern = 201412280286, 201901010013, 201701010135,
+    # 201612260022`.
     (
-        re.compile(r'(【影片?】|\[影\])'),
+        re.compile(r'(【影片?】|\[(影|直播)\])'),
         '',
     ),
     # Remove meaningless symbols. This observation is made with
     # `url_pattern = 201412260020`.
     (
         re.compile(r'★'),
+        '',
+    ),
+    # Remove article labels. This observation is made with
+    # `url_pattern = 201612260025`.
+    (
+        re.compile(r'\s?特派專欄\s?'),
         '',
     ),
 ]
