@@ -71,9 +71,15 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '」 ',
     ),
     # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008, 201411090158, 201612180139, 201612070380`.
+    # `url_pattern = 201412300008, 201411090158`.
     (
-        re.compile(r'(\((?:賽況)?(?:即時)?更新\)|【更新】)'),
+        re.compile(r'\((?:賽況)?(?:即時)?更新\)'),
+        '',
+    ),
+    # Remove update hints. This observation is made with
+    # `url_pattern = 201612180139, 201612070380`.
+    (
+        re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
         '',
     ),
     # Remove meaningless symbols. This observation is made with
