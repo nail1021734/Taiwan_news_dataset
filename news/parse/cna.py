@@ -28,9 +28,10 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d+?月?\d+?日?\d*?電?\)'),
     # This observation is made with `url_pattern = 201412300008, 201412300122,
     # 201412260115, 201411100007, 201801240404, 201807110318, 201801010009,
-    # 201801010165, 201911100105, 201801040371`.
+    # 201801010165, 201801040371, 201911100105`.
     re.compile(
-        r'\(中央社?(?:記者)?\d*?日?([^)0-9]*?)\d*?月?\d*?日?綜合?(?:外電|外)?(?:報導)?.*?\)'),
+        r'\(中央社?(?:記者)?\d*?日?([^)0-9]*?)\d*?月?\d*?日?綜合?(?:外電|外)?(?:報導)?.*?\)'
+    ),
     # This observation is made with `url_pattern = 201501010257, 201412300220,
     # 201908030093, 201912070131`.
     re.compile(r'\(中?央社?(?:記者)?([^)0-9]*?)\d*?月?\d+?日[^)]*?電\)'),
@@ -113,29 +114,18 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     ),
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
-    # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008, 201901010005`.
+    # Remove content hints. This observation is made with
+    # `url_pattern = 201412280286, 201412300008, 201701010135, 201801190132,
+    # 201802070327, 201803060174, 201901010005, 201901010013, 202001010027,
+    # 201910250015, 201911080011, 201912310042`.
     (
-        re.compile(r'(\[更新\]|【更新】)'),
-        '',
-    ),
-    # Remove video hints. This observation is made with
-    # `url_pattern = 201412280286, 201901010013, 201701010135`.
-    (
-        re.compile(r'(【影片?】|\[影\])'),
+        re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
         '',
     ),
     # Remove meaningless symbols. This observation is made with
     # `url_pattern = 201412260020`.
     (
         re.compile(r'★'),
-        '',
-    ),
-    # Remove article desc hints. This observation is made with
-    # `url_pattern = 202001010027, 201912310042, 201911080011, 201801190132,
-    # 201803060174, 201802070327, 201910250015`.
-    (
-        re.compile(r'([【\[](?:全文|直播|圖輯|清單|互動地圖|內有空拍影片|全文中譯)[\]】])'),
         '',
     ),
 ]
