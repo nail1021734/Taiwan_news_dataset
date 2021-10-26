@@ -30,19 +30,17 @@ def test_module_attribute_signature() -> None:
     r"""Ensure module attributes' signature."""
     assert hasattr(news.parse.cna, 'REPORTER_PATTERNS')
     assert news.parse.cna.REPORTER_PATTERNS == [
-        re.compile(r'\(中央社?(?:記者)?([^)0-9日]*?)\d*?\s*日?\d*?專?(?:電|家)\)'),
-        re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d*?日?特稿\)'),
-        re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d+?月?\d+?日?\d*?電?\)'),
         re.compile(
-            r'\(中央社?(?:記者)?\d*?日?([^)0-9]*?)\d*?月?\d*?日?綜合?'
-            + r'(?:外電|外)?(?:報導)?.*?\)'
+            r'\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
+            + r'\d*?\s*?年?\d*?\s*?月?\d*\s*?日?\d*?'
+            + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
         ),
-        re.compile(r'\(中?央社?(?:記者)?([^)0-9]*?)\d*?月?\d+?日[^)]*?電\)'),
-        re.compile(r'\(中央社?(?:記者)?([^)0-9]*?)\d+?年\d+?月[^)]*?電\)'),
-        re.compile(r'中央社?駐.*?特派員(.*?)/\d+?月\d+?日'),
         re.compile(
-            r'\(中央社?(?:記者|網站)?([^)0-9]*?)\d*?月?\d*?日?(?:連線|更新)?(?:報導)?\)',
+            r'\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
+            + r'\d*?年?\d*?月?\d*\s*?日?\d*?(?:日[^\)]*?)'
+            + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
         ),
+        re.compile(r'中?央社?駐.*?特派員(.*?)/\d*?年?\d+?月?\d+?日'),
     ]
     assert hasattr(news.parse.cna, 'ARTICLE_SUB_PATTERNS')
     assert news.parse.cna.ARTICLE_SUB_PATTERNS == [
