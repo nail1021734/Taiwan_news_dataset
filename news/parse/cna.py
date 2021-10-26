@@ -94,8 +94,6 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'。\s?\S*?連結點這裡'),
         '。',
     ),
-    # Remove update hints. This observation is made with
-    # `url_pattern = 201412300008, 201901010005`.
     # Remove url. This observation is made with `url_pattern =
     # 201911110278`.
     (
