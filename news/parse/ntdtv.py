@@ -78,7 +78,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 2021-10-24-103250967,
     # 2011-12-23-635993, 2011-04-11-517450, 2011-03-30-512271`.
     (
-        re.compile(r'[—–─]*\(?轉自[^)\s]*?\)?\s*(有[刪删][節节])?$'),
+        re.compile(r'[—–─]*\(?[轉转]自[^)\s]*?\)?\s*(有[刪删][節节])?$'),
         '',
     ),
     (

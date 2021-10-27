@@ -64,7 +64,7 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'[—–─]*\(?轉自[^)\s]*?\)?\s*(有[刪删][節节])?$'),
+            re.compile(r'[—–─]*\(?[轉转]自[^)\s]*?\)?\s*(有[刪删][節节])?$'),
             '',
         ),
         (

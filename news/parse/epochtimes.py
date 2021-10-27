@@ -41,11 +41,12 @@ TITLE_SELECTOR_LIST: str = re.sub(
 # MUST have exactly ONE group.  You can use `(?...)` pattern as non-capture
 # group, see python's re module for details.
 ###############################################################################
-# This observation is made with `url_pattern = 14-1-1-4048455, 14-1-1-4048450,
-# 13-12-31-4046950, 13-12-30-4046025`.
 REPORTER_PATTERNS: List[re.Pattern] = [
+    # This observation is made with `url_pattern = 13-12-23-4041274,
+    # 14-1-1-4048455, 14-1-1-4048450, 13-12-31-4046950, 13-12-30-4046025`.
     re.compile(
-        r'\((?:[這这]是)?大[紀纪]元[記记]?者?(?:亞太)?(?:[電电][視视][台臺]?)?'
+        r'\((?:[這这]是)?[新大][紀纪]元(?:[週周]刊\d*?期?,?)?[記记]?者?'
+        + r'(?:亞太)?(?:[電电][視视][台臺]?)?'
         + r'([\w、\s]*?)[的综綜合整理採采訪访編编譯译報报導导道]+?。?\)'
     ),
 ]
@@ -55,14 +56,31 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 14-1-1-4048450,
-    # 14-1-1-4047920`.
+    # 14-1-1-4047920, 13-12-26-4043823`.
     (
         re.compile(
-            r'\(?(新[唐塘]人|中央社?)([記记]者)?'
-            + r'[^()0-9]*?\d*?[^()]*?([電电]|[報报][導导道]|特稿|社)\)',
+            r'\(?(新[唐塘]人|中央社?)(特[約约])?([記记]者)?'
+            + r'[^()0-9]*?\d*?[^()]*?([電电]|[報报][導导道]|特稿|社)?\)',
         ),
         '',
     ),
+    # This observation is made with `url_pattern = 14-1-1-4048450,
+    (
+        re.compile(
+            r'以上是(自由[亞亚]洲[電电][台臺]|美國之音).*?[報报][導导道]。',
+        ),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-12-15-4034574,
+    (
+        re.compile(
+            r'\([詳详][細细][報报][導导道][內内]容[請请][見见].*$',
+        ),
+        '',
+    ),
+    # 14-1-1-4047920, 13-12-26-4043823, 13-12-19-4037847`.
+    # News copy source.  Parentheses must show up in the begining and the end
+    # of the pattern.
     # This observation is made with `url_pattern = 14-1-1-4047920,
     # 13-12-31-4047555, 13-12-31-4047176, 13-12-31-4047058, 13-12-30-4046768,
     # 13-12-28-4044667`.
@@ -73,19 +91,29 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
-    # This observation is made with `url_pattern = 14-1-1-4048382`.
+    # This observation is made with `url_pattern = 14-1-1-4048382,
+    # 13-12-26-4043823`.
     (
-        re.compile(r'\(([實实][習习])?[編编]?[譯译]者?[:;][^)]+\)?'),
+        re.compile(r'\(([實实][習习])?[編编]?[譯译]者?[:;][^)]*?\)?'),
         '',
     ),
     # Note that `ord('–') == 8211`, `ord('—') == 8212` and `ord('─') == 9472`.
+    # This observation is made with `url_pattern = 13-12-23-4041274`.
     (
-        re.compile(r'[—–─]*\(?轉自[^)\s]*?\)?\s*(有[刪删][節节])?$'),
+        re.compile(r'[—–─]*\(?(本文)?[轉转]自.*?$'),
         '',
     ),
     # This observation is made with `url_pattern = 13-9-21-3969060`.
     (
         re.compile(r'\([^)]*?來稿\)'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-12-22-4040557`.
+    (
+        re.compile(
+            r'[瞭了]解德[國国]社[會会]的最佳途[徑径]—*'
+            + r'大[紀纪]元[歐欧]洲生活[網网]:\s*(https?://)?www\.dajiyuan\.eu',
+        ),
         '',
     ),
     (
