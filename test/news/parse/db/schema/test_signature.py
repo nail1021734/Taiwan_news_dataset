@@ -1,6 +1,6 @@
 import inspect
-from inspect import Parameter, Signature
 from datetime import datetime
+from inspect import Parameter, Signature
 
 import news.parse.db.schema
 
