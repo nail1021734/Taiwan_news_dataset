@@ -1,6 +1,6 @@
 import textwrap
-from datetime import datetime, timezone
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 
 @dataclass
@@ -24,6 +24,14 @@ class ParsedNews:
         yield self.title
         yield self.url_pattern
 
+    def get_datetime(self) -> datetime:
+        r"""Return datetime object in UTC timezone."""
+        return datetime.fromtimestamp(self.timestamp).astimezone(timezone.utc)
+
+    def get_datetime_str(self) -> str:
+        r"""Convert `self.timestamp` to `YYYY-mm-dd HH:MM:SS+0000`."""
+        return self.get_datetime().strftime('%Y-%m-%d %H:%M:%S%z')
+
     def pretify(self) -> str:
         r"""Return informations with pretty format."""
         # Category can be `None`.
@@ -31,15 +39,6 @@ class ParsedNews:
             category = self.category
         else:
             category = 'None'
-
-        # Convert timestamp to `YYYY-mm-dd HH:MM:SS+0000`.
-        datetime_str = datetime.fromtimestamp(
-            self.timestamp,
-        ).astimezone(
-            timezone.utc,
-        ).strftime(
-            '%Y-%m-%d %H:%M:%S%z',
-        )
 
         # Reporter can be `None`.
         if self.reporter:
@@ -53,7 +52,7 @@ class ParsedNews:
             idx:                  {self.idx}
             url_pattern:          {self.url_pattern}
             datetime (timestamp): {self.timestamp}
-            datetime (YYYYMMDD):  {datetime_str}
+            datetime (YYYYMMDD):  {self.get_datetime_str()}
 
             category:
                 {category}

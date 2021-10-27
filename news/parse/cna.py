@@ -79,6 +79,12 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
         '',
     ),
+    # Remove list symbols.
+    # This observation is made with `url_pattern = 201909290214`.
+    (
+        re.compile(r'●'),
+        ' ',
+    ),
     # Remove meaningless symbols. This observation is made with
     # `url_pattern = 201412040065, 202110210003`.
     (
