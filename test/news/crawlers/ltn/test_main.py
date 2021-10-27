@@ -1,5 +1,5 @@
 import test.news.crawlers.conftest
-from typing import Final, List
+from typing import List
 
 import news.crawlers.db.read
 import news.crawlers.db.schema
@@ -7,10 +7,10 @@ import news.crawlers.ltn
 
 
 def test_save_news_to_db(
-    db_name: Final[str],
-    response_200: Final[test.news.crawlers.conftest.MockResponse],
-    cleanup_db_file: Final,
-    monkeypatch: Final,
+    db_name: str,
+    response_200: test.news.crawlers.conftest.MockResponse,
+    cleanup_db_file,
+    monkeypatch,
 ) -> None:
     r"""Save crawling news to database with correct format."""
 

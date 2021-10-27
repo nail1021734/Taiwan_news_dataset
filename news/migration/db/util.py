@@ -1,11 +1,10 @@
 import os
 import sqlite3
-from typing import Final
 
 from news.path import PROJECT_ROOT
 
 # 預設讀取路徑的root為`data`
-DATA_PATH: Final[str] = os.path.join(PROJECT_ROOT, 'data')
+DATA_PATH: str = os.path.join(PROJECT_ROOT, 'data')
 
 
 def get_path(db_name: str) -> str:

@@ -1,6 +1,5 @@
 import unicodedata
 from datetime import datetime, timedelta
-from typing import Final
 
 from bs4 import BeautifulSoup
 
@@ -8,7 +7,7 @@ from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
 
-def parser(raw_news: Final[RawNews]) -> ParsedNews:
+def parser(raw_news: RawNews) -> ParsedNews:
     """Parse STORM news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these information cannot

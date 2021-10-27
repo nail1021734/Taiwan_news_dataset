@@ -1,6 +1,5 @@
 import unicodedata
 from datetime import datetime, timedelta
-from typing import Final
 
 import dateutil.parser
 from bs4 import BeautifulSoup
@@ -39,7 +38,7 @@ NON_REPORTER_WORDS = [',', '。', ':']
 TYPICAL_REPORTER_LENGTH = 20
 
 
-def parser(raw_news: Final[RawNews]) -> ParsedNews:
+def parser(raw_news: RawNews) -> ParsedNews:
     """Parse ETtoday news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these information cannot

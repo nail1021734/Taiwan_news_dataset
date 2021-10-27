@@ -1,7 +1,7 @@
 import inspect
 import re
 from inspect import Parameter, Signature
-from typing import Final, List, Optional
+from typing import List, Optional
 
 import news.crawlers.db.read
 import news.crawlers.db.schema
@@ -19,7 +19,7 @@ def test_module_function_signature() -> None:
                 name='db_name',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[str],
+                annotation=str,
             ),
         ],
         return_annotation=List[news.crawlers.db.schema.RawNews],
@@ -34,19 +34,19 @@ def test_module_function_signature() -> None:
                 name='db_name',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[str],
+                annotation=str,
             ),
             Parameter(
                 name='limit',
                 kind=Parameter.KEYWORD_ONLY,
                 default=100,
-                annotation=Final[Optional[int]],
+                annotation=Optional[int],
             ),
             Parameter(
                 name='offset',
                 kind=Parameter.KEYWORD_ONLY,
                 default=0,
-                annotation=Final[Optional[int]],
+                annotation=Optional[int],
             ),
         ],
         return_annotation=List[news.crawlers.db.schema.RawNews],
@@ -61,7 +61,7 @@ def test_module_function_signature() -> None:
                 name='db_name',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[str],
+                annotation=str,
             ),
         ],
         return_annotation=int,

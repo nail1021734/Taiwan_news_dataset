@@ -1,5 +1,3 @@
-from typing import Final
-
 import news.db
 import news.parse.db.create
 import news.parse.db.schema
@@ -8,8 +6,8 @@ import news.parse.db.write
 
 
 def test_write_new_records(
-    db_name: Final[str],
-    cleanup_db_file: Final,
+    db_name: str,
+    cleanup_db_file,
 ) -> None:
     idx = 123
     article = 'abc'

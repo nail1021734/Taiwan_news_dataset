@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Final, List, Tuple
+from typing import List, Tuple
 
 from bs4 import BeautifulSoup
 
@@ -18,7 +18,7 @@ from news.parse.db.schema import ParsedNews
 # article contains image captions, thus we remove it using
 # `:not(:has(a:has(img)))`.
 # This observation is made with `url_pattern = 2011-04-11-517450`.
-ARTICLE_SELECTOR_LIST: Final[str] = re.sub(
+ARTICLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
@@ -32,7 +32,7 @@ ARTICLE_SELECTOR_LIST: Final[str] = re.sub(
 # selector lists (selectors separated by comma) to denote all title patterns.
 # This observation is made with `url_pattern = 2012-01-01-640251,
 # 2011-04-12-517548`.
-TITLE_SELECTOR_LIST: Final[str] = re.sub(
+TITLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
@@ -49,7 +49,7 @@ TITLE_SELECTOR_LIST: Final[str] = re.sub(
 # MUST have exactly ONE group.  You can use `(?...)` pattern as non-capture
 # group, see python's re module for details.
 ###############################################################################
-REPORTER_PATTERNS: Final[List[re.Pattern]] = [
+REPORTER_PATTERNS: List[re.Pattern] = [
     # re.compile(r'^採訪/(.*?)\s*編輯/(.*?)\s*後製/(.*?)$'),
     # re.compile(r'\(責任編輯:(\S*?)\)'),
     # This observation is made with `url_pattern = 2012-01-01-640292,
@@ -66,7 +66,7 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # This observation is made with `url_pattern = 2012-01-01-640083`.
     re.compile(r'文字:([^/]+?)/.+$'),
 ]
-ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 2011-04-17-519983,
     # 2011-04-16-519478`.
     (
@@ -265,7 +265,7 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
 ]
-TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove content hints. This observation is made with `url_pattern =
     # 2012-01-01-640083, 2011-04-12-517801, 2011-12-23-636402`.
     (
@@ -287,7 +287,7 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
 ]
 
 
-def parser(raw_news: Final[RawNews]) -> ParsedNews:
+def parser(raw_news: RawNews) -> ParsedNews:
     """Parse NTDTV news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these information cannot

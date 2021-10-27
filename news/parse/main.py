@@ -2,7 +2,7 @@ import argparse
 import gc
 import sys
 import textwrap
-from typing import Callable, Dict, Final, List
+from typing import Callable, Dict, List
 
 from tqdm import trange
 
@@ -28,7 +28,7 @@ import news.path
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-PARSER_LOOKUP_TABLE: Final[Dict[int, Callable[[RawNews], ParsedNews]]] = {
+PARSER_LOOKUP_TABLE: Dict[int, Callable[[RawNews], ParsedNews]] = {
     news.crawlers.util.normalize.get_company_id(company='中時'):
         news.parse.chinatimes.parser,
     news.crawlers.util.normalize.get_company_id(company='中央社'):
@@ -54,13 +54,13 @@ PARSER_LOOKUP_TABLE: Final[Dict[int, Callable[[RawNews], ParsedNews]]] = {
 }
 
 # List lookup with index is O(1).
-PARSER_FASTEST_LOOKUP_TABLE: Final[List[Callable[[RawNews], ParsedNews]]] = [
+PARSER_FASTEST_LOOKUP_TABLE: List[Callable[[RawNews], ParsedNews]] = [
     PARSER_LOOKUP_TABLE[company_id]
     for company_id in sorted(PARSER_LOOKUP_TABLE.keys())
 ]
 
 
-def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
+def parse_args(argv: List[str]) -> argparse.Namespace:
     r"""Parse command line arguments.
 
     Example
@@ -250,8 +250,8 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
 
 def parse_raw_news(
-    db_path: Final[str],
-    raw_news_list: Final[List[RawNews]],
+    db_path: str,
+    raw_news_list: List[RawNews],
 ) -> List[ParsedNews]:
     r"""根據公司用不同方法 parse `RawNews`."""
     parsed_news_list: List[ParsedNews] = []
@@ -268,7 +268,7 @@ def parse_raw_news(
     return parsed_news_list
 
 
-def main(argv: Final[List[str]]) -> None:
+def main(argv: List[str]) -> None:
     args = parse_args(argv=argv)
 
     if args.db_name is None:

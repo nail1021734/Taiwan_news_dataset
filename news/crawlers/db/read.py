@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Final, List, Optional
+from typing import List, Optional
 
 import news.crawlers.db.create
 import news.crawlers.db.schema
@@ -7,13 +7,13 @@ import news.crawlers.db.util
 import news.db
 
 # 讀取全部資料用的 SQL 指令.
-READ_ALL_RECORDS_SQL: Final[str] = """
+READ_ALL_RECORDS_SQL: str = """
     SELECT id, company_id, raw_xml, url_pattern
     FROM   raw_news;
 """
 
 # 讀取部份資料用的 SQL 指令.
-READ_SOME_RECORDS_SQL: Final[str] = """
+READ_SOME_RECORDS_SQL: str = """
     SELECT id, company_id, raw_xml, url_pattern
     FROM   raw_news
     LIMIT  :limit
@@ -21,15 +21,13 @@ READ_SOME_RECORDS_SQL: Final[str] = """
 """
 
 # 讀取資料數的 SQL 指令.
-READ_NUM_OF_RECORDS_SQL: Final[str] = """
+READ_NUM_OF_RECORDS_SQL: str = """
     SELECT COUNT(id)
     FROM   raw_news;
 """
 
 
-def read_all_records(
-    db_name: Final[str],
-) -> List[news.crawlers.db.schema.RawNews]:
+def read_all_records(db_name: str,) -> List[news.crawlers.db.schema.RawNews]:
     r"""讀取指定 `db_name` 中所有的 `RawNews`."""
 
     # 檢查是否有給予 `db_name`, 如果都沒有則無法進行後續讀取.
@@ -64,10 +62,10 @@ def read_all_records(
 
 
 def read_some_records(
-    db_name: Final[str],
+    db_name: str,
     *,
-    limit: Final[Optional[int]] = 100,
-    offset: Final[Optional[int]] = 0,
+    limit: Optional[int] = 100,
+    offset: Optional[int] = 0,
 ) -> List[news.crawlers.db.schema.RawNews]:
     r"""讀取指定 `db_name` 中部份的 `RawNews`."""
 
@@ -118,7 +116,7 @@ def read_some_records(
     return records
 
 
-def get_num_of_records(db_name: Final[str],) -> int:
+def get_num_of_records(db_name: str,) -> int:
     r"""讀取指定 `db_name` 中 `RawNews` 的資料數."""
 
     # 檢查是否有給予 `db_name`, 如果都沒有則無法進行後續讀取.

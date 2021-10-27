@@ -1,6 +1,6 @@
 import random
 import time
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 
 import news.crawlers.util.normalize
 
@@ -11,7 +11,7 @@ import news.crawlers.util.normalize
 # LTN, SETN, FTV, STORM, TVBS use cloudfront services and cloudfront will
 # banned crawlers.
 ###############################################################################
-SLEEP_SECS_BEFORE_BANNED_LOOKUP_TABLE: Final[Dict[int, float]] = {
+SLEEP_SECS_BEFORE_BANNED_LOOKUP_TABLE: Dict[int, float] = {
     news.crawlers.util.normalize.get_company_id(company='中時'):
         0.0,
     news.crawlers.util.normalize.get_company_id(company='中央社'):
@@ -58,7 +58,7 @@ SLEEP_SECS_BEFORE_BANNED_FASTEST_LOOKUP_TABLE: List[float] = [
 #
 # TVBS is set to 0.0 since we use API without bad request.
 ###############################################################################
-SLEEP_SECS_AFTER_BANNED_LOOKUP_TABLE: Final[Dict[int, float]] = {
+SLEEP_SECS_AFTER_BANNED_LOOKUP_TABLE: Dict[int, float] = {
     news.crawlers.util.normalize.get_company_id(company='中時'): 0.0,
     news.crawlers.util.normalize.get_company_id(company='中央社'): 0.0,
     news.crawlers.util.normalize.get_company_id(company='大紀元'): 0.0,
@@ -86,7 +86,7 @@ SLEEP_SECS_AFTER_BANNED_FASTEST_LOOKUP_TABLE: List[float] = [
 # LTN, SETN, FTV, STORM, TVBS use cloudfront services and cloudfront will
 # banned crawlers.
 ###############################################################################
-SLEEP_SECS_AFTER_429_LOOKUP_TABLE: Final[Dict[int, float]] = {
+SLEEP_SECS_AFTER_429_LOOKUP_TABLE: Dict[int, float] = {
     news.crawlers.util.normalize.get_company_id(company='中時'): 120.0,
     news.crawlers.util.normalize.get_company_id(company='中央社'): 0.0,
     news.crawlers.util.normalize.get_company_id(company='大紀元'): 120.0,
@@ -110,9 +110,9 @@ SLEEP_SECS_AFTER_429_FASTEST_LOOKUP_TABLE: List[float] = [
 
 def gen_non_neg(
     *,
-    mu: Final[Optional[float]] = 1.0,
-    sigma: Final[Optional[float]] = 2.0,
-    upper_bound: Final[Optional[float]] = 10.0,
+    mu: Optional[float] = 1.0,
+    sigma: Optional[float] = 2.0,
+    upper_bound: Optional[float] = 10.0,
 ) -> float:
     r"""Sample non-negative random numbers from normal distribution."""
     rand_secs = random.gauss(mu=mu, sigma=sigma)
@@ -122,7 +122,7 @@ def gen_non_neg(
     return rand_secs
 
 
-def sleep_after_banned(company_id: Final[int]) -> None:
+def sleep_after_banned(company_id: int) -> None:
     r"""Sleep specified seconds when got banned.
 
     Sleeping seconds only depends on `company_id`, which are set based on
@@ -133,7 +133,7 @@ def sleep_after_banned(company_id: Final[int]) -> None:
         time.sleep(secs + gen_non_neg())
 
 
-def sleep_after_429(company_id: Final[int]) -> None:
+def sleep_after_429(company_id: int) -> None:
     r"""Sleep specified seconds when launching too many request.
 
     Sleeping seconds only depends on `company_id`, which are set based on
@@ -144,7 +144,7 @@ def sleep_after_429(company_id: Final[int]) -> None:
         time.sleep(secs + gen_non_neg())
 
 
-def sleep_before_banned(company_id: Final[int]) -> None:
+def sleep_before_banned(company_id: int) -> None:
     r"""Sleep specified seconds between each request.
 
     Sleeping seconds only depends on `company_id`, which are set based on
@@ -156,9 +156,9 @@ def sleep_before_banned(company_id: Final[int]) -> None:
 
 
 def check_status_code(
-    company_id: Final[int],
-    status_code: Final[int],
-    url: Final[str],
+    company_id: int,
+    status_code: int,
+    url: str,
 ) -> None:
     r"""Sleep specified seconds based on `company_id` and `status_code`.
 

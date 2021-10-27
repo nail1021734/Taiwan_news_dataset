@@ -1,5 +1,3 @@
-from typing import Final
-
 import news.crawlers.db.create
 import news.crawlers.db.read
 import news.crawlers.db.schema
@@ -8,7 +6,7 @@ import news.crawlers.db.write
 import news.db
 
 
-def test_read_all_records(db_name: Final[str], cleanup_db_file: Final) -> None:
+def test_read_all_records(db_name: str, cleanup_db_file) -> None:
     # Randomly create two records.
     # Note that sqlite's index start with 1.
     news_list = [

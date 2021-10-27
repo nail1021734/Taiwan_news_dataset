@@ -1,6 +1,5 @@
 import re
 import unicodedata
-from typing import Final
 
 import dateutil.parser
 from bs4 import BeautifulSoup
@@ -26,7 +25,7 @@ REPORTER_PATTERNS = [
 URL_PATTERN = re.compile(r'/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm')
 
 
-def parser(raw_news: Final[RawNews]) -> ParsedNews:
+def parser(raw_news: RawNews) -> ParsedNews:
     """Parse Epochtimes news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these information cannot

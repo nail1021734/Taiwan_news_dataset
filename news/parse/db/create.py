@@ -40,9 +40,8 @@ r"""創建資料表儲存爬蟲新聞內容處理結果.
 """
 
 import sqlite3
-from typing import Final
 
-SQL: Final[str] = """
+SQL: str = """
     CREATE TABLE IF NOT EXISTS parsed_news (
         id          INTEGER  PRIMARY KEY AUTOINCREMENT,
         article     TEXT        NOT NULL,
@@ -56,6 +55,6 @@ SQL: Final[str] = """
 """
 
 
-def create_table(cur: Final[sqlite3.Cursor]) -> None:
+def create_table(cur: sqlite3.Cursor) -> None:
     r"""執行創建表格 SQL."""
     cur.execute(SQL)

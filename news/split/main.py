@@ -4,7 +4,7 @@ import os
 import pathlib
 import sys
 import textwrap
-from typing import Final, List, Tuple
+from typing import List, Tuple
 
 from tqdm import trange
 
@@ -20,7 +20,7 @@ import news.parse.db.write
 import news.path
 
 
-def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
+def parse_args(argv: List[str]) -> argparse.Namespace:
     r"""Parse command line arguments.
 
     Example
@@ -263,10 +263,10 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
 
 
 def get_output_db_path(
-    db_name: Final[str],
-    db_type: Final[str],
-    start_idx: Final[int],
-    end_idx: Final[int],
+    db_name: str,
+    db_type: str,
+    start_idx: int,
+    end_idx: int,
 ) -> str:
     db_name_no_ext, db_name_ext = os.path.splitext(db_name)
     # Split files are output to path `PROJECT_ROOT/data/split/{db_type}` with
@@ -279,7 +279,7 @@ def get_output_db_path(
     )
 
 
-def main(argv: Final[List[str]]) -> None:
+def main(argv: List[str]) -> None:
     args = parse_args(argv=argv)
 
     if args.db_name is None:

@@ -1,7 +1,7 @@
 import inspect
 import sqlite3
 from inspect import Parameter, Signature
-from typing import Final, List, Sequence
+from typing import List, Sequence
 
 import news.db
 
@@ -16,7 +16,7 @@ def test_module_function_signature() -> None:
                 name='db_path',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[str],
+                annotation=str,
             ),
         ],
         return_annotation=sqlite3.Connection,
@@ -29,7 +29,7 @@ def test_module_function_signature() -> None:
                 name='file_path',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[str],
+                annotation=str,
             ),
         ],
         return_annotation=bool,
@@ -42,7 +42,7 @@ def test_module_function_signature() -> None:
                 name='file_paths',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[Sequence[str]],
+                annotation=Sequence[str],
             ),
         ],
         return_annotation=List[str],
