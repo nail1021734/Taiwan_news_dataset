@@ -63,7 +63,9 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     # News article.
     article = ''
     try:
-        article_tags = soup.select('div#Content1 > p:not([class]):not([style])')
+        article_tags = soup.select(
+            'div#Content1 > p:not([class]):not([style])',
+        )
         # Joint remaining text.
         article = ' '.join(
             filter(
@@ -93,16 +95,16 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         category = ''
 
     # News datetime.
-    news_datetime = ''
+    timestamp = 0
     try:
         time_tag = soup.select('time.page-date')[0]
-        news_datetime = datetime.strptime(time_tag.text, '%Y/%m/%d %H:%M:%S')
+        timestamp = datetime.strptime(time_tag.text, '%Y/%m/%d %H:%M:%S')
         # Convert to UTC.
-        news_datetime = news_datetime - timedelta(hours=8)
-        news_datetime = news_datetime.timestamp()
+        timestamp = timestamp - timedelta(hours=8)
+        timestamp = timestamp.timestamp()
     except Exception:
         # There may not have category.
-        news_datetime = ''
+        timestamp = 0
 
     # News reporter.
     reporter = ''
@@ -128,7 +130,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
 
     parsed_news.article = article
     parsed_news.category = category
-    parsed_news.datetime = news_datetime
     parsed_news.reporter = reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news

@@ -11,8 +11,8 @@ def test_init() -> None:
     - `article`
     - `category`
     - `company_id`
-    - `datetime`
     - `reporter`
+    - `timestamp`
     - `title`
     - `url_pattern`
     """
@@ -20,8 +20,8 @@ def test_init() -> None:
     article = 'abc'
     category = 'def'
     company_id = 456
-    datetime = 789
     reporter = 'ghi'
+    timestamp = 789
     title = 'jkl'
     url_pattern = 'mno'
 
@@ -30,8 +30,8 @@ def test_init() -> None:
         article=article,
         category=category,
         company_id=company_id,
-        datetime=datetime,
         reporter=reporter,
+        timestamp=timestamp,
         title=title,
         url_pattern=url_pattern,
     )
@@ -42,8 +42,8 @@ def test_init() -> None:
     assert next(attrs_gen) == article
     assert next(attrs_gen) == category
     assert next(attrs_gen) == company_id
-    assert next(attrs_gen) == datetime
     assert next(attrs_gen) == reporter
+    assert next(attrs_gen) == timestamp
     assert next(attrs_gen) == title
     assert next(attrs_gen) == url_pattern
 

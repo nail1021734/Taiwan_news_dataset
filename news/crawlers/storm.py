@@ -146,7 +146,7 @@ def main(
         )
 
         # No more news to crawl.
-        if not news_list:
+        if not news_list and latest_idx == -1:
             break
 
         # Write news records to database.

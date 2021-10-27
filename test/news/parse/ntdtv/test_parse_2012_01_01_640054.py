@@ -56,7 +56,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '法輪功,各界恭賀李洪志先生新年好'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1325347200
+    assert parsed_news.timestamp == 1325347200
     assert parsed_news.reporter == '倩雅於淼,任浩'
     assert parsed_news.title == '科技傳統美景 各地迎接新年特色不同'
     assert parsed_news.url_pattern == '2012-01-01-640054'

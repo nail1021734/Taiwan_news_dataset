@@ -31,7 +31,7 @@ def test_module_attribute_signature() -> None:
     assert hasattr(news.parse.cna, 'REPORTER_PATTERNS')
     assert news.parse.cna.REPORTER_PATTERNS == [
         re.compile(
-            r'\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
+            r'^\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
             + r'\d*?\s*?年?\d*?\s*?月?\d*\s*?日?\d*?'
             + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
         ),
@@ -69,7 +69,7 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'★'),
+            re.compile(r'(?:★|\s*?\.$)'),
             '',
         ),
         (

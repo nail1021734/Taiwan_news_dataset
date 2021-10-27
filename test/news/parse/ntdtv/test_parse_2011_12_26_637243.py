@@ -78,7 +78,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1324828800
+    assert parsed_news.timestamp == 1324828800
     assert parsed_news.reporter == '唐美華'
     assert parsed_news.title == '外記揭央視如何愚弄人民 官媒三大禁區'
     assert parsed_news.url_pattern == '2011-12-26-637243'

@@ -10,8 +10,8 @@
 |article|TEXT|NOT NULL|新聞內文|
 |category|TEXT|DEFAULT NULL|新聞種類|
 |company_id|INTEGER|NOT NULL|新聞公司|
-|datetime|INTEGER|NOT NULL|新聞發佈日期與時間|
 |reporter|TEXT|DEFAULT NULL|記者|
+|timestamp|INTEGER|NOT NULL|新聞發佈日期與時間|
 |title|TEXT|NOT NULL|新聞標題|
 |url_pattern|TEXT|NOT NULL|新聞 URL|
 

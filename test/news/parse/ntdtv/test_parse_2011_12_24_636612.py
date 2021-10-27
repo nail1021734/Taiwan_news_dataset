@@ -67,7 +67,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1324656000
+    assert parsed_news.timestamp == 1324656000
     assert parsed_news.reporter == '常春,李元翰,周平'
     assert parsed_news.title == '金正恩行使軍權 韓美中對朝釋善意'
     assert parsed_news.url_pattern == '2011-12-24-636612'

@@ -55,7 +55,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '九評及退黨,九評及退黨浪潮'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1302969600
+    assert parsed_news.timestamp == 1302969600
     assert parsed_news.reporter == '張建浩'
     assert parsed_news.title == '吉隆坡鬧市中慶祝9300萬人退出中共'
     assert parsed_news.url_pattern == '2011-04-17-519983'

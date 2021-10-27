@@ -39,7 +39,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '社會'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1415548800
+    assert parsed_news.timestamp == 1415548800
     assert parsed_news.reporter == '陳淑芬台中'
     assert parsed_news.title == '抗癌騎士環島 拜會台中市議長'
     assert parsed_news.url_pattern == '201411100229'

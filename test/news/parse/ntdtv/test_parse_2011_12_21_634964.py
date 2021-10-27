@@ -70,7 +70,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1324396800
+    assert parsed_news.timestamp == 1324396800
     assert parsed_news.reporter == '常春,李元翰,孫寧'
     assert parsed_news.title == '後金正日時代 專家析朝鮮政局走向'
     assert parsed_news.url_pattern == '2011-12-21-634964'

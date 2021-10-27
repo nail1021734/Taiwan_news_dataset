@@ -22,9 +22,10 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # 201412300008, 201412300122, 201412310239, 201501010002, 201501010021,
     # 201501010071, 201501010087, 201801010009, 201801010165, 201801040371,
     # 201801240404, 201806280284, 201807110318, 201808210054, 201812310105,
-    # 201903240113, 201908030093, 201909290214, 201912070131, 202110200353`.
+    # 201903240113, 201908030093, 201909290214, 201912070131, 202110200353,
+    # 202110210070`.
     re.compile(
-        r'\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
+        r'^\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
         + r'\d*?\s*?年?\d*?\s*?月?\d*\s*?日?\d*?'
         + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
     ),
@@ -79,9 +80,9 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
     # Remove meaningless symbols. This observation is made with
-    # `url_pattern = 201412040065`.
+    # `url_pattern = 201412040065, 202110210003`.
     (
-        re.compile(r'★'),
+        re.compile(r'(?:★|\s*?\.$)'),
         '',
     ),
     # Remove recommendations. This observation is made with `url_pattern =
@@ -205,12 +206,12 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     ###########################################################################
     # Parsing news datetime.
     ###########################################################################
-    news_datetime = 0
+    timestamp = 0
     try:
         # Some news publishing date time are different to URL pattern.  For
         # simplicity we only use URL pattern to represent the same news.  News
         # datetime will convert to POSIX time (which is under UTC time zone).
-        news_datetime = int(
+        timestamp = int(
             datetime.strptime(
                 parsed_news.url_pattern[:8],
                 '%Y%m%d',
@@ -284,10 +285,10 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         parsed_news.category = category
     else:
         parsed_news.category = ParsedNews.category
-    parsed_news.datetime = news_datetime
     if reporter:
         parsed_news.reporter = reporter
     else:
         parsed_news.reporter = ParsedNews.reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news

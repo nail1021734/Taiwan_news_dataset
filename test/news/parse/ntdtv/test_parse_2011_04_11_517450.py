@@ -49,7 +49,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '法輪功,法輪功人權'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1302451200
+    assert parsed_news.timestamp == 1302451200
     assert parsed_news.reporter is None
     assert parsed_news.title == '马来西亚天国乐团洪法传福音受欢迎'
     assert parsed_news.url_pattern == '2011-04-11-517450'

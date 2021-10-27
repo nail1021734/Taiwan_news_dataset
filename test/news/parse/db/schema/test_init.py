@@ -18,8 +18,8 @@ def test_init() -> None:
     article = 'abc'
     category = 'def'
     company_id = 456
-    datetime = 789
     reporter = 'ghi'
+    timestamp = 789
     title = 'jkl'
     url_pattern = 'mno'
 
@@ -28,8 +28,8 @@ def test_init() -> None:
         article=article,
         category=category,
         company_id=company_id,
-        datetime=datetime,
         reporter=reporter,
+        timestamp=timestamp,
         title=title,
         url_pattern=url_pattern,
     )
@@ -38,7 +38,7 @@ def test_init() -> None:
     assert parsed_news.article == article
     assert parsed_news.category == category
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == datetime
     assert parsed_news.reporter == reporter
+    assert parsed_news.timestamp == timestamp
     assert parsed_news.title == title
     assert parsed_news.url_pattern == url_pattern
