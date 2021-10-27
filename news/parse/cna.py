@@ -109,6 +109,18 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'\(延伸閱讀:.*?\)'),
         '',
     ),
+    # Remove special column. This observation is made with `url_pattern =
+    # 202110200224`.
+    (
+        re.compile(r'自殺警語:珍惜生命,自殺不能解決問題,生命一定可以找到出路.*。'),
+        '',
+    ),
+    # Remove special column. This observation is made with `url_pattern =
+    # 202110190043`.
+    (
+        re.compile(r'\s▼.*?(?:。\s|$)'),
+        '',
+    )
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove content hints. This observation is made with
