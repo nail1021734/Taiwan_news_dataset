@@ -1,7 +1,7 @@
 import inspect
 from datetime import datetime
 from inspect import Parameter, Signature
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 
 import news.crawlers.db.schema
 import news.crawlers.ftv
@@ -18,7 +18,7 @@ def test_module_function_signature() -> None:
                 name='raw_xml',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[str],
+                annotation=str,
             ),
         ],
         return_annotation=bool,
@@ -31,37 +31,37 @@ def test_module_function_signature() -> None:
                 name='category_api',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[str],
+                annotation=str,
             ),
             Parameter(
                 name='current_datetime',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[datetime],
+                annotation=datetime,
             ),
             Parameter(
                 name='continue_fail_count',
                 kind=Parameter.KEYWORD_ONLY,
                 default=100,
-                annotation=Final[Optional[int]],
+                annotation=Optional[int],
             ),
             Parameter(
                 name='debug',
                 kind=Parameter.KEYWORD_ONLY,
                 default=False,
-                annotation=Final[Optional[bool]],
+                annotation=Optional[bool],
             ),
             Parameter(
                 name='first_idx',
                 kind=Parameter.KEYWORD_ONLY,
                 default=1,
-                annotation=Final[Optional[int]],
+                annotation=Optional[int],
             ),
             Parameter(
                 name='kwargs',
                 kind=Parameter.VAR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[Optional[Dict]],
+                annotation=Optional[Dict],
             ),
         ],
         return_annotation=List[news.crawlers.db.schema.RawNews],
@@ -74,25 +74,25 @@ def test_module_function_signature() -> None:
                 name='current_datetime',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[datetime],
+                annotation=datetime,
             ),
             Parameter(
                 name='db_name',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[str],
+                annotation=str,
             ),
             Parameter(
                 name='past_datetime',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[datetime],
+                annotation=datetime,
             ),
             Parameter(
                 name='kwargs',
                 kind=Parameter.VAR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[Optional[Dict]],
+                annotation=Optional[Dict],
             ),
         ],
         return_annotation=None,

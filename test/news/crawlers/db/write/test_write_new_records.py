@@ -1,5 +1,3 @@
-from typing import Final
-
 import news.crawlers.db.create
 import news.crawlers.db.schema
 import news.crawlers.db.util
@@ -8,8 +6,8 @@ import news.db
 
 
 def test_write_new_records(
-    db_name: Final[str],
-    cleanup_db_file: Final,
+    db_name: str,
+    cleanup_db_file,
 ) -> None:
     idx = 123
     company_id = 456

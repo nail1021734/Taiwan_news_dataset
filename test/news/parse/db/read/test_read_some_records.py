@@ -1,5 +1,3 @@
-from typing import Final
-
 import news.db
 import news.parse.db.create
 import news.parse.db.read
@@ -8,7 +6,7 @@ import news.parse.db.util
 import news.parse.db.write
 
 
-def test_read_all_records(db_name: Final[str], cleanup_db_file: Final) -> None:
+def test_read_all_records(db_name: str, cleanup_db_file) -> None:
     # Randomly create two records.
     # Note that sqlite's index start with 1.
     news_list = [

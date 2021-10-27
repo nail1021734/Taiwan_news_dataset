@@ -1,6 +1,6 @@
 import inspect
 from inspect import Parameter, Signature
-from typing import Final, Optional
+from typing import Optional
 
 import news.crawlers.util.status_code
 
@@ -16,19 +16,19 @@ def test_module_function_signature() -> None:
                     name='mu',
                     kind=Parameter.KEYWORD_ONLY,
                     default=1.0,
-                    annotation=Final[Optional[float]],
+                    annotation=Optional[float],
                 ),
                 Parameter(
                     name='sigma',
                     kind=Parameter.KEYWORD_ONLY,
                     default=2.0,
-                    annotation=Final[Optional[float]],
+                    annotation=Optional[float],
                 ),
                 Parameter(
                     name='upper_bound',
                     kind=Parameter.KEYWORD_ONLY,
                     default=10.0,
-                    annotation=Final[Optional[float]],
+                    annotation=Optional[float],
                 ),
             ],
             return_annotation=float,
@@ -46,7 +46,7 @@ def test_module_function_signature() -> None:
                     name='company_id',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[int],
+                    annotation=int,
                 ),
             ],
             return_annotation=None,
@@ -63,7 +63,7 @@ def test_module_function_signature() -> None:
                     name='company_id',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[int],
+                    annotation=int,
                 ),
             ],
             return_annotation=None,
@@ -82,7 +82,7 @@ def test_module_function_signature() -> None:
                     name='company_id',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[int],
+                    annotation=int,
                 ),
             ],
             return_annotation=None,
@@ -99,19 +99,19 @@ def test_module_function_signature() -> None:
                     name='company_id',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[int],
+                    annotation=int,
                 ),
                 Parameter(
                     name='status_code',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[int],
+                    annotation=int,
                 ),
                 Parameter(
                     name='url',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[str],
+                    annotation=str,
                 ),
             ],
             return_annotation=None,

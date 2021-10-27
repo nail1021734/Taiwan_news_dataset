@@ -1,7 +1,6 @@
 import inspect
 import re
 from inspect import Parameter, Signature
-from typing import Final
 
 import news.crawlers.util.normalize
 
@@ -17,7 +16,7 @@ def test_module_function_signature() -> None:
                     name='raw_xml',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[str],
+                    annotation=str,
                 ),
             ],
             return_annotation=str,
@@ -31,13 +30,13 @@ def test_module_function_signature() -> None:
                     name='company_id',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[int],
+                    annotation=int,
                 ),
                 Parameter(
                     name='url',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[str],
+                    annotation=str,
                 ),
             ],
             return_annotation=str,
@@ -51,7 +50,7 @@ def test_module_function_signature() -> None:
                     name='company',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[str],
+                    annotation=str,
                 ),
             ],
             return_annotation=int,
@@ -65,7 +64,7 @@ def test_module_function_signature() -> None:
                     name='company_id',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[int],
+                    annotation=int,
                 ),
             ],
             return_annotation=str,

@@ -1,7 +1,7 @@
 import argparse
 import inspect
 from inspect import Parameter, Signature
-from typing import Final, List
+from typing import List
 
 import news.parse.chinatimes
 import news.parse.cna
@@ -28,7 +28,7 @@ def test_module_function_signature() -> None:
                     name='argv',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[List[str]],
+                    annotation=List[str],
                 ),
             ],
             return_annotation=argparse.Namespace,
@@ -43,13 +43,13 @@ def test_module_function_signature() -> None:
                     name='db_path',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[str],
+                    annotation=str,
                 ),
                 Parameter(
                     name='raw_news_list',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[List[news.crawlers.db.schema.RawNews]],
+                    annotation=List[news.crawlers.db.schema.RawNews],
                 ),
             ],
             return_annotation=List[news.parse.db.schema.ParsedNews],
@@ -64,7 +64,7 @@ def test_module_function_signature() -> None:
                     name='argv',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[List[str]],
+                    annotation=List[str],
                 ),
             ],
             return_annotation=None,

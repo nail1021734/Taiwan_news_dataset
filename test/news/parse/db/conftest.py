@@ -1,5 +1,4 @@
 import os
-from typing import Final
 
 import pytest
 
@@ -8,7 +7,7 @@ import news.parse.db.util
 
 
 @pytest.fixture
-def cleanup_db_file(db_name: Final[str], request: Final) -> None:
+def cleanup_db_file(db_name: str, request) -> None:
     r"""Delete testing database files."""
 
     def remove() -> None:

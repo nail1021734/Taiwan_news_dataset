@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Final, List, Tuple
+from typing import List, Tuple
 
 from bs4 import BeautifulSoup
 
@@ -16,7 +16,7 @@ from news.parse.db.schema import ParsedNews
 # MUST have exactly ONE group.  You can use `(?...)` pattern as non-capture
 # group, see python's re module for details.
 ###############################################################################
-REPORTER_PATTERNS: Final[List[re.Pattern]] = [
+REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 201411080177, 201411100007,
     # 201411100229, 201411100306, 201411100454, 201412030042, 201412260115,
     # 201412300008, 201412300122, 201412310239, 201501010002, 201501010021,
@@ -39,7 +39,7 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # This observation is made with `url_pattern = 201807110178`.
     re.compile(r'中?央社?駐.*?特派員(.*?)/\d*?年?\d+?月?\d+?日'),
 ]
-ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 201901010005`.
     (
         re.compile(r'(\(編輯.*?\))'),
@@ -128,7 +128,7 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
 ]
-TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove content hints. This observation is made with
     # `url_pattern = 201412280286, 201412300008, 201701010135, 201801190132,
     # 201802070327, 201803060174, 201901010005, 201901010013, 202001010027,
@@ -152,7 +152,7 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
 ]
 
 
-def parser(raw_news: Final[RawNews]) -> ParsedNews:
+def parser(raw_news: RawNews) -> ParsedNews:
     """Parse CNA news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these information cannot

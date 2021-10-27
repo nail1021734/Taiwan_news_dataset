@@ -21,9 +21,8 @@ url_pattern 代表該新聞網頁的 url 格式.
 """
 
 import sqlite3
-from typing import Final
 
-SQL: Final[str] = """
+SQL: str = """
     CREATE TABLE IF NOT EXISTS raw_news (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         company_id  INTEGER NOT NULL,
@@ -33,6 +32,6 @@ SQL: Final[str] = """
 """
 
 
-def create_table(cur: Final[sqlite3.Cursor]) -> None:
+def create_table(cur: sqlite3.Cursor) -> None:
     r"""執行創建表格 SQL."""
     cur.execute(SQL)

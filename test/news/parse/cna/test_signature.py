@@ -1,7 +1,6 @@
 import inspect
 import re
 from inspect import Parameter, Signature
-from typing import Final
 
 import news.crawlers.db.schema
 import news.parse.cna
@@ -19,7 +18,7 @@ def test_module_function_signature() -> None:
                 name='raw_news',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[news.crawlers.db.schema.RawNews],
+                annotation=news.crawlers.db.schema.RawNews,
             ),
         ],
         return_annotation=news.parse.db.schema.ParsedNews,
