@@ -15,8 +15,8 @@ def test_write_new_records(
     article = 'abc'
     category = 'def'
     company_id = 456
-    datetime = 789
     reporter = 'ghi'
+    timestamp = 789
     title = 'jkl'
     url_pattern = 'mno'
 
@@ -25,8 +25,8 @@ def test_write_new_records(
         article=article,
         category=category,
         company_id=company_id,
-        datetime=datetime,
         reporter=reporter,
+        timestamp=timestamp,
         title=title,
         url_pattern=url_pattern,
     )

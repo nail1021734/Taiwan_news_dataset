@@ -49,7 +49,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '產經'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1634659200
+    assert parsed_news.timestamp == 1634659200
     assert parsed_news.reporter == '吳佳蓉台北'
     assert parsed_news.title == '學者籲課世代正義稅 財政部:先看房地合一2.0成效'
     assert parsed_news.url_pattern == '202110200353'

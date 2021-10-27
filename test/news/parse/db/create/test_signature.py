@@ -38,8 +38,8 @@ def test_module_attribute_signature() -> None:
                 article     TEXT        NOT NULL,
                 category    TEXT    DEFAULT NULL,
                 company_id  INTEGER     NOT NULL,
-                datetime    INTEGER     NOT NULL,
                 reporter    TEXT    DEFAULT NULL,
+                timestamp   INTEGER     NOT NULL,
                 title       TEXT        NOT NULL,
                 url_pattern TEXT        NOT NULL
             );

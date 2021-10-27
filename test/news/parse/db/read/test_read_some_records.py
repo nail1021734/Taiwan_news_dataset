@@ -17,8 +17,8 @@ def test_read_all_records(db_name: Final[str], cleanup_db_file: Final) -> None:
             article='abc',
             category='def',
             company_id=123,
-            datetime=456,
             reporter='ghi',
+            timestamp=456,
             title='jkl',
             url_pattern='mno',
         ),
@@ -27,8 +27,8 @@ def test_read_all_records(db_name: Final[str], cleanup_db_file: Final) -> None:
             article='cba',
             category='fed',
             company_id=321,
-            datetime=654,
             reporter='ihg',
+            timestamp=654,
             title='lkj',
             url_pattern='onm',
         ),
@@ -37,8 +37,8 @@ def test_read_all_records(db_name: Final[str], cleanup_db_file: Final) -> None:
             article='aaa',
             category=None,
             company_id=111,
-            datetime=222,
             reporter=None,
+            timestamp=222,
             title='bbb',
             url_pattern='ccc',
         ),
@@ -69,8 +69,8 @@ def test_read_all_records(db_name: Final[str], cleanup_db_file: Final) -> None:
         assert r1.article == r2.article
         assert r1.category == r2.category
         assert r1.company_id == r2.company_id
-        assert r1.datetime == r2.datetime
         assert r1.reporter == r2.reporter
+        assert r1.timestamp == r2.timestamp
         assert r1.title == r2.title
         assert r1.url_pattern == r2.url_pattern
 
@@ -85,8 +85,8 @@ def test_read_all_records(db_name: Final[str], cleanup_db_file: Final) -> None:
         assert r1.article == r2.article
         assert r1.category == r2.category
         assert r1.company_id == r2.company_id
-        assert r1.datetime == r2.datetime
         assert r1.reporter == r2.reporter
+        assert r1.timestamp == r2.timestamp
         assert r1.title == r2.title
         assert r1.url_pattern == r2.url_pattern
 
@@ -102,7 +102,7 @@ def test_read_all_records(db_name: Final[str], cleanup_db_file: Final) -> None:
         assert r1.article == r2.article
         assert r1.category == r2.category
         assert r1.company_id == r2.company_id
-        assert r1.datetime == r2.datetime
         assert r1.reporter == r2.reporter
+        assert r1.timestamp == r2.timestamp
         assert r1.title == r2.title
         assert r1.url_pattern == r2.url_pattern

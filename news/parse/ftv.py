@@ -115,18 +115,18 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         category = ''
 
     # News datetime.
-    news_datetime = ''
+    timestamp = 0
     try:
         url_datetime = parsed_news.url_pattern.split('/')[-1][:7]
         url_datetime = f'{url_datetime[:4]}{int("0x" + url_datetime[4], 0):02}{url_datetime[5:]}'
-        news_datetime = datetime.strptime(
+        timestamp = datetime.strptime(
             url_datetime,
             '%Y%m%d',
         )
-        news_datetime = news_datetime.timestamp()
+        timestamp = timestamp.timestamp()
     except Exception:
         # There may not have category.
-        news_datetime = ''
+        timestamp = 0
 
     # News reporter.
     reporter = ''
@@ -174,9 +174,10 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         # FTV response 404 with status code 200.
         # Thus some pages do not have title since it is 404.
         raise ValueError('Fail to parse FTV news title.')
+
     parsed_news.article = article
     parsed_news.category = category
-    parsed_news.datetime = news_datetime
     parsed_news.reporter = reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news

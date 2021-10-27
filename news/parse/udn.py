@@ -55,7 +55,8 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     try:
         # Discard images, captions, styles, scripts and ads.
         for tag in soup.select(
-                'figure.article-content__image, style, script, div.inline-ads'):
+                'figure.article-content__image, style, script, div.inline-ads',
+        ):
             tag.extract()
 
         # Discard related links.
@@ -66,7 +67,8 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
                     break
 
         article_tags = soup.select(
-            'section.article-content__editor > p, section.article-content__editor > blockquote'
+            'section.article-content__editor > p, '
+            + 'section.article-content__editor > blockquote'
         )
         article = ' '.join(map(lambda tag: tag.text.strip(), article_tags))
 
@@ -88,20 +90,20 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         category = ''
 
     # News datetime.
-    news_datetime = ''
+    timestamp = 0
     try:
-        news_datetime = soup.select(
-            'section.authors > time.article-content__time'
+        timestamp = soup.select(
+            'section.authors > time.article-content__time',
         )[0].text
         # Convert to UTC.
-        news_datetime = datetime.strptime(
-            news_datetime,
+        timestamp = datetime.strptime(
+            timestamp,
             '%Y-%m-%d %H:%M',
         ) - timedelta(hours=8)
-        news_datetime = news_datetime.timestamp()
+        timestamp = timestamp.timestamp()
     except Exception:
         # There may not have category.
-        news_datetime = ''
+        timestamp = 0
 
     # News reporter.
     reporter = ''
@@ -126,7 +128,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
 
     parsed_news.article = article
     parsed_news.category = category
-    parsed_news.datetime = news_datetime
     parsed_news.reporter = reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news

@@ -64,7 +64,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1324051200
+    assert parsed_news.timestamp == 1324051200
     assert parsed_news.reporter == '劉惠,孫寧'
     assert parsed_news.title == '審判法前總統希拉克 對中共的警示'
     assert parsed_news.url_pattern == '2011-12-17-633168'

@@ -200,12 +200,12 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     ###########################################################################
     # Parsing news datetime.
     ###########################################################################
-    news_datetime = 0
+    timestamp = 0
     try:
         # Some news publishing date time are different to URL pattern.  For
         # simplicity we only use URL pattern to represent the same news.  News
         # datetime will convert to POSIX time (which is under UTC time zone).
-        news_datetime = int(
+        timestamp = int(
             datetime.strptime(
                 parsed_news.url_pattern[:8],
                 '%Y%m%d',
@@ -279,10 +279,10 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         parsed_news.category = category
     else:
         parsed_news.category = ParsedNews.category
-    parsed_news.datetime = news_datetime
     if reporter:
         parsed_news.reporter = reporter
     else:
         parsed_news.reporter = ParsedNews.reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news

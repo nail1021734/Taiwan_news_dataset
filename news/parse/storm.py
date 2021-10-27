@@ -57,18 +57,18 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         category = ''
 
     # News datetime.
-    news_datetime = ''
+    timestamp = 0
     try:
-        news_datetime = datetime.strptime(
+        timestamp = datetime.strptime(
             soup.select('span#info_time')[0].text,
             '%Y-%m-%d %H:%M',
         )
         # Convert to UTC.
-        news_datetime = news_datetime - timedelta(hours=8)
-        news_datetime = news_datetime.timestamp()
+        timestamp = timestamp - timedelta(hours=8)
+        timestamp = timestamp.timestamp()
     except Exception:
         # There may not have category.
-        news_datetime = ''
+        timestamp = 0
 
     # News reporter.
     reporter = ''
@@ -91,7 +91,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
 
     parsed_news.article = article
     parsed_news.category = category
-    parsed_news.datetime = news_datetime
     parsed_news.reporter = reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news

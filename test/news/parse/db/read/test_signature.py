@@ -80,8 +80,8 @@ def test_module_attribute_signature() -> None:
         r'\s+',
         ' ',
         """
-        SELECT id, article, category, company_id, datetime, reporter,
-                title, url_pattern
+        SELECT id, article, category, company_id, reporter, timestamp,
+               title, url_pattern
         FROM   parsed_news;
         """,
     )
@@ -95,8 +95,8 @@ def test_module_attribute_signature() -> None:
         r'\s+',
         ' ',
         """
-        SELECT id, article, category, company_id, datetime, reporter,
-                title, url_pattern
+        SELECT id, article, category, company_id, reporter, timestamp,
+               title, url_pattern
         FROM   parsed_news
         LIMIT  :limit
         OFFSET :offset;

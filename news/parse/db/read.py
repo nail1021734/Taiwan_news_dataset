@@ -8,14 +8,14 @@ import news.parse.db.util
 
 # 讀取用的 SQL 指令
 READ_ALL_RECORDS_SQL: Final[str] = """
-    SELECT id, article, category, company_id, datetime, reporter, title,
+    SELECT id, article, category, company_id, reporter, timestamp, title,
            url_pattern
     FROM   parsed_news;
 """
 
 # 讀取部份資料用的 SQL 指令.
 READ_SOME_RECORDS_SQL: Final[str] = """
-    SELECT id, article, category, company_id, datetime, reporter, title,
+    SELECT id, article, category, company_id, reporter, timestamp, title,
            url_pattern
     FROM   parsed_news
     LIMIT  :limit
@@ -52,7 +52,7 @@ def read_all_records(
 
     # 將讀取出的資料轉換為 `ParsedNews` 物件
     records: List[news.parse.db.schema.ParsedNews] = []
-    for (idx, article, category, company_id, datetime, reporter, title,
+    for (idx, article, category, company_id, reporter, timestamp, title,
          url_pattern) in news_list:
         records.append(
             news.parse.db.schema.ParsedNews(
@@ -60,8 +60,8 @@ def read_all_records(
                 article=article,
                 category=category,
                 company_id=company_id,
-                datetime=datetime,
                 reporter=reporter,
+                timestamp=timestamp,
                 title=title,
                 url_pattern=url_pattern,
             )
@@ -112,7 +112,7 @@ def read_some_records(
 
     # 將讀取出的資料轉換為 `ParsedNews` 物件
     records: List[news.parse.db.schema.ParsedNews] = []
-    for (idx, article, category, company_id, datetime, reporter, title,
+    for (idx, article, category, company_id, reporter, timestamp, title,
          url_pattern) in news_list:
         records.append(
             news.parse.db.schema.ParsedNews(
@@ -120,8 +120,8 @@ def read_some_records(
                 article=article,
                 category=category,
                 company_id=company_id,
-                datetime=datetime,
                 reporter=reporter,
+                timestamp=timestamp,
                 title=title,
                 url_pattern=url_pattern,
             )

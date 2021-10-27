@@ -58,7 +58,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '兩岸'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1634745600
+    assert parsed_news.timestamp == 1634745600
     assert parsed_news.reporter == '台北'
     assert parsed_news.title == '中國修產業結構調整指導目錄 淘汰虛擬貨幣挖礦'
     assert parsed_news.url_pattern == '202110210070'

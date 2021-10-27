@@ -69,8 +69,8 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
             for redundant_tag in article_tag.select('a, iframe, img'):
                 redundant_tag.extract()
 
-        # Remove strong tags if it contains filter words.
-        # Also remove strong tag if its previous sibiling contains filter words.
+        # Remove strong tags if it contains filter words.  Also remove strong
+        # tag if its previous sibiling contains filter words.
         # ETtoday's formatting sucks.
         for article_tag in article_tags:
             for strong_tag in article_tag.select('strong'):
@@ -126,24 +126,25 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         category = ''
 
     # News datetime.
-    news_datetime = ''
+    timestamp = ''
     try:
         time_tag = soup.select('time[datetime]')[0]
         # When datetime is in UTC+8 format.
         if len(time_tag['datetime']) >= 10:
-            news_datetime = dateutil.parser.isoparse(time_tag['datetime']
-                                                    ) - timedelta(hours=8)
+            timestamp = dateutil.parser.isoparse(
+                time_tag['datetime'],
+            ) - timedelta(hours=8)
         # When datetime is useless. Again ETtoday's formatting sucks.
         else:
-            news_datetime = time_tag.text.strip()
-            news_datetime = datetime.strptime(
-                news_datetime,
+            timestamp = time_tag.text.strip()
+            timestamp = datetime.strptime(
+                timestamp,
                 '%Y-%m-%d %H:%M',
             ) - timedelta(hours=8)
-        news_datetime = news_datetime.timestamp()
+        timestamp = timestamp.timestamp()
     except Exception:
         # There may not have category.
-        news_datetime = ''
+        timestamp = ''
 
     # News reporter.
     reporter = ''
@@ -195,7 +196,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
 
     parsed_news.article = article
     parsed_news.category = category
-    parsed_news.datetime = news_datetime
     parsed_news.reporter = reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news

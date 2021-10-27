@@ -39,7 +39,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '兩岸'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1538496000
+    assert parsed_news.timestamp == 1538496000
     assert parsed_news.reporter is None
     assert parsed_news.title == '粵深港高鐵通車 落實大灣區理念'
     assert parsed_news.url_pattern == '201810030025'

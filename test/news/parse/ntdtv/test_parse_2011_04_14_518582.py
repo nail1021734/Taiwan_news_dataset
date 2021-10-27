@@ -66,7 +66,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1302710400
+    assert parsed_news.timestamp == 1302710400
     assert parsed_news.reporter == '李元翰,柏妮'
     assert parsed_news.title == 'IMF警告中國資產泡沫與破裂風險'
     assert parsed_news.url_pattern == '2011-04-14-518582'

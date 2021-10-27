@@ -105,24 +105,25 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     # News category.
     category = ''
     try:
-        category = CATEGORIES[CATEGORY_PATTERN.match(parsed_news.url_pattern
-                                                    ).group(1)]
+        category = CATEGORIES[CATEGORY_PATTERN.match(
+            parsed_news.url_pattern,
+        ).group(1)]
         category = unicodedata.normalize('NFKC', category).strip()
     except Exception:
         # There may not have category.
         category = ''
 
     # News datetime.
-    news_datetime = ''
+    timestamp = 0
     try:
         # Convert to UTC.
-        news_datetime = dateutil.parser.isoparse(
+        timestamp = dateutil.parser.isoparse(
             soup.select('meta[name=pubdate]')[0]['content']
         ) - timedelta(hours=8)
-        news_datetime = news_datetime.timestamp()
+        timestamp = timestamp.timestamp()
     except Exception:
         # There may not have category.
-        news_datetime = ''
+        timestamp = 0
 
     # News reporter.
     reporter = ''
@@ -145,7 +146,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
 
     parsed_news.article = article
     parsed_news.category = category
-    parsed_news.datetime = news_datetime
     parsed_news.reporter = reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news
