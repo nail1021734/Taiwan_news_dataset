@@ -1,11 +1,12 @@
 import re
-from typing import List, Tuple
 from datetime import datetime
+from typing import List, Tuple
+
 from bs4 import BeautifulSoup
 
+import news.parse.util.normalize
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
-import news.parse.util.normalize
 
 # News articles are located in `div#artbody`, and all of them are either `p` or
 # `h2` tags.  `h2` tags represent section header and `p` tags represent normal
