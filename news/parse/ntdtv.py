@@ -8,13 +8,46 @@ import news.parse.util.normalize
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
+# There are at least two article patterns, and these patterns are mutually
+# exclusive (in other words, only one pattern applies to each news).  We use
+# selector lists (selectors separated by comma) to denote all article patterns.
+# This observation is made with `url_pattern = 2012-01-01-640251,
+# 2011-04-12-517548`.
+#
+# In the pattern `div[itemprop=articleBody].post_content > p`, some of the
+# article contains image captions, thus we remove it using
+# `:not(:has(a:has(img)))`.
+# This observation is made with `url_pattern = 2011-04-11-517450`.
+ARTICLE_SELECTOR_LIST: Final[str] = re.sub(
+    r'\s+',
+    ' ',
+    '''
+    div[itemprop=articleBody].post_content > p:not(:has(a:has(img))),
+    div.article_content > p
+    ''',
+)
+
+# There are at least two title patterns, and these patterns are mutually
+# exclusive (in other words, only one pattern applies to each news). We use
+# selector lists (selectors separated by comma) to denote all title patterns.
+# This observation is made with `url_pattern = 2012-01-01-640251,
+# 2011-04-12-517548`.
+TITLE_SELECTOR_LIST: Final[str] = re.sub(
+    r'\s+',
+    ' ',
+    '''
+    div.article_title > h1,
+    div.main_title
+    ''',
+)
+
 ###############################################################################
 #                                 WARNING:
 # Patterns (including `REPORTER_PATTERNS`, `ARTICLE_SUB_PATTERNS`,
-# `TITLE_SUB_PATTERNS`) MUST remain unordered, in other words, the order of
-# execution WILL NOT and MUST NOT effect the parsing results.
-# `REPORTER_PATTERNS` MUST have exactly ONE group.  You can use `(?...)`
-# pattern as non-capture group, see python's re module for details.
+# `TITLE_SUB_PATTERNS`) MUST remain their relative ordered, in other words,
+# the order of execution may effect the parsing results. `REPORTER_PATTERNS`
+# MUST have exactly ONE group.  You can use `(?...)` pattern as non-capture
+# group, see python's re module for details.
 ###############################################################################
 REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # re.compile(r'^採訪/(.*?)\s*編輯/(.*?)\s*後製/(.*?)$'),
@@ -26,8 +59,9 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
     # 2011-12-20-634655, 2011-12-18-633615, 2011-12-15-632140,
     # 2011-12-13-631155, 2011-04-17-519983, 2011-04-15-519037`.
     re.compile(
-        r'\(?(?:這是)?新(?:唐|塘)人(?:記|记)?者?(?:亞太)?(?:電視臺?)?([\w、\s]*?)'
-        + r'的?(?:(?:综|綜)合|整理|(?:採|采)訪)?(?:報|报)(?:導|导|道)。?\)?'
+        r'\(?(?:(?:這|这)是)?新(?:唐|塘)人(?:記|记)?者?'
+        + r'(?:亞太)?(?:(?:電|电)(?:視|视)(?:台|臺)?)?' + r'([\w、\s]*?)'
+        + r'的?(?:(?:综|綜)合|整理|(?:採|采)(?:訪|访))?(?:報|报)(?:導|导|道)。?\)?'
     ),
     # This observation is made with `url_pattern = 2012-01-01-640083`.
     re.compile(r'文字:([^/]+?)/.+$'),
@@ -43,10 +77,11 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'@\*#'),
         '',
     ),
+    # Note that `ord('–') == 8211`, `ord('—') == 8212` and `ord('─') == 9472`.
     # This observation is made with `url_pattern = 2021-10-24-103250967,
-    # 2011-12-23-635993`.
+    # 2011-12-23-635993, 2011-04-11-517450, 2011-03-30-512271`.
     (
-        re.compile(r'—*\(?轉自[^)\s]*?\)?$'),
+        re.compile(r'[—–─]*\(?轉自[^)\s]*?\)?\s*(有(刪|删)(節|节))?$'),
         '',
     ),
     (
@@ -73,9 +108,10 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'^(【[^】]*?】)+'),
         '',
     ),
-    # This observation is made with `url_pattern = 2011-04-17-519966`.
+    # This observation is made with `url_pattern = 2011-04-17-519966,
+    # 2011-04-03-514098`.
     (
-        re.compile(r'【新唐人[^】]*?訊】'),
+        re.compile(r'【新(唐|塘)人[^】]*?訊】?'),
         '',
     ),
     # Remove useless last paragraph with at most one space in between. This
@@ -93,12 +129,12 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # This observation is made with `url_pattern = 2011-12-31-639654,
     # 2011-12-28-638240, 2011-12-26-637243`.
     (
-        re.compile(r'相關(鏈接|視頻|新聞)+?:.*$'),
+        re.compile(r'相(關|关)((鏈|链)(接|結)|(視|视)(頻|频)|新(聞|闻))+?:.*$'),
         '',
     ),
     # This observation is made with `url_pattern = 2021-10-24-103250967`.
     (
-        re.compile(r'(撰文|製作):.*$'),
+        re.compile(r'(撰文|(製|制)作):.*$'),
         ' ',
     ),
     # This observation is made with `url_pattern = 2021-10-24-103250967`.
@@ -108,22 +144,26 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     ),
     # This observation is made with `url_pattern = 2012-01-01-640316,
     # 2012-01-01-640301, 2012-01-01-640240, 2012-01-01-640096,
-    # 2011-12-31-639994, 2011-04-17-519993, 2011-04-17-519859`.
+    # 2011-12-31-639994, 2011-04-17-519993, 2011-04-17-519859,
+    # 2011-04-11-517227`.
     (
-        re.compile(r'\(?(大紀元|中央社?)(記者)?[^()0-9]*?\d*?[^()]*?(電|報導|特稿|社)\)'),
+        re.compile(
+            r'\(?(大(紀|纪)元|中央社?)((記|记)者)?'
+            + r'[^()0-9]*?\d*?[^()]*?((電|电)|(報|报)(導|导)|特稿|社)\)',
+        ),
         '',
     ),
     # This observation is made with `url_pattern = 2012-01-01-640301,
-    # 2011-12-23-636434`.
+    # 2011-12-23-636434, 2011-04-12-517789, 2011-04-09-516789`.
     (
-        re.compile(r'\(譯者:[^)]+\)?'),
+        re.compile(r'\(((實|实)(習|习))?(編|编)?(譯|译)者?(:|;)[^)]+\)?'),
         '',
     ),
     # This observation is made with `url_pattern = 2012-01-01-640045,
     # 2012-01-01-640280, 2011-12-30-639608, 2011-12-26-637451,
-    # 2011-12-25-636915`.
+    # 2011-12-25-636915, 2011-04-02-513571`.
     (
-        re.compile(r'\(本文附(有|帶)?照片及?帶?(影音)?\)'),
+        re.compile(r'\(本文附(有|(帶|带))?((影音|照片)(及|和)?(帶|带)?)+\)'),
         '',
     ),
     # This observation is made with `url_pattern = 2011-12-31-639655,
@@ -145,14 +185,11 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'新(聞|闻)(週|周)刊\(?\d+\)?期?'),
         '',
     ),
-    # Remove traslation and datetime string at the end. This observation is
-    # made with `url_pattern = 2011-12-30-639201, 2011-12-30-639463,
-    # 2011-12-24-636612, 2011-12-24-636565, 2011-12-21-634964,
-    # 2011-12-22-635525, 2011-12-20-634431, 2011-12-20-634429,
-    # 2011-12-17-633168, 2011-12-15-632169`.
+    # Remove section header symbols. This observation is made with `url_pattern
+    # = 2011-04-10-516866`.
     (
-        re.compile(r'''[0-9a-zA-sÀ-ÿ,.:;?!/“”’'"$%『』\[\]()*=—\-\s]+$'''),
-        '',
+        re.compile(r'\*(\S*?)\*'),
+        r'\1',
     ),
     # Remove list item symbols. This observation is made with
     # `url_pattern = 2011-12-28-638636, 2011-12-28-638635, 2011-12-28-638631,
@@ -162,9 +199,9 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         ' ',
     ),
     # Remove figure references. This observation is made with
-    # `url_pattern = 2011-12-28-638568`.
+    # `url_pattern = 2011-12-28-638568, 2011-04-11-517502, 2011-03-29-511547`.
     (
-        re.compile(r'\[圖卡\d+\]\s*'),
+        re.compile(r'(\[(圖|图)卡\d*\]\s*|\((圖|图)片來源:.*?\))'),
         '',
     ),
     # Remove wierd typos. This observation is made with `url_pattern =
@@ -173,36 +210,68 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'([^:])//'),
         r'\1',
     ),
-    # Remove download links. This observation is made with `url_pattern =
-    # 2011-12-21-635020, 2011-04-17-519966`.
+    # Remove website references. This observation is made with `url_pattern =
+    # 2011-12-21-635020, 2011-04-14-518790, 2011-04-07-515910`.
     (
-        re.compile(r'(下載錄像)?\s*新唐人電視台\s*((https?://)?www\.ntdtv\.com)?'),
+        re.compile(
+            r'新(唐|塘)人(電|电)(視|视)(臺|台)\s*((https?://)?www\.ntdtv\.com)?',
+        ),
+        '',
+    ),
+    # Remove download links. This observation is made with `url_pattern =
+    # 2011-12-21-635020, 2011-04-12-517801, 2011-04-11-517355,
+    # 2011-04-08-516206`.
+    (
+        re.compile(r'(下(載|载)(錄|录)像)'),
+        '',
+    ),
+    # Remove content references. This observation is made with `url_pattern =
+    # 2011-04-12-517801, 2011-04-11-517355, 2011-04-08-516206`.
+    (
+        re.compile(r'\((畫|画)面.*?(報|报)(導|导|道)\)'),
         '',
     ),
     # Remove left along symbols at the begin. This observation is made with
-    # `url_pattern = 2011-12-17-633460`.
+    # `url_pattern = 2011-12-17-633460, 2011-04-12-517593`.
     (
-        re.compile(r'^\)'),
+        re.compile(r'^(主播)?\)'),
         '',
     ),
     # Remove related news tags. This observation is made with `url_pattern =
     # 2011-04-17-519966`.
     (
-        re.compile(r'\s+相關新聞\s+'),
+        re.compile(r'\s+相(關|关)新聞\s+'),
         ' ',
+    ),
+    # Remove unclear links. This observation is made with `url_pattern =
+    # 2011-04-14-518847`.
+    (
+        re.compile(r'\.html#video target=_blank>'),
+        '',
+    ),
+    # Remove traslation and datetime string at the end. Note that
+    # `ord('–') == 8211`, `ord('—') == 8212` and `ord('─') == 9472`. This
+    # observation is made with `url_pattern = 2011-12-30-639201,
+    # 2011-12-30-639463, 2011-12-24-636612, 2011-12-24-636565,
+    # 2011-12-21-634964, 2011-12-22-635525, 2011-12-20-634431,
+    # 2011-12-20-634429, 2011-12-17-633168, 2011-12-15-632169,
+    # 2011-04-14-518582, 2011-04-04-514246`.
+    (
+        re.compile(r'''[0-9a-zA-sÀ-ÿ,.:;?!&/“”’'"$%『』\[\]()*=—–─\-\s]+$'''),
+        '',
     ),
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove content hints. This observation is made with `url_pattern =
-    # 2012-01-01-640083`.
+    # 2012-01-01-640083, 2011-04-12-517801, 2011-12-23-636402`.
     (
-        re.compile(r'【[^】]*?】'),
+        re.compile(r'(【[^】]*?】|\([^)]*?\))'),
         '',
     ),
-    # Remove picture hints. This observation is made with `url_pattern =
-    # 2011-12-23-636402, 2011-04-16-519478`.
+    # Remove content hints without parentheses. This observation is made with
+    # `url_pattern = 2011-04-16-519478, 2011-04-04-514182`.
     (
-        re.compile(r'\(?組圖:?\)?'),
+        re.compile(r'(快(訊|讯)|組(圖|图)):'),
         '',
     ),
     # Remove useless symbols. This observation is made with `url_pattern =
@@ -236,19 +305,8 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     ###########################################################################
     article = ''
     try:
-        # There are at least two article patterns, and these patterns are
-        # mutually exclusive (in other words, only one pattern applies to each
-        # news). We use selector lists (selectors separated by comma) to denote
-        # all article patterns. This observation is made with `url_pattern =
-        # 2012-01-01-640251, 2011-04-12-517548`.
         article = ' '.join(
-            map(
-                lambda tag: tag.text,
-                soup.select(
-                    'div[itemprop=articleBody].post_content > p,'
-                    + 'div.article_content > p'
-                )
-            )
+            map(lambda tag: tag.text, soup.select(ARTICLE_SELECTOR_LIST))
         )
         article = news.parse.util.normalize.NFKC(article)
     except Exception:
@@ -319,10 +377,10 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         reporter = ','.join(map(news.parse.util.normalize.NFKC, reporter_list))
         # Some reporters are separated by whitespaces or '、'.  This
         # observation is made with `url_pattern = 2012-01-01-640292,
-        # 2011-12-15-632140`.
+        # 2011-12-15-632140, 2011-04-12-517593`.
         reporter = news.parse.util.normalize.NFKC(
             re.sub(
-                r'(\s|、)',
+                r'[\s、]+',
                 ',',
                 reporter,
             )
@@ -336,16 +394,8 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     ###########################################################################
     title = ''
     try:
-        # There are at least two title patterns, and these patterns are
-        # mutually exclusive (in other words, only one pattern applies to each
-        # news). We use selector lists (selectors separated by comma) to denote
-        # all title patterns. This observation is made with `url_pattern =
-        # 2012-01-01-640251, 2011-04-12-517548`.
-        title = soup.select_one('div.article_title > h1, div.main_title').text
+        title = soup.select_one(TITLE_SELECTOR_LIST).text
         title = news.parse.util.normalize.NFKC(title)
-        # Discard trash news.
-        if '【熱門話題】' in title:
-            article = ''
     except Exception:
         raise ValueError('Fail to parse NTDTV news title.')
 
