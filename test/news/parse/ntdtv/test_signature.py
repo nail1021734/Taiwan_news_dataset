@@ -4,8 +4,8 @@ from inspect import Parameter, Signature
 from typing import Final
 
 import news.crawlers.db.schema
-import news.parse.ntdtv
 import news.parse.db.schema
+import news.parse.ntdtv
 import news.parse.util.normalize
 
 

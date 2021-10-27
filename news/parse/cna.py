@@ -30,9 +30,9 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
         + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
     ),
     # Must match '日' in the middle of text. This observation is made with
-    # `url_pattern = 201911100105, 201501010257, 201412300220`.
+    # `url_pattern = 201911100105, 201501010257, 201412300220, 201602120188`.
     re.compile(
-        r'\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
+        r'\(\s?中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
         + r'\d*?年?\d*?月?\d*\s*?日?\d*?(?:日[^\)]*?)'
         + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
     ),
@@ -73,6 +73,18 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'\((?:賽況)?(?:即時)?更新\)'),
         '',
     ),
+    # Remove update hints. This observation is made with
+    # `url_pattern = 201612180139, 201612070380`.
+    (
+        re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
+        '',
+    ),
+    # Remove list symbols.
+    # This observation is made with `url_pattern = 201909290214`.
+    (
+        re.compile(r'●'),
+        ' ',
+    ),
     # Remove meaningless symbols. This observation is made with
     # `url_pattern = 201412040065, 202110210003`.
     (
@@ -98,15 +110,21 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
-    # 201810030025`.
+    # 201810030025, 201612260025`.
     (
-        re.compile(r'\(特派員專欄\)'),
+        re.compile(r'^\(?特派員[^\s。,]*?專欄\)?'),
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
-    # 201910250015`.
+    # 201910250015, 201708200238`.
     (
-        re.compile(r'\(延伸閱讀:.*?\)'),
+        re.compile(r'\(?延伸閱讀[^\)。,]*\)?(?=\s+?[^\s。,]*)'),
+        '',
+    ),
+    # Remove prefix. This observation is made with `url_pattern =
+    # 201609300395, 201609300396, 201609300393, 201603130226, 201603130227`.
+    (
+        re.compile(r'^[^\s。,]*?專題(?:之[一二三四五六七八九十]+)?(?:\(\d+\))?'),
         '',
     ),
 ]
@@ -123,6 +141,12 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # `url_pattern = 201412260020`.
     (
         re.compile(r'★'),
+        '',
+    ),
+    # Remove article labels. This observation is made with
+    # `url_pattern = 201612260025`.
+    (
+        re.compile(r'\s?特派專欄\s?'),
         '',
     ),
 ]
