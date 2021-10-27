@@ -132,9 +132,9 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove content hints. This observation is made with
     # `url_pattern = 201412280286, 201412300008, 201701010135, 201801190132,
     # 201802070327, 201803060174, 201901010005, 201901010013, 202001010027,
-    # 201910250015, 201911080011, 201912310042`.
+    # 201910250015, 201911080011, 201912310042, 202012300309`.
     (
-        re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
+        re.compile(r'(【[^】]*?】|\[[^\]]*?\]|\s*?特派專欄\s*?)'),
         '',
     ),
     # Remove meaningless symbols. This observation is made with
@@ -176,7 +176,13 @@ def parser(raw_news: RawNews) -> ParsedNews:
     try:
         additional_tag = soup.select_one('div.dictionary')
         if additional_tag:
-            article = additional_tag.text
+            article += additional_tag.text
+
+        # Some news author information is in `div.author`. This observation is
+        # made with `url_pattern = 202010070112`.
+        reporter_tag = soup.select_one('div.author')
+        if reporter_tag:
+            article += reporter_tag.text
 
         # Only first `div.centralContent div.paragraph` contains news.  News
         # are splitted into paragraph by `p` tags, which happens to be the
@@ -252,8 +258,16 @@ def parser(raw_news: RawNews) -> ParsedNews:
     title = ''
     try:
         # Title is in `div.centralContent h1 span`. This observation is made
-        # with `url_pattern = 201501010002`.
-        title = soup.select_one('div.centralContent h1 span').text
+        # with `url_pattern = 201501010002, 202012120085, 202012120086,
+        # 202012120087`.
+        title += ''.join(
+            map(
+                lambda tag: tag.text,
+                soup.select(
+                    'div.centralContent h1 span',
+                )
+            )
+        )
         title = news.parse.util.normalize.NFKC(title)
     except Exception:
         raise ValueError('Fail to parse CNA news title.')
