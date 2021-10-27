@@ -30,9 +30,9 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
         + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
     ),
     # Must match '日' in the middle of text. This observation is made with
-    # `url_pattern = 201911100105, 201501010257, 201412300220`.
+    # `url_pattern = 201911100105, 201501010257, 201412300220, 201602120188`.
     re.compile(
-        r'\(\s 中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
+        r'\(\s?中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
         + r'\d*?年?\d*?月?\d*\s*?日?\d*?(?:日[^\)]*?)'
         + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
     ),
@@ -110,9 +110,9 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
-    # 201910250015`.
+    # 201910250015, 201708200238`.
     (
-        re.compile(r'\(?延伸閱讀:?.*?\)?\s'),
+        re.compile(r'\(?延伸閱讀[^\)。,]*\)?(?=\s+?[^\s。,]*)'),
         '',
     ),
     # Remove prefix. This observation is made with `url_pattern =

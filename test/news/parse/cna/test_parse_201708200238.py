@@ -33,7 +33,7 @@ def test_parsing_result() -> None:
         textwrap.dedent(
             '''\
             今年第13號颱風天鴿今天形成,中央氣象局晚間11時30分發布天鴿颱風海上颱風警報
-            。根據中央氣象局觀測,天鴿颱風目前中心位置在鵝鑾鼻東南東方約570公里的海面上
+            。 根據中央氣象局觀測,天鴿颱風目前中心位置在鵝鑾鼻東南東方約570公里的海面上
             ,以每小時16公里向西轉西北西前進。暴風圈對台灣東南部海面及巴士海峽構成威脅
             。 21日下午起,台灣東半部、恆春半島及西南部沿海地區有長浪,氣象局提醒民眾,前往
             海邊活動須注意安全。
@@ -42,7 +42,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '重點新聞'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1503158400
+    assert parsed_news.timestamp == 1503158400
     assert parsed_news.reporter == "陳葦庭台北"
     assert parsed_news.title == '颱風天鴿海警 晚間11時30分發布'
     assert parsed_news.url_pattern == '201708200238'

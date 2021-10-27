@@ -41,7 +41,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '產經'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1475164800
+    assert parsed_news.timestamp == 1475164800
     assert parsed_news.reporter == '蔡素蓉台北'
     assert parsed_news.title == 'Uber 沒共享的跨國資本主義新經濟'
     assert parsed_news.url_pattern == '201609300395'
