@@ -43,7 +43,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '天災人禍,各國地震,日本地震'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1302537600
+    assert parsed_news.timestamp == 1302537600
     assert parsed_news.reporter is None
     assert parsed_news.title == '枝野幸男親嘗福島番茄 強調食物安全'
     assert parsed_news.url_pattern == '2011-04-12-517801'

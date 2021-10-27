@@ -50,11 +50,12 @@ def test_module_attribute_signature() -> None:
         re.sub(r'\s+', ' ', news.parse.db.write.WRITE_SQL) == re.sub(
             r'\s+', ' ', """
                 INSERT INTO parsed_news(
-                    article, category, company_id, datetime, reporter, title,
+                    article, category, company_id, reporter, timestamp, title,
                     url_pattern
                 )
                 VALUES (
-                    ?      , ?       , ?         , ?       , ?       , ?    , ?
+                    ?      , ?       , ?         , ?       , ?        , ?    ,
+                    ?
                 );
             """
         )

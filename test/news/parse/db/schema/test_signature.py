@@ -20,10 +20,10 @@ def test_class_attribute() -> None:
     assert news.parse.db.schema.ParsedNews.category is None
     assert hasattr(news.parse.db.schema.ParsedNews, 'company_id')
     assert news.parse.db.schema.ParsedNews.company_id == 0
-    assert hasattr(news.parse.db.schema.ParsedNews, 'datetime')
-    assert news.parse.db.schema.ParsedNews.datetime == 0
     assert hasattr(news.parse.db.schema.ParsedNews, 'reporter')
     assert news.parse.db.schema.ParsedNews.reporter is None
+    assert hasattr(news.parse.db.schema.ParsedNews, 'timestamp')
+    assert news.parse.db.schema.ParsedNews.timestamp == 0
     assert hasattr(news.parse.db.schema.ParsedNews, 'title')
     assert news.parse.db.schema.ParsedNews.title == ''
     assert hasattr(news.parse.db.schema.ParsedNews, 'url_pattern')
@@ -45,4 +45,18 @@ def test_instance_method() -> None:
                 ),
             ],
             return_annotation=Signature.empty,
+        )
+    assert hasattr(news.parse.db.schema.ParsedNews, 'pretify')
+    assert inspect.isfunction(news.parse.db.schema.ParsedNews.pretify)
+    assert inspect.signature(news.parse.db.schema.ParsedNews.pretify) \
+        == Signature(
+            parameters=[
+                Parameter(
+                    name='self',
+                    kind=Parameter.POSITIONAL_OR_KEYWORD,
+                    default=Parameter.empty,
+                    annotation=Parameter.empty,
+                ),
+            ],
+            return_annotation=str,
         )

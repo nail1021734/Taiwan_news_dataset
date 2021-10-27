@@ -48,7 +48,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1302537600
+    assert parsed_news.timestamp == 1302537600
     assert parsed_news.reporter == '施萍,高磊赫爾辛基'
     assert parsed_news.title == '芬蘭議會大選在即 各黨爭拉選票'
     assert parsed_news.url_pattern == '2011-04-12-517593'

@@ -49,7 +49,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '重點新聞'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1516291200
+    assert parsed_news.timestamp == 1516291200
     assert parsed_news.reporter == '陳偉婷台北'
     assert parsed_news.title == '法國問題奶粉再擴大 台灣29品項全下架'
     assert parsed_news.url_pattern == '201801190132'

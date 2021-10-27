@@ -54,7 +54,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '國際'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1325001600
+    assert parsed_news.timestamp == 1325001600
     assert parsed_news.reporter == '曾奕豪,張明筑台灣臺北'
     assert parsed_news.title == '首投族民調 近3成5仍未表態投誰'
     assert parsed_news.url_pattern == '2011-12-28-638568'

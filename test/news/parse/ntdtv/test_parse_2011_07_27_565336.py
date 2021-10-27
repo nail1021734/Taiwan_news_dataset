@@ -51,7 +51,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '財經'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1311696000
+    assert parsed_news.timestamp == 1311696000
     assert parsed_news.reporter is None
     assert parsed_news.title == '高鑫香港掛牌 股價走高3成'
     assert parsed_news.url_pattern == '2011-07-27-565336'

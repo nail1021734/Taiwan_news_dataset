@@ -40,7 +40,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '運動'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1531238400
+    assert parsed_news.timestamp == 1531238400
     assert parsed_news.reporter == '謝靜雯台北'
     assert parsed_news.title == '王維中6局優質先發 勝投候選退場'
     assert parsed_news.url_pattern == '201807110318'

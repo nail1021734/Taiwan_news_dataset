@@ -56,7 +56,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '海外華人'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1302451200
+    assert parsed_news.timestamp == 1302451200
     assert parsed_news.reporter is None
     assert parsed_news.title == '澳财长警告:联邦财政预算将急剧缩减'
     assert parsed_news.url_pattern == '2011-04-11-517227'

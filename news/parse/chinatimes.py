@@ -59,26 +59,27 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     # News category.
     category = ''
     try:
-        category = soup.select('nav.breadcrumb-wrapper > ol > li > a > span'
-                              )[-1].text
+        category = soup.select(
+            'nav.breadcrumb-wrapper > ol > li > a > span',
+        )[-1].text
         category = unicodedata.normalize('NFKC', category).strip()
     except Exception:
         # There may not have category.
         category = ''
 
     # News datetime.
-    news_datetime = ''
+    timestamp = ''
     try:
-        news_datetime = datetime.strptime(
+        timestamp = datetime.strptime(
             soup.select('header.article-header time[datetime]')[0]['datetime'],
             '%Y-%m-%d %H:%M',
         )
         # Convert to UTC.
-        news_datetime = news_datetime - timedelta(hours=8)
-        news_datetime = news_datetime.timestamp()
+        timestamp = timestamp - timedelta(hours=8)
+        timestamp = timestamp.timestamp()
     except Exception:
         # There may not have category.
-        news_datetime = ''
+        timestamp = ''
 
     # News reporter.
     reporter = ''
@@ -104,7 +105,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
 
     parsed_news.article = article
     parsed_news.category = category
-    parsed_news.datetime = news_datetime
     parsed_news.reporter = reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news

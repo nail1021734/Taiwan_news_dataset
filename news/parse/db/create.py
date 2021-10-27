@@ -13,9 +13,9 @@ r"""創建資料表儲存爬蟲新聞內容處理結果.
 +-------------+---------+---------------------------+
 | company_id  | INTEGER | NOT NULL                  |
 +-------------+---------+---------------------------+
-| datetime    | INTEGER | NOT NULL                  |
-+-------------+---------+---------------------------+
 | reporter    | TEXT    | DEFAULT NULL              |
++-------------+---------+---------------------------+
+| timestamp   | INTEGER | NOT NULL                  |
 +-------------+---------+---------------------------+
 | title       | TEXT    | NOT NULL                  |
 +-------------+---------+---------------------------+
@@ -30,10 +30,10 @@ r"""創建資料表儲存爬蟲新聞內容處理結果.
   url_pattern 的部份文字取得.  部份新聞並沒有類別.
 - company_id 代表新聞網站, 與 `news.crawlers.db.schema.RawNews` 中的
   company_id 相同.
-- datetime 為新聞發表日期, 從 `news.crawlers.db.schema.RawNews` 中 raw_xml 或
-  url_pattern 的部份文字取得.
 - reporter 為新聞記者 (可以是多人, 以逗點區隔), 從 `news.crawlers.db.schema.RawNews`
   中 raw_xml 的部份文字取得.  部份新聞並沒有記者.
+- timestamp 為新聞發表日期, 從 `news.crawlers.db.schema.RawNews` 中 raw_xml 或
+  url_pattern 的部份文字取得.
 - title 為新聞標題, 從 `news.crawlers.db.schema.RawNews` 中 raw_xml 的部份文字取得.
 - url_pattern 代表該新聞網頁的 url 格式 與 `news.crawlers.db.schema.RawNews` 中的
   url_pattern 相同.
@@ -48,8 +48,8 @@ SQL: Final[str] = """
         article     TEXT        NOT NULL,
         category    TEXT    DEFAULT NULL,
         company_id  INTEGER     NOT NULL,
-        datetime    INTEGER     NOT NULL,
         reporter    TEXT    DEFAULT NULL,
+        timestamp   INTEGER     NOT NULL,
         title       TEXT        NOT NULL,
         url_pattern TEXT        NOT NULL
     );

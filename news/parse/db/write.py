@@ -10,10 +10,10 @@ READ_SQL: Final[str] = """
 
 WRITE_SQL: Final[str] = """
     INSERT INTO parsed_news(
-        article, category, company_id, datetime, reporter, title, url_pattern
+        article, category, company_id, reporter, timestamp, title, url_pattern
     )
     VALUES (
-        ?      , ?       , ?         , ?       , ?       , ?    , ?
+        ?      , ?       , ?         , ?       , ?        , ?    , ?
     );
 """
 
@@ -39,8 +39,8 @@ def write_new_records(
                     n.article,
                     n.category,
                     n.company_id,
-                    n.datetime,
                     n.reporter,
+                    n.timestamp,
                     n.title,
                     n.url_pattern,
                 )

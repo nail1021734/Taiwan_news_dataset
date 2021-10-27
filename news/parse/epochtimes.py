@@ -64,19 +64,19 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
         category = ''
 
     # News datetime.
-    news_datetime = ''
+    timestamp = ''
     try:
         match = URL_PATTERN.match(parsed_news.url_pattern)
         year = int(match.group(1))
         month = int(match.group(2))
         day = int(match.group(3))
-        news_datetime = dateutil.parser.isoparse(
+        timestamp = dateutil.parser.isoparse(
             f"20{year:02d}-{month:02d}-{day:02d}T00:00:00Z"
         )
-        news_datetime = news_datetime.timestamp()
+        timestamp = timestamp.timestamp()
     except Exception:
         # There may not have category.
-        news_datetime = ''
+        timestamp = ''
 
     # News reporter.
     reporter = ''
@@ -103,7 +103,7 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
 
     parsed_news.article = article
     parsed_news.category = category
-    parsed_news.datetime = news_datetime
     parsed_news.reporter = reporter
+    parsed_news.timestamp = timestamp
     parsed_news.title = title
     return parsed_news
