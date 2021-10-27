@@ -176,7 +176,13 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     try:
         additional_tag = soup.select_one('div.dictionary')
         if additional_tag:
-            article = additional_tag.text
+            article += additional_tag.text
+
+        # Some news author information is in `div.author`. This observation is
+        # made with `url_pattern = 202010070112`.
+        reporter_tag = soup.select_one('div.author')
+        if reporter_tag:
+            article += reporter_tag.text
 
         # Only first `div.centralContent div.paragraph` contains news.  News
         # are splitted into paragraph by `p` tags, which happens to be the
