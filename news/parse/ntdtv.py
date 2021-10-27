@@ -97,9 +97,10 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'美東時間:\s*.*?【萬年曆】'),
         '',
     ),
-    # This observation is made with `url_pattern = 2011-04-15-519169`.
+    # This observation is made with `url_pattern = 2011-04-15-519169,
+    # 2011-07-14-559558`.
     (
-        re.compile(r'本文網址:\s*.*$'),
+        re.compile(r'(本文|影片)網址為?:?\s*.*$'),
         '',
     ),
     # This observation is made with `url_pattern = 2012-01-01-640292,
@@ -161,9 +162,10 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     ),
     # This observation is made with `url_pattern = 2012-01-01-640045,
     # 2012-01-01-640280, 2011-12-30-639608, 2011-12-26-637451,
-    # 2011-12-25-636915, 2011-04-02-513571, 2011-07-27-565336`.
+    # 2011-12-25-636915, 2011-04-02-513571, 2011-07-27-565336,
+    # 2011-06-11-545215`.
     (
-        re.compile(r'\(本文附(有|(帶|带))?((影音|(照|相)片)(及|和)?(帶|带)?)+\)'),
+        re.compile(r'\(本文附?(有|(帶|带))?((影音|(照|相)片)(及|和)?(帶|带)?)+\)'),
         '',
     ),
     # This observation is made with `url_pattern = 2011-12-31-639655,
@@ -250,8 +252,10 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
     # Remove traslation and datetime string at the end. Note that
-    # `ord('–') == 8211`, `ord('—') == 8212` and `ord('─') == 9472`. This
-    # observation is made with `url_pattern = 2011-12-30-639201,
+    # `ord('–') == 8211`, `ord('—') == 8212` and `ord('─') == 9472`.  Also note
+    # that always leave this pattern at the last of all patterns since this
+    # pattern removes everything the above patterns does not match.
+    # This observation is made with `url_pattern = 2011-12-30-639201,
     # 2011-12-30-639463, 2011-12-24-636612, 2011-12-24-636565,
     # 2011-12-21-634964, 2011-12-22-635525, 2011-12-20-634431,
     # 2011-12-20-634429, 2011-12-17-633168, 2011-12-15-632169,
@@ -269,9 +273,9 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
     # Remove content hints without parentheses. This observation is made with
-    # `url_pattern = 2011-04-16-519478, 2011-04-04-514182`.
+    # `url_pattern = 2011-04-16-519478, 2011-04-04-514182, 2011-07-06-555876`.
     (
-        re.compile(r'(快(訊|讯)|組(圖|图)):'),
+        re.compile(r'(快(訊|讯)|組(圖|图)|焦(點|点)人物):'),
         '',
     ),
     # Remove useless symbols. This observation is made with `url_pattern =
