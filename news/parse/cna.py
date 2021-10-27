@@ -112,13 +112,19 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove special column. This observation is made with `url_pattern =
     # 201910250015, 201708200238`.
     (
-        re.compile(r'\(?延伸閱讀[^\)。,]*\)?(?=\s+?[^\s。,]*)'),
+        re.compile(r'\(?延伸閱讀[^\)。,]*?\)?(?=\s[^。,]*)'),
         '',
     ),
     # Remove prefix. This observation is made with `url_pattern =
     # 201609300395, 201609300396, 201609300393, 201603130226, 201603130227`.
     (
         re.compile(r'^[^\s。,]*?專題(?:之[一二三四五六七八九十]+)?(?:\(\d+\))?'),
+        '',
+    ),
+    # Remove punctuation error. This observation is made with `url_pattern =
+    # 201708060096`.
+    (
+        re.compile(r',(?=)。'),
         '',
     ),
 ]
