@@ -108,7 +108,8 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\([^)]*?來稿\)'),
         '',
     ),
-    # This observation is made with `url_pattern = 13-12-22-4040557`.
+    # This observation is made with `url_pattern = 13-12-22-4040557,
+    # 20-10-10-12466941`.
     (
         re.compile(
             r'[瞭了]解德[國国]社[會会]的最佳途[徑径]—*'
@@ -132,6 +133,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'^(【[^】]*?】)+'),
         '',
     ),
+    (
+        re.compile(r'(待續)'),
+        '',
+    ),
     # Remove useless symbols.
     # This observation is made with `url_pattern = 13-9-21-3969060`.
     (
@@ -139,9 +144,9 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 21-10-27-13332627,
-    # 14-1-1-4048468, 14-1-1-4048456, 14-1-1-4047776`.
+    # 14-1-1-4048468, 14-1-1-4048456, 14-1-1-4047776, 20-10-10-12466941`.
     (
-        re.compile(r'\(?[責责]任?[編编][輯辑]?:.*$'),
+        re.compile(r'\(?(?:[責责]任?[編编][輯辑]?|資料來源|文字整理):.*$'),
         '',
     ),
 ]
