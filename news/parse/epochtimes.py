@@ -218,6 +218,11 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\(?文字整理:[^)]*?(\)|$)'),
         '',
     ),
+    # This observation is made with `url_pattern = 20-10-15-12478440`.
+    (
+        re.compile(r'#$'),
+        '',
+    ),
 ]
 TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (
