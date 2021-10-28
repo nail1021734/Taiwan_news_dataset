@@ -130,7 +130,7 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     # Remove punctuation error. This observation is made with `url_pattern =
     # 201708060096`.
     (
-        re.compile(r',(?=)。'),
+        re.compile(r',(?=。)'),
         '',
     ),
 ]
