@@ -56,14 +56,29 @@ REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 13-12-23-4041274,
     # 14-1-1-4048455, 14-1-1-4048450, 13-12-31-4046950, 13-12-30-4046025,
     # 13-12-13-4033178, 13-12-11-4031411, 13-12-9-4030334, 13-7-21-3921942,
-    # 13-3-12-3820892`.
+    # 13-3-12-3820892, 13-3-1-3811503`.
     re.compile(
         r'\(?\s*(?:[這这]是)?[新大][紀纪]元(?:.{1,2}洲)?(?:[週周]刊\d*?期?,?)?[記记]?者?站?'
         + r'(?:亞太)?(?:[電电][視视][台臺]?)?'
-        + r'([\w、/\s]*?)[的综綜合整理採采訪访編编譯译報报導导道]+?[,。]?\s*\)'
+        + r'([\w、/\s]*?)[的综綜合整理採采訪访編编譯译報报導导道告]+?[,。]?\s*\)'
     ),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
+    # Remove list symbols.
+    # This observation is made with `url_pattern = 13-12-14-4034056,
+    # 13-12-13-4033481, 13-12-9-4030017, 13-12-7-4028473, 13-7-29-3928497,
+    # 13-3-3-3813641`.
+    (
+        re.compile(r'\s+(※|•|●|★|◎|\*)\s*'),
+        ' ',
+    ),
+    # Remove useless symbols.
+    # This observation is made with `url_pattern = 13-9-21-3969060,
+    # 13-8-7-3935864, 13-3-3-3813641, 13-2-27-3810705`.
+    (
+        re.compile(r'(◇|\[\[\d+\]\]|\?{2,}|\?\*|\(完\))'),
+        '',
+    ),
     (
         re.compile(r'@\*#'),
         '',
@@ -97,13 +112,18 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 14-1-1-4047920,
     # 13-12-31-4047555, 13-12-31-4047176, 13-12-31-4047058, 13-12-30-4046768,
     # 13-12-28-4044667, 13-12-12-4032207, 13-12-12-4032203, 13-12-19-4037847,
-    # 13-12-7-4028971`.
+    # 13-12-7-4028971, 13-3-4-3813779, 13-3-1-3812338`.
     (
         re.compile(
             r'\([據据轉转]?《?'
-            + r'(BBC|法[廣广]|自由亞洲|[美德][國国]之[音聲声]|[台民][視视]|明慧)(中文[網网])?'
-            + r'[^)]*?([報报][導导道])?\)',
+            + r'(BBC|法[廣广]|自由(時[報报]|亞洲)|[美德][國国]之[音聲声]|[台民][視视]|明慧)(中文[網网])?'
+            + r'[^)]*?([報报][導导道])?\)\s*\??',
         ),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-3-3-3813542`.
+    (
+        re.compile(r'\(本文[附有帶带影音照相片及和與与]+\)'),
         '',
     ),
     # This observation is made with `url_pattern = 13-8-12-3938760`.
@@ -167,23 +187,14 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'【大[紀纪]元[^】]*?[訊讯]】?'),
         '',
     ),
+    # This observation is made with `url_pattern = 13-3-3-3813123`.
+    (
+        re.compile(r'\([大新][紀纪]元[週周]刊\d+期\)'),
+        '',
+    ),
     # This observation is made with `url_pattern = 13-3-4-3814165`.
     (
         re.compile(r'\(?(https?)?://www\.dajiyuan\.com\)?'),
-        '',
-    ),
-    # Remove list symbols.
-    # This observation is made with `url_pattern = 13-12-14-4034056,
-    # 13-12-13-4033481, 13-12-9-4030017, 13-12-7-4028473, 13-7-29-3928497`.
-    (
-        re.compile(r'\s+(※|•|●|★|◎)\s*'),
-        ' ',
-    ),
-    # Remove useless symbols.
-    # This observation is made with `url_pattern = 13-9-21-3969060,
-    # 13-8-7-3935864`.
-    (
-        re.compile(r'(◇|\[\[\d+\]\])'),
         '',
     ),
     # This observation is made with `url_pattern = 21-10-27-13332627,
