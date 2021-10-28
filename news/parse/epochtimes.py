@@ -30,12 +30,18 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
 # `div#artbody > div#article_wrap`.  In this case `p` and `h2` still act the
 # same as normal news.
 # This observation is made with `url_pattern = 13-2-23-3807193`.
+#
+# For category `文化網`, news articles are located in
+# `div.whitebg > :is(p, h2)`.  In this case `p` and `h2` still act the same as
+# normal news.
+# This observation is made with `url_pattern = 13-8-20-3945076`.
 ARTICLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
     div#artbody > :is(p, h2),
-    div#article_wrap > :is(p, h2)
+    div#article_wrap > :is(p, h2),
+    div.whitebg > :is(p, h2)
     ''',
 )
 
@@ -82,14 +88,29 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # Remove useless symbols.
     # This observation is made with `url_pattern = 13-9-21-3969060,
-    # 13-8-7-3935864, 13-3-3-3813641, 13-2-27-3810705, 13-2-27-3810566`.
+    # 13-8-7-3935864, 13-3-3-3813641, 13-2-27-3810705, 13-2-27-3810566,
+    # 13-8-20-3945076, 13-2-18-3803627`.
     (
-        re.compile(r'(◇|□|\[\[\d+\]\]|\?{2,}|\?\*|\(未?完(待[續续])?\))'),
+        re.compile(
+            r'(◇|□|\[\[\d+\]\]|\?{2,}|\?\*|\(未?完?待?[續续]?(前文)?[圖图]?\)|'
+            + r'\(?[註注][\d一二三四五六七八九十]+:?\)?)'
+        ),
         '',
     ),
+    # This observation is made with `url_pattern = 13-8-20-3945076`.
     (
-        re.compile(r'@\*#'),
+        re.compile(r'@?\s*[註注][釋释]:'),
         '',
+    ),
+    # This observation is made with `url_pattern = 13-8-20-3945076`.
+    (
+        re.compile(r'@\*?#'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-1-2-3767198`.
+    (
+        re.compile(r'([。!])@'),
+        r'\1',
     ),
     # News copy source.  Parentheses must show up in the begining and the end
     # of the pattern.
@@ -114,10 +135,19 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
-    # This observation is made with `url_pattern = 13-12-15-4034574,
+    # This observation is made with `url_pattern = 13-12-15-4034574`.
     (
         re.compile(
             r'\([詳详][細细][報报][導导道][內内]容[請请][見见].*$',
+        ),
+        '',
+    ),
+    # Remove news article references.  References might have nested parenthese.
+    # This observation is made with `url_pattern = 13-2-7-3795671,
+    # 13-6-22-3899772, 13-3-16-3823858`.
+    (
+        re.compile(
+            r'\((事?[據据]|[見见]|出自)([^(]*?\([^)]*?\))*[^)]*?\)。?',
         ),
         '',
     ),
@@ -139,9 +169,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # Note that `ord('–') == 8211`, `ord('—') == 8212` and `ord('─') == 9472`.
     # This observation is made with `url_pattern = 13-12-23-4041274,
-    # 13-2-15-3801677`.
+    # 13-2-15-3801677, 13-8-20-3945076, 13-6-6-3887756, 13-2-9-3797609,
+    # 13-3-10-3818921, 13-12-1-4023601`.
     (
-        re.compile(r'[—–─]*\(?(本文)?[轉转]自[^,]*?$'),
+        re.compile(r'[\-—–─]*\(?(本文)?(摘[編编]|取材|[轉转]|原)[載载自]+[^,]*?$'),
         '',
     ),
     # This observation is made with `url_pattern = 13-9-21-3969060`.
@@ -170,11 +201,12 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ' ',
     ),
     (
-        re.compile(r'─+點閱\s*【.*?】\s*─+'),
+        re.compile(r'─+[點点][閱阅]\s*【.*?】\s*─+'),
         '',
     ),
+    # This observation is made with `url_pattern = 13-6-6-3887756`.
     (
-        re.compile(r'點閱\s*【.*?】\s*系列文章'),
+        re.compile(r'\(?[點点][閱阅]\s*【.*?】\s*系列文章。\)?'),
         '',
     ),
     # This observation is made with `url_pattern = 13-2-23-3807193`.
@@ -244,9 +276,9 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 13-8-3-3932270,
-    # 13-7-29-3928497`.
+    # 13-7-29-3928497, 13-3-6-3816184, 13-3-9-3818323`.
     (
-        re.compile(r'\(?[資资]料[來来]源:[^)]*?(\)|$)'),
+        re.compile(r'\(?([參参]考)?[資资]料([來来]源)?[:《][^)]*?(\)|$)'),
         '',
     ),
     # This observation is made with `url_pattern = 13-2-24-3807746`.
@@ -319,19 +351,19 @@ def parser(raw_news: RawNews) -> ParsedNews:
     ###########################################################################
     category = ''
     try:
-        # Sometimes news does not have categories, but if they do,  categories
-        # are always located in breadcrumbs `div#breadcrumb > a`.
-        # The first text in breadcrumb is always '首頁', so we exclude it.
-        # The second text in breadcrumb is media type, we also exclude it.
-        # There might be more than one category.  Thus we include them all and
-        # save as comma separated format.  Some categories are duplicated, thus
-        # we remove it using `list(dict.fromkeys(...))`.
+        # Sometimes news does not have categories, but if they do, categories
+        # are always located in breadcrumbs `a.breadcrumbs`.  The first text
+        # in breadcrumbs is media type, we also exclude it (`a.breadcrumbs`
+        # does not select `首頁`).  There might be more than one category.  Thus
+        # we include them all and save as comma separated format.  Some
+        # categories are duplicated, thus we remove it using
+        # `list(dict.fromkeys(...))`.
         category = ','.join(
             list(
                 dict.fromkeys(
                     map(
                         lambda tag: tag.text,
-                        soup.select('div#breadcrumb > a')[2:],
+                        soup.select('a.breadcrumbs')[1:],
                     )
                 )
             )
