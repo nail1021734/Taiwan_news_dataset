@@ -43,11 +43,12 @@ TITLE_SELECTOR_LIST: str = re.sub(
 ###############################################################################
 REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 13-12-23-4041274,
-    # 14-1-1-4048455, 14-1-1-4048450, 13-12-31-4046950, 13-12-30-4046025`.
+    # 14-1-1-4048455, 14-1-1-4048450, 13-12-31-4046950, 13-12-30-4046025,
+    # 13-12-13-4033178, 13-12-11-4031411`.
     re.compile(
-        r'\((?:[這这]是)?[新大][紀纪]元(?:[週周]刊\d*?期?,?)?[記记]?者?'
+        r'\(\s*(?:[這这]是)?[新大][紀纪]元(?:[週周]刊\d*?期?,?)?[記记]?者?'
         + r'(?:亞太)?(?:[電电][視视][台臺]?)?'
-        + r'([\w、\s]*?)[的综綜合整理採采訪访編编譯译報报導导道]+?。?\)'
+        + r'([\w、\s]*?)[的综綜合整理採采訪访編编譯译報报導导道]+?[,。]?\s*\)'
     ),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
@@ -83,10 +84,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # of the pattern.
     # This observation is made with `url_pattern = 14-1-1-4047920,
     # 13-12-31-4047555, 13-12-31-4047176, 13-12-31-4047058, 13-12-30-4046768,
-    # 13-12-28-4044667`.
+    # 13-12-28-4044667, 13-12-12-4032207, 13-12-12-4032203`.
     (
         re.compile(
-            r'\([據据]?(BBC(中文[網网])?|法[廣广]|自由亞洲電[臺台]|美國之音|[台民][視视])'
+            r'\([據据]?(BBC(中文[網网])?|法[廣广]|自由亞洲|美[國国]之音|[台民][視视]|明慧)'
             + r'[^)]*?([報报][導导道])?\)',
         ),
         '',
@@ -116,6 +117,15 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
+    # URL pattern was found in
+    # https://stackoverflow.com/questions/7109143/what-characters-are-valid-in-a-url
+    # This observation is made with `url_pattern = 13-12-12-4032764`.
+    (
+        re.compile(
+            r'''[圖图]:\s*https?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;%=]+''',
+        ),
+        '',
+    ),
     (
         re.compile(r'─+點閱\s*【.*?】\s*─+'),
         '',
@@ -132,6 +142,13 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'^(【[^】]*?】)+'),
         '',
     ),
+    # Remove list symbols.
+    # This observation is made with `url_pattern = 13-12-14-4034056,
+    # 13-12-13-4033481`.
+    (
+        re.compile(r'\s+(※|•)\s*'),
+        ' ',
+    ),
     # Remove useless symbols.
     # This observation is made with `url_pattern = 13-9-21-3969060`.
     (
@@ -139,9 +156,9 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 21-10-27-13332627,
-    # 14-1-1-4048468, 14-1-1-4048456, 14-1-1-4047776`.
+    # 14-1-1-4048468, 14-1-1-4048456, 14-1-1-4047776, 13-12-15-4034530`.
     (
-        re.compile(r'\(?[責责]任?[編编][輯辑]?:.*$'),
+        re.compile(r'\(?[責责]任?[編编][輯辑]?.*?:.*$'),
         '',
     ),
 ]
