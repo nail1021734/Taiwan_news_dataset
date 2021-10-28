@@ -69,10 +69,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 14-1-1-4048450,
-    # 14-1-1-4047920, 13-12-26-4043823`.
+    # 14-1-1-4047920, 13-12-26-4043823, 20-11-9-12536603`.
     (
         re.compile(
-            r'\(?(新[唐塘]人|中央社?)(特[約约])?([記记]者)?'
+            r'\(?(轉載:)?(新[唐塘]人|中央社?)(特[約约])?([記记]者)?'
             + r'[^()0-9]*?\d*?[^()]*?([電电]|[報报][導导道]|特稿|社)?\)',
         ),
         '',
@@ -221,6 +221,12 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 20-10-15-12478440`.
     (
         re.compile(r'#$'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 20-8-31-12371094
+    # 20-9-21-12420158, 20-9-21-12420158`.
+    (
+        re.compile(r'【\S+?】'),
         '',
     ),
 ]
