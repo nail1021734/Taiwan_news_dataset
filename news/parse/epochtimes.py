@@ -8,17 +8,28 @@ import news.parse.util.normalize
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
+# Some times paragraph contains figures and captions.  Figure captions are
+# repeated and useless, so we remove figures along with captions.
+# This observation is made with `url_pattern = 14-1-1-4048433,
+# 13-8-12-3938760`.
+ARTICLE_DECOMPOSE_LIST: str = re.sub(
+    r'\s+',
+    ' ',
+    '''
+    figure, figcaption
+    ''',
+)
+
 # News articles are located in `div#artbody`, and all of them are either `p` or
 # `h2` tags.  `h2` tags represent section header and `p` tags represent normal
-# paragprah.  Some `p` tags content figures and figure-captions which we do not
-# need, thus we remove it with `p:not(:has(figure))`.
+# paragprah.
 # This observation is made with `url_pattern = 21-10-27-13332627,
 # 14-1-1-4048433`.
 ARTICLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
-    div#artbody > :is(p:not(:has(figure)), h2)
+    div#artbody > :is(p, h2)
     ''',
 )
 
@@ -43,11 +54,13 @@ TITLE_SELECTOR_LIST: str = re.sub(
 ###############################################################################
 REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 13-12-23-4041274,
-    # 14-1-1-4048455, 14-1-1-4048450, 13-12-31-4046950, 13-12-30-4046025`.
+    # 14-1-1-4048455, 14-1-1-4048450, 13-12-31-4046950, 13-12-30-4046025,
+    # 13-12-13-4033178, 13-12-11-4031411, 13-12-9-4030334, 13-7-21-3921942,
+    # 13-3-12-3820892`.
     re.compile(
-        r'\((?:[這这]是)?[新大][紀纪]元(?:[週周]刊\d*?期?,?)?[記记]?者?'
+        r'\(?\s*(?:[這这]是)?[新大][紀纪]元(?:.{1,2}洲)?(?:[週周]刊\d*?期?,?)?[記记]?者?站?'
         + r'(?:亞太)?(?:[電电][視视][台臺]?)?'
-        + r'([\w、\s]*?)[的综綜合整理採采訪访編编譯译報报導导道]+?。?\)'
+        + r'([\w、/\s]*?)[的综綜合整理採采訪访編编譯译報报導导道]+?[,。]?\s*\)'
     ),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
@@ -65,9 +78,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 14-1-1-4048450,
+    # 13-7-30-3928877`.
     (
         re.compile(
-            r'以上是(自由[亞亚]洲[電电][台臺]|美國之音).*?[報报][導导道]。',
+            r'以上是(自由[亞亚]洲[電电][台臺]|[美德][國国]之[音聲声]).*?[報报][導导道]。?',
         ),
         '',
     ),
@@ -78,23 +92,29 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
-    # 14-1-1-4047920, 13-12-26-4043823, 13-12-19-4037847`.
     # News copy source.  Parentheses must show up in the begining and the end
     # of the pattern.
     # This observation is made with `url_pattern = 14-1-1-4047920,
     # 13-12-31-4047555, 13-12-31-4047176, 13-12-31-4047058, 13-12-30-4046768,
-    # 13-12-28-4044667`.
+    # 13-12-28-4044667, 13-12-12-4032207, 13-12-12-4032203, 13-12-19-4037847,
+    # 13-12-7-4028971`.
     (
         re.compile(
-            r'\([據据]?(BBC(中文[網网])?|法[廣广]|自由亞洲電[臺台]|美國之音|[台民][視视])'
+            r'\([據据轉转]?《?'
+            + r'(BBC|法[廣广]|自由亞洲|[美德][國国]之[音聲声]|[台民][視视]|明慧)(中文[網网])?'
             + r'[^)]*?([報报][導导道])?\)',
         ),
         '',
     ),
-    # This observation is made with `url_pattern = 14-1-1-4048382,
-    # 13-12-26-4043823`.
+    # This observation is made with `url_pattern = 13-8-12-3938760`.
     (
-        re.compile(r'\(([實实][習习])?[編编]?[譯译]者?[:;][^)]*?\)?'),
+        re.compile(r'\([^)]*?[攝摄]影[報报][導导道]\)'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 14-1-1-4048382,
+    # 13-12-26-4043823, 13-8-7-3935510`.
+    (
+        re.compile(r'\(([實实][習习])?[編编]?[譯译議议]者?[:;][^)]*?\)?'),
         '',
     ),
     # Note that `ord('–') == 8211`, `ord('—') == 8212` and `ord('─') == 9472`.
@@ -109,11 +129,20 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 13-12-22-4040557,
-    # 20-10-10-12466941`.
+    # 13-8-13-3939870, 20-10-10-12466941`.
     (
         re.compile(
-            r'[瞭了]解德[國国]社[會会]的最佳途[徑径]—*'
+            r'([瞭了]解|更多)德[國国].*?'
             + r'大[紀纪]元[歐欧]洲生活[網网]:\s*(https?://)?www\.dajiyuan\.eu',
+        ),
+        '',
+    ),
+    # URL pattern was found in
+    # https://stackoverflow.com/questions/7109143/what-characters-are-valid-in-a-url
+    # This observation is made with `url_pattern = 13-12-12-4032764`.
+    (
+        re.compile(
+            r'''[圖图]:\s*https?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;%=]+''',
         ),
         '',
     ),
@@ -134,19 +163,54 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     (
-        re.compile(r'(待續)'),
+        re.compile(r'\(待續\)'),
         '',
+    ),
+    # This observation is made with `url_pattern = 13-7-21-3922412`.
+    (
+        re.compile(r'【大[紀纪]元[^】]*?[訊讯]】?'),
+        '',
+    ),
+    # Remove list symbols.
+    # This observation is made with `url_pattern = 13-12-14-4034056,
+    # 13-12-13-4033481, 13-12-9-4030017, 13-12-7-4028473, 13-7-29-3928497`.
+    (
+        re.compile(r'\s+(※|•|●|★|◎)\s*'),
+        ' ',
     ),
     # Remove useless symbols.
-    # This observation is made with `url_pattern = 13-9-21-3969060`.
+    # This observation is made with `url_pattern = 13-9-21-3969060,
+    # 13-8-7-3935864`.
     (
-        re.compile(r'◇'),
+        re.compile(r'(◇|\[\[\d+\]\])'),
         '',
     ),
-    # This observation is made with `url_pattern = 21-10-27-13332627,
-    # 14-1-1-4048468, 14-1-1-4048456, 14-1-1-4047776, 20-10-10-12466941`.
+    # 14-1-1-4048468, 14-1-1-4048456, 14-1-1-4047776, 13-12-15-4034530,
+    # 13-8-5-3933454`.
     (
-        re.compile(r'\(?(?:[責责]任?[編编][輯辑]?|資料來源|文字整理):.*$'),
+        re.compile(r'\(?[責责]任?[編编][輯辑]?.*?[:;].*$'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-7-24-3924107`.
+    (
+        re.compile(r'\(?[視视][频頻][:;][\S]+\)?'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-7-21-3921942`.
+    (
+        re.compile(r'(ph|f)oto\s*[:;][:a-z\s]+', re.IGNORECASE),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-8-3-3932270,
+    # 13-7-29-3928497`.
+    (
+        re.compile(r'\(?[資资]料[來来]源:[^)]*?(\)|$)'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-8-3-3932270,
+    # 13-7-29-3928497, 20-10-10-12466941`.
+    (
+        re.compile(r'\(?文字整理:[^)]*?(\)|$)'),
         '',
     ),
 ]
@@ -189,8 +253,21 @@ def parser(raw_news: RawNews) -> ParsedNews:
     ###########################################################################
     article = ''
     try:
+        # First remove tags we don't need.  This statement must always put
+        # before tags retrieving statement.
+        list(
+            map(
+                lambda tag: tag.decompose(),
+                soup.select(ARTICLE_DECOMPOSE_LIST),
+            )
+        )
+        # Next we retrieve tags contains article text.  This statement must
+        # always put after tags removing statement.
         article = ' '.join(
-            map(lambda tag: tag.text, soup.select(ARTICLE_SELECTOR_LIST))
+            map(
+                lambda tag: tag.text,
+                soup.select(ARTICLE_SELECTOR_LIST),
+            )
         )
         article = news.parse.util.normalize.NFKC(article)
     except Exception:

@@ -43,8 +43,14 @@ def get_datetime_from_url(url: str) -> Union[datetime, None]:
     if not match:
         return None
 
+    year = match.group(1)
+    if len(year) == 1:
+        year = f'200{year}'
+    else:
+        year = f'20{year}'
+
     return datetime(
-        year=int('20' + match.group(1)),
+        year=int(year),
         month=int(match.group(2)),
         day=int(match.group(3)),
         tzinfo=timezone.utc,
