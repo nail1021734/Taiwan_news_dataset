@@ -25,11 +25,17 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
 # paragprah.
 # This observation is made with `url_pattern = 21-10-27-13332627,
 # 14-1-1-4048433`.
+#
+# For category `視頻集錦`, news articles are located in
+# `div#artbody > div#article_wrap`.  In this case `p` and `h2` still act the
+# same as normal news.
+# This observation is made with `url_pattern = 13-2-23-3807193`.
 ARTICLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
-    div#artbody > :is(p, h2)
+    div#artbody > :is(p, h2),
+    div#article_wrap > :is(p, h2)
     ''',
 )
 
@@ -164,6 +170,11 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     (
         re.compile(r'點閱\s*【.*?】\s*系列文章'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-2-23-3807193`.
+    (
+        re.compile(r'看更多文章»'),
         '',
     ),
     (
