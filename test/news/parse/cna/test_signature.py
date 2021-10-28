@@ -44,11 +44,7 @@ def test_module_attribute_signature() -> None:
     assert hasattr(news.parse.cna, 'ARTICLE_SUB_PATTERNS')
     assert news.parse.cna.ARTICLE_SUB_PATTERNS == [
         (
-            re.compile(r'(\(編輯.*?\))'),
-            '',
-        ),
-        (
-            re.compile(r'(\(譯者.*?\))'),
+            re.compile(r'(\((實習)?(編?[輯譯]者?|核稿):?.*?\))'),
             '',
         ),
         (
@@ -88,7 +84,7 @@ def test_module_attribute_signature() -> None:
             '。',
         ),
         (
-            re.compile(r'([,。]募資連結https?:\/\/[\da-z\.-_\/]+)'),
+            re.compile(r'([,。]募資連結https?:\/\/[\da-z\.-_\/]+|請上「中央社好POD」.*。$)'),
             '',
         ),
         (
@@ -103,19 +99,31 @@ def test_module_attribute_signature() -> None:
             re.compile(r'^[^\s。,]*?專題(?:之[一二三四五六七八九十]+)?(?:\(\d+\))?'),
             '',
         ),
+        (
+            re.compile(r'\s▼.*?(。\s|$)'),
+            '',
+        ),
+        (
+            re.compile(r'(?:自殺警語:)?珍惜生命,自殺不能解決問題,生命一定可以找到出路.*$'),
+            '',
+        ),
+        (
+            re.compile(r'\(?飲酒過量有害(身體)?健康[,.。;]酒後勿開車[,.。;]未(成年|滿18歲)請勿飲酒\)?'),
+            '',
+        ),
+        (
+            re.compile(r'\s*吸菸有害(身體)?健康[,.。;]未(成年|滿18歲)請勿吸菸。$'),
+            '',
+        ),
     ]
     assert hasattr(news.parse.cna, 'TITLE_SUB_PATTERNS')
     assert news.parse.cna.TITLE_SUB_PATTERNS == [
         (
-            re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
+            re.compile(r'(【[^】]*?】|\[[^\]]*?\]|\s*?特派專欄\s*?)'),
             '',
         ),
         (
             re.compile(r'★'),
-            '',
-        ),
-        (
-            re.compile(r'\s?特派專欄\s?'),
             '',
         ),
     ]
