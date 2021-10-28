@@ -1,7 +1,7 @@
 import os
 import uuid
 from dataclasses import dataclass
-from typing import Final, List
+from typing import List
 
 import pytest
 
@@ -10,7 +10,7 @@ import news.crawlers.db.util
 
 
 @pytest.fixture
-def cleanup_db_file(db_name: Final[str], request: Final) -> None:
+def cleanup_db_file(db_name: str, request) -> None:
     r"""Delete testing database files."""
 
     def remove() -> None:
@@ -67,12 +67,12 @@ def response_500() -> MockResponse:
 
 @pytest.fixture
 def all_responses(
-    response_200: Final[MockResponse],
-    response_403: Final[MockResponse],
-    response_404: Final[MockResponse],
-    response_410: Final[MockResponse],
-    response_429: Final[MockResponse],
-    response_500: Final[MockResponse],
+    response_200: MockResponse,
+    response_403: MockResponse,
+    response_404: MockResponse,
+    response_410: MockResponse,
+    response_429: MockResponse,
+    response_500: MockResponse,
 ) -> List[MockResponse]:
     return [
         response_200,

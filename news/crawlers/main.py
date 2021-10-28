@@ -2,7 +2,7 @@ import argparse
 import sys
 import textwrap
 from datetime import datetime, timedelta, timezone
-from typing import Callable, Dict, Final, List
+from typing import Callable, Dict, List
 
 import news.crawlers.chinatimes
 import news.crawlers.cna
@@ -18,7 +18,7 @@ import news.crawlers.udn
 import news.crawlers.util
 import news.path
 
-CRAWLER_SCRIPT_LOOKUP_TABLE: Final[Dict[str, Callable]] = {
+CRAWLER_SCRIPT_LOOKUP_TABLE: Dict[str, Callable] = {
     'chinatimes': news.crawlers.chinatimes.main,
     'cna': news.crawlers.cna.main,
     'epochtimes': news.crawlers.epochtimes.main,
@@ -33,7 +33,7 @@ CRAWLER_SCRIPT_LOOKUP_TABLE: Final[Dict[str, Callable]] = {
 }
 
 
-def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
+def parse_args(argv: List[str]) -> argparse.Namespace:
     r"""Parse command line arguments.
 
     Example
@@ -173,7 +173,7 @@ def parse_args(argv: Final[List[str]]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Final[List[str]]) -> None:
+def main(argv: List[str]) -> None:
     args = parse_args(argv=argv)
 
     # `current_datetime` is default to now.

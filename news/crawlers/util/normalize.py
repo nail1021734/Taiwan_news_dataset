@@ -1,12 +1,12 @@
 import re
-from typing import Dict, Final, List
+from typing import Dict, List
 
 ####################################################
 #                     WARNING
 # NEW news company must be appended at the end.
 # COMPANT_ID cannot repeat.
 ####################################################
-COMPANY_ID_LOOKUP_TABLE: Final[Dict[str, int]] = {
+COMPANY_ID_LOOKUP_TABLE: Dict[str, int] = {
     '中時': 0,
     '中央社': 1,
     '大紀元': 2,
@@ -20,7 +20,7 @@ COMPANY_ID_LOOKUP_TABLE: Final[Dict[str, int]] = {
     '聯合報': 10,
 }
 
-COMPANY_URL_LOOKUP_TABLE: Final[Dict[int, str]] = {
+COMPANY_URL_LOOKUP_TABLE: Dict[int, str] = {
     COMPANY_ID_LOOKUP_TABLE['中時']:
         r'https://www.chinatimes.com/realtimenews/',
     COMPANY_ID_LOOKUP_TABLE['中央社']:
@@ -46,12 +46,12 @@ COMPANY_URL_LOOKUP_TABLE: Final[Dict[int, str]] = {
 }
 
 # List lookup with index is O(1).
-COMPANY_URL_FASTEST_LOOKUP_TABLE: Final[List[str]] = [
+COMPANY_URL_FASTEST_LOOKUP_TABLE: List[str] = [
     COMPANY_URL_LOOKUP_TABLE[company_id]
     for company_id in sorted(COMPANY_ID_LOOKUP_TABLE.values())
 ]
 
-COMPRESS_URL_PATTERN_LOOKUP_TABLE: Final[Dict[int, re.Pattern]] = {
+COMPRESS_URL_PATTERN_LOOKUP_TABLE: Dict[int, re.Pattern] = {
     COMPANY_ID_LOOKUP_TABLE['中時']:
         re.compile(
             r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)',
@@ -99,15 +99,15 @@ COMPRESS_URL_PATTERN_LOOKUP_TABLE: Final[Dict[int, re.Pattern]] = {
 }
 
 # List lookup with index is O(1).
-COMPRESS_URL_PATTERN_FASTEST_LOOKUP_TABLE: Final[List[re.Pattern]] = [
+COMPRESS_URL_PATTERN_FASTEST_LOOKUP_TABLE: List[re.Pattern] = [
     COMPRESS_URL_PATTERN_LOOKUP_TABLE[company_id]
     for company_id in sorted(COMPANY_ID_LOOKUP_TABLE.values())
 ]
 
-WHITESPACE_COLLAPSE_PATTERN: Final[re.Pattern] = re.compile(r'\s+')
+WHITESPACE_COLLAPSE_PATTERN: re.Pattern = re.compile(r'\s+')
 
 
-def compress_raw_xml(raw_xml: Final[str]) -> str:
+def compress_raw_xml(raw_xml: str) -> str:
     r"""將 `raw_xml` 中的多餘資訊去除.
 
     去除資訊包含:
@@ -117,7 +117,7 @@ def compress_raw_xml(raw_xml: Final[str]) -> str:
     return WHITESPACE_COLLAPSE_PATTERN.sub(' ', raw_xml).strip()
 
 
-def compress_url(company_id: Final[int], url: Final[str]) -> str:
+def compress_url(company_id: int, url: str) -> str:
     r"""去掉同一新聞媒體中 url 相同的部份."""
     match = COMPRESS_URL_PATTERN_FASTEST_LOOKUP_TABLE[company_id].match(url)
     if not match:
@@ -125,7 +125,7 @@ def compress_url(company_id: Final[int], url: Final[str]) -> str:
     return '-'.join(match.groups())
 
 
-def get_company_id(company: Final[str]) -> int:
+def get_company_id(company: str) -> int:
     r"""取得每個新聞媒體所對應到的流水號.
 
     使用流水號取代文字的目的為加速計算與節省儲存空間.
@@ -133,6 +133,6 @@ def get_company_id(company: Final[str]) -> int:
     return COMPANY_ID_LOOKUP_TABLE[company]
 
 
-def get_company_url(company_id: Final[int]) -> str:
+def get_company_url(company_id: int) -> str:
     r"""取得每個新聞媒體網站的 domain name."""
     return COMPANY_URL_FASTEST_LOOKUP_TABLE[company_id]

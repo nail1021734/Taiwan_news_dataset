@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
 from tqdm import trange
@@ -13,15 +13,13 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
-    company='風傳媒',
-)
-COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+COMPANY_ID: int = news.crawlers.util.normalize.get_company_id(company='風傳媒',)
+COMPANY_URL: str = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
 
 
-def page_not_found(raw_xml: Final[str]) -> bool:
+def page_not_found(raw_xml: str) -> bool:
     r"""Return `True` if page not found.
 
     This is need since storm.mg always return 200.
@@ -33,12 +31,12 @@ def page_not_found(raw_xml: Final[str]) -> bool:
 
 
 def get_news_list(
-    first_idx: Final[int],
-    latest_idx: Final[int],
+    first_idx: int,
+    latest_idx: int,
     *,
-    continue_fail_count: Final[Optional[int]] = 500,
-    debug: Final[Optional[bool]] = False,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 500,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -99,12 +97,12 @@ def get_news_list(
 
 
 def main(
-    db_name: Final[str],
-    first_idx: Final[int],
-    latest_idx: Final[int],
+    db_name: str,
+    first_idx: int,
+    latest_idx: int,
     *,
-    records_per_commit: Final[Optional[int]] = 2000,
-    **kwargs: Final[Optional[Dict]],
+    records_per_commit: Optional[int] = 2000,
+    **kwargs: Optional[Dict],
 ) -> None:
     # Value check.
     if first_idx <= 0:

@@ -6,10 +6,6 @@ import news.parse.db.schema
 
 def test_pretify() -> None:
     r"""Ensure format consistency."""
-    idx = 123
-    article = 'abc'
-    category = 'def'
-    company_id = 456
     timestamp = int(
         datetime(
             year=1995,
@@ -22,50 +18,49 @@ def test_pretify() -> None:
             tzinfo=timezone.utc,
         ).timestamp()
     )
-    reporter = 'ghi'
-    title = 'jkl'
-    url_pattern = 'mno'
 
     parsed_news = news.parse.db.schema.ParsedNews(
-        idx=idx,
-        article=article,
-        category=category,
-        company_id=company_id,
-        reporter=reporter,
+        idx=123,
+        article='abc',
+        category='def',
+        company_id=456,
+        reporter='ghi',
         timestamp=timestamp,
-        title=title,
-        url_pattern=url_pattern,
+        title='jkl',
+        url_pattern='mno',
     )
-    datetime_str = parsed_news.get_datetime_str()
 
     assert parsed_news.pretify() == textwrap.dedent(
-        f'''\
-        company_id:           {company_id}
-        idx:                  {idx}
-        url_pattern:          {url_pattern}
-        datetime (timestamp): {timestamp}
-        datetime (YYYYMMDD):  {datetime_str}
+        '''\
+        +-------------------------------------+--------------------------+
+        | idx                                 | 123                      |
+        +-------------------------------------+--------------------------+
+        | company_id                          | 456                      |
+        +-------------------------------------+--------------------------+
+        | url_pattern                         | mno                      |
+        +-------------------------------------+--------------------------+
+        | datetime (timestamp)                | 813456000                |
+        +-------------------------------------+--------------------------+
+        | datetime (YYYY-mm-dd HH:MM:SS+0000) | 1995-10-12 00:00:00+0000 |
+        +-------------------------------------+--------------------------+
 
         category:
-            {category}
+            def
 
         reporter:
-            {reporter}
+            ghi
 
         title:
-            {title}
+            jkl
 
         article:
-            {article}
+        abc
         '''
     )
 
 
 def test_default_category() -> None:
     r"""Must show `None` when category is empty."""
-    idx = 123
-    article = 'abc'
-    company_id = 456
     timestamp = int(
         datetime(
             year=1995,
@@ -78,51 +73,49 @@ def test_default_category() -> None:
             tzinfo=timezone.utc,
         ).timestamp()
     )
-    reporter = 'ghi'
-    title = 'jkl'
-    url_pattern = 'mno'
 
     parsed_news = news.parse.db.schema.ParsedNews(
-        idx=idx,
-        article=article,
+        idx=123,
+        article='abc',
         category=None,
-        company_id=company_id,
-        reporter=reporter,
+        company_id=456,
+        reporter='ghi',
         timestamp=timestamp,
-        title=title,
-        url_pattern=url_pattern,
+        title='jkl',
+        url_pattern='mno',
     )
-    datetime_str = parsed_news.get_datetime_str()
 
     assert parsed_news.pretify() == textwrap.dedent(
-        f'''\
-        company_id:           {company_id}
-        idx:                  {idx}
-        url_pattern:          {url_pattern}
-        datetime (timestamp): {timestamp}
-        datetime (YYYYMMDD):  {datetime_str}
+        '''\
+        +-------------------------------------+--------------------------+
+        | idx                                 | 123                      |
+        +-------------------------------------+--------------------------+
+        | company_id                          | 456                      |
+        +-------------------------------------+--------------------------+
+        | url_pattern                         | mno                      |
+        +-------------------------------------+--------------------------+
+        | datetime (timestamp)                | 813456000                |
+        +-------------------------------------+--------------------------+
+        | datetime (YYYY-mm-dd HH:MM:SS+0000) | 1995-10-12 00:00:00+0000 |
+        +-------------------------------------+--------------------------+
 
         category:
             None
 
         reporter:
-            {reporter}
+            ghi
 
         title:
-            {title}
+            jkl
 
         article:
-            {article}
+        abc
         '''
     )
 
 
 def test_default_reporter() -> None:
     r"""Must show `None` when reporter is empty."""
-    idx = 123
-    article = 'abc'
-    category = 'def'
-    company_id = 456
     timestamp = int(
         datetime(
             year=1995,
@@ -135,39 +128,42 @@ def test_default_reporter() -> None:
             tzinfo=timezone.utc,
         ).timestamp()
     )
-    title = 'jkl'
-    url_pattern = 'mno'
 
     parsed_news = news.parse.db.schema.ParsedNews(
-        idx=idx,
-        article=article,
-        category=category,
-        company_id=company_id,
+        idx=123,
+        article='abc',
+        category='def',
+        company_id=456,
         reporter=None,
         timestamp=timestamp,
-        title=title,
-        url_pattern=url_pattern,
+        title='jkl',
+        url_pattern='mno',
     )
-    datetime_str = parsed_news.get_datetime_str()
 
     assert parsed_news.pretify() == textwrap.dedent(
-        f'''\
-        company_id:           {company_id}
-        idx:                  {idx}
-        url_pattern:          {url_pattern}
-        datetime (timestamp): {timestamp}
-        datetime (YYYYMMDD):  {datetime_str}
+        '''\
+        +-------------------------------------+--------------------------+
+        | idx                                 | 123                      |
+        +-------------------------------------+--------------------------+
+        | company_id                          | 456                      |
+        +-------------------------------------+--------------------------+
+        | url_pattern                         | mno                      |
+        +-------------------------------------+--------------------------+
+        | datetime (timestamp)                | 813456000                |
+        +-------------------------------------+--------------------------+
+        | datetime (YYYY-mm-dd HH:MM:SS+0000) | 1995-10-12 00:00:00+0000 |
+        +-------------------------------------+--------------------------+
 
         category:
-            {category}
+            def
 
         reporter:
             None
 
         title:
-            {title}
+            jkl
 
         article:
-            {article}
+        abc
         '''
     )

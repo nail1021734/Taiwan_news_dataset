@@ -1,10 +1,9 @@
 import os
-from typing import Final
 
 import news.path
 
 
-def get_db_path(db_name: Final[str]) -> str:
+def get_db_path(db_name: str) -> str:
     r"""給定資料庫檔案名稱, 回傳資料庫檔案完整路徑."""
 
     # Return `db_name` when it is an absolute path.

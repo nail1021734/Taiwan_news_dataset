@@ -1,14 +1,14 @@
 import sqlite3
-from typing import Final, Sequence
+from typing import Sequence
 
 import news.parse.db.schema
 
-READ_SQL: Final[str] = """
+READ_SQL: str = """
     SELECT company_id, url_pattern
     FROM   parsed_news;
 """
 
-WRITE_SQL: Final[str] = """
+WRITE_SQL: str = """
     INSERT INTO parsed_news(
         article, category, company_id, reporter, timestamp, title, url_pattern
     )
@@ -19,8 +19,8 @@ WRITE_SQL: Final[str] = """
 
 
 def write_new_records(
-    cur: Final[sqlite3.Cursor],
-    news_list: Final[Sequence[news.parse.db.schema.ParsedNews]],
+    cur: sqlite3.Cursor,
+    news_list: Sequence[news.parse.db.schema.ParsedNews],
 ) -> None:
     r"""透過目標資料庫的 `cursor` 將 `news_list` 內的資料保存到目標資料庫中."""
 

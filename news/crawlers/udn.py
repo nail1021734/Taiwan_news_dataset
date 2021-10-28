@@ -1,6 +1,6 @@
 from collections import Counter
 from datetime import datetime, timezone
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 
 from tqdm import trange
 
@@ -13,17 +13,15 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
-    company='聯合報',
-)
-COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+COMPANY_ID: int = news.crawlers.util.normalize.get_company_id(company='聯合報',)
+COMPANY_URL: str = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
 
 
 def get_last_available_page(
-    past_datetime: Final[datetime],
-    **kwargs: Final[Optional[Dict]],
+    past_datetime: datetime,
+    **kwargs: Optional[Dict],
 ) -> int:
     r"""Find last available page."""
 
@@ -105,9 +103,9 @@ def get_last_available_page(
 
 
 def get_last_vaild_page(
-    last_ava_page: Final[int],
-    past_datetime: Final[datetime],
-    **kwargs: Final[Optional[Dict]],
+    last_ava_page: int,
+    past_datetime: datetime,
+    **kwargs: Optional[Dict],
 ) -> int:
     r"""Find last page with `datetime >= past_datetime`."""
     # Use binary search to find precise upper bound of page number with
@@ -164,9 +162,9 @@ def get_last_vaild_page(
 
 
 def get_first_vaild_page(
-    last_valid_page: Final[int],
-    current_datetime: Final[datetime],
-    **kwargs: Final[Optional[Dict]],
+    last_valid_page: int,
+    current_datetime: datetime,
+    **kwargs: Optional[Dict],
 ) -> int:
     r"""Find first page with `datetime <= current_datetime`."""
     # Use binary search to find precise upper bound of page number with
@@ -223,14 +221,14 @@ def get_first_vaild_page(
 
 
 def get_news_list(
-    current_datetime: Final[datetime],
-    first_page: Final[int],
-    last_page: Final[int],
-    past_datetime: Final[datetime],
+    current_datetime: datetime,
+    first_page: int,
+    last_page: int,
+    past_datetime: datetime,
     *,
-    continue_fail_count: Final[Optional[int]] = 5,
-    debug: Final[Optional[bool]] = False,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 5,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -335,12 +333,12 @@ def get_news_list(
 
 
 def main(
-    current_datetime: Final[datetime],
-    db_name: Final[str],
-    past_datetime: Final[datetime],
+    current_datetime: datetime,
+    db_name: str,
+    past_datetime: datetime,
     *,
-    commit_page_interval: Final[Optional[int]] = 10,
-    **kwargs: Final[Optional[Dict]],
+    commit_page_interval: Optional[int] = 10,
+    **kwargs: Optional[Dict],
 ) -> None:
     r"""Crawling news using UDN's API.
 

@@ -1,10 +1,9 @@
 import os
-from typing import Final
 
 import news.db
 
 
-def test_get_db_paths(db_path: Final[str], cleanup_db_file: Final) -> None:
+def test_get_db_paths(db_path: str, cleanup_db_file) -> None:
     try:
         conn = news.db.get_conn(db_path=db_path)
         cur = conn.cursor()
