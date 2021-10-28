@@ -75,16 +75,16 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove list symbols.
     # This observation is made with `url_pattern = 13-12-14-4034056,
     # 13-12-13-4033481, 13-12-9-4030017, 13-12-7-4028473, 13-7-29-3928497,
-    # 13-3-3-3813641`.
+    # 13-3-3-3813641, 13-2-1-3790819, 13-1-5-3769045`.
     (
-        re.compile(r'\s+(※|•|●|★|◎|\*)\s*'),
-        ' ',
+        re.compile(r'([。\s])(※|•|●|★|◎|\*|■)\s*'),
+        r'\1',
     ),
     # Remove useless symbols.
     # This observation is made with `url_pattern = 13-9-21-3969060,
     # 13-8-7-3935864, 13-3-3-3813641, 13-2-27-3810705, 13-2-27-3810566`.
     (
-        re.compile(r'(◇|\[\[\d+\]\]|\?{2,}|\?\*|\(未?完(待[續续])?\))'),
+        re.compile(r'(◇|□|\[\[\d+\]\]|\?{2,}|\?\*|\(未?完(待[續续])?\))'),
         '',
     ),
     (
@@ -161,13 +161,13 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # URL pattern was found in
     # https://stackoverflow.com/questions/7109143/what-characters-are-valid-in-a-url
     # This observation is made with `url_pattern = 13-12-12-4032764,
-    # 13-2-22-3806891`.
+    # 13-2-22-3806891, 13-2-8-3796686, 13-1-15-3777183`.
     (
         re.compile(
-            r'([圖图]|申請網址):\s*'
-            + r'''https?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;%=]+''',
+            r'([圖图]|申[請请][網网]址|[專专][业業家]版):\s*(\(同[測测][試试]版\))?\s*'
+            + r'''(https?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;%=]+\s*)+''',
         ),
-        '',
+        ' ',
     ),
     (
         re.compile(r'─+點閱\s*【.*?】\s*─+'),
@@ -180,6 +180,15 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 13-2-23-3807193`.
     (
         re.compile(r'看更多文章»'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-1-6-3769836`.
+    (
+        re.compile(
+            r'李進具三十餘年汽車維修保養經驗,對汽車買賣也很熟悉。如果您有汽車維修與保養方面'
+            + r'的問題,歡迎發信至car_qna@epochtimes\.com,本報將轉發李進解答。來信請註明'
+            + r'汽車型號、牌子及年份。'
+        ),
         '',
     ),
     (
@@ -203,6 +212,17 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 13-3-4-3814165`.
     (
         re.compile(r'\(?(https?)?://www\.dajiyuan\.com\)?'),
+        '',
+    ),
+    # Email pattern was found in
+    # https://stackoverflow.com/questions/2049502/what-characters-are-allowed-in-an-email-address
+    # This observation is made with `url_pattern = 13-1-25-3785356`.
+    (
+        re.compile(
+            r'[聯联][絡络]本文作者[請请][發发][郵邮]件到:\s*'
+            + r'''[a-z0-9!#$%&'*+\-/=?^_`{|}~."(),:;<>@[\\\]]+@[a-z0-9\-.]+''',
+            re.IGNORECASE,
+        ),
         '',
     ),
     # This observation is made with `url_pattern = 21-10-27-13332627,
