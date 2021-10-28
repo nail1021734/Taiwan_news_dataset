@@ -171,6 +171,11 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'【大[紀纪]元[^】]*?[訊讯]】?'),
         '',
     ),
+    # This observation is made with `url_pattern = 13-3-4-3814165`.
+    (
+        re.compile(r'\(?(https?)?://www\.dajiyuan\.com\)?'),
+        '',
+    ),
     # Remove list symbols.
     # This observation is made with `url_pattern = 13-12-14-4034056,
     # 13-12-13-4033481, 13-12-9-4030017, 13-12-7-4028473, 13-7-29-3928497`.
