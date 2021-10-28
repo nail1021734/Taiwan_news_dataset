@@ -92,9 +92,9 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '。',
     ),
     # Remove url. This observation is made with `url_pattern =
-    # 201911110278`.
+    # 201911110278, 202109220330`.
     (
-        re.compile(r'([,。]募資連結https?:\/\/[\da-z\.-_\/]+)'),
+        re.compile(r'([,。]募資連結https?:\/\/[\da-z\.-_\/]+|請上「中央社好POD」.*。$)'),
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
@@ -110,9 +110,9 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
-    # 202110200224`.
+    # 202110200224, 202109060288`.
     (
-        re.compile(r'自殺警語:珍惜生命,自殺不能解決問題,生命一定可以找到出路.*。'),
+        re.compile(r'(?:自殺警語:)?珍惜生命,自殺不能解決問題,生命一定可以找到出路.*$'),
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
@@ -120,6 +120,24 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
     (
         re.compile(r'\s▼.*?(?:。\s|$)'),
         '',
+    ),
+    # Remove special column. This observation is made with `url_pattern =
+    # 202110070162`.
+    (
+        re.compile(r'\(飲酒過量有害健康;酒後勿開車;未成年請勿飲酒\)'),
+        ''
+    ),
+    # Remove special column. This observation is made with `url_pattern =
+    # 202104110048`.
+    (
+        re.compile(r'\s吸菸有害身體健康,未滿18歲請勿吸菸。$'),
+        ''
+    ),
+    # Remove special column. This observation is made with `url_pattern =
+    # 202102180174`.
+    (
+        re.compile(r'\(實習編譯:(:?.*?)/核稿:(?:.*?)\)$'),
+        ''
     )
 ]
 TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
@@ -162,19 +180,20 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     ###########################################################################
     article = ''
     try:
-        additional_tag = soup.select_one('div.dictionary')
-        if additional_tag:
-            article = additional_tag.text
-
-        # Only first `div.centralContent div.paragraph` contains news.  News
-        # are splitted into paragraph by `p` tags, which happens to be the
-        # direct children of `div.centralContent div.paragraph`.  This
-        # observation is made with `url_pattern = 201501010002`.
+        # Only first `div.centralContent div.paragraph` and
+        # `div.dictionary > span` contains news.  News are splitted into
+        # paragraph by `p` tags, which happens to be the direct children
+        # of `div.centralContent div.paragraph`.
+        # Sometimes some paragraphs will be wrapped in the span of the
+        # dictionary class, so we need to select `div.dictionary > span`
+        # for complete news. This observation is made with `url_pattern =
+        # 201501010002, 202109220356, 202110190043`.
         article += ' '.join(
             map(
                 lambda tag: tag.text,
                 soup.select(
-                    'div.centralContent div:nth-child(1 of .paragraph) > p',
+                    'div.centralContent div:nth-child(1 of .paragraph) > p, ' +
+                    'div.dictionary > span',
                 )
             )
         )

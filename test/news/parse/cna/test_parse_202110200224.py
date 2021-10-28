@@ -52,7 +52,7 @@ def test_parsing_result() -> None:
     )
     assert parsed_news.category == '社會'
     assert parsed_news.company_id == company_id
-    assert parsed_news.datetime == 1634659200
+    assert parsed_news.timestamp == 1634659200
     assert parsed_news.reporter == '黃國芳嘉義市'
     assert parsed_news.title == '嘉義師生同車2死 女學生解剖、家屬質疑遭加工自殺'
     assert parsed_news.url_pattern == '202110200224'
