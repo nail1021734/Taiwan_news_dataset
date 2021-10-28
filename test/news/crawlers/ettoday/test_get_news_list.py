@@ -1,5 +1,4 @@
 import test.news.crawlers.conftest
-from typing import Final
 
 import news.crawlers.db.schema
 import news.crawlers.ettoday
@@ -27,9 +26,9 @@ def test_get_news_list() -> None:
 
 
 def test_show_progress_bar(
-    response_200: Final[test.news.crawlers.conftest.MockResponse],
-    capsys: Final,
-    monkeypatch: Final,
+    response_200: test.news.crawlers.conftest.MockResponse,
+    capsys,
+    monkeypatch,
 ) -> None:
     r"""Must show progress bar when `debug = True`."""
 
@@ -55,9 +54,9 @@ def test_show_progress_bar(
 
 
 def test_show_error_statistics(
-    response_410: Final[test.news.crawlers.conftest.MockResponse],
-    capsys: Final,
-    monkeypatch: Final,
+    response_410: test.news.crawlers.conftest.MockResponse,
+    capsys,
+    monkeypatch,
 ) -> None:
     r"""Must show error statistics when `debug = True`."""
 

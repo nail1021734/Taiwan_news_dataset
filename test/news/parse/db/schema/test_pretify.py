@@ -5,63 +5,165 @@ import news.parse.db.schema
 
 
 def test_pretify() -> None:
-    r"""Instance of `ParsedNews` must be iterable.
-
-    Iterator will generate following attributes in order:
-    - `idx`
-    - `article`
-    - `category`
-    - `company_id`
-    - `datetime`
-    - `reporter`
-    - `title`
-    - `url_pattern`
-    """
-    idx = 123
-    article = 'abc'
-    category = 'def'
-    company_id = 456
-    timestamp = datetime.now().timestamp()
-    datetime_str = datetime.fromtimestamp(
-        timestamp,
-    ).astimezone(
-        timezone.utc,
-    ).strftime(
-        '%Y-%m-%d %H:%M:%S%z',
+    r"""Ensure format consistency."""
+    timestamp = int(
+        datetime(
+            year=1995,
+            month=10,
+            day=12,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+            tzinfo=timezone.utc,
+        ).timestamp()
     )
-    reporter = 'ghi'
-    title = 'jkl'
-    url_pattern = 'mno'
 
     parsed_news = news.parse.db.schema.ParsedNews(
-        idx=idx,
-        article=article,
-        category=category,
-        company_id=company_id,
-        reporter=reporter,
+        idx=123,
+        article='abc',
+        category='def',
+        company_id=456,
+        reporter='ghi',
         timestamp=timestamp,
-        title=title,
-        url_pattern=url_pattern,
+        title='jkl',
+        url_pattern='mno',
     )
 
     assert parsed_news.pretify() == textwrap.dedent(
-        f'''\
-        company_id:           {company_id}
-        idx:                  {idx}
-        url_pattern:          {url_pattern}
-        datetime (timestamp): {timestamp}
-        datetime (YYYYMMDD):  {datetime_str}
+        '''\
+        +-------------------------------------+--------------------------+
+        | idx                                 | 123                      |
+        +-------------------------------------+--------------------------+
+        | company_id                          | 456                      |
+        +-------------------------------------+--------------------------+
+        | url_pattern                         | mno                      |
+        +-------------------------------------+--------------------------+
+        | datetime (timestamp)                | 813456000                |
+        +-------------------------------------+--------------------------+
+        | datetime (YYYY-mm-dd HH:MM:SS+0000) | 1995-10-12 00:00:00+0000 |
+        +-------------------------------------+--------------------------+
 
         category:
-            {category}
+            def
 
         reporter:
-            {reporter}
+            ghi
 
         title:
-            {title}
+            jkl
 
         article:
-            {article}
+        abc
+        '''
+    )
+
+
+def test_default_category() -> None:
+    r"""Must show `None` when category is empty."""
+    timestamp = int(
+        datetime(
+            year=1995,
+            month=10,
+            day=12,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+            tzinfo=timezone.utc,
+        ).timestamp()
+    )
+
+    parsed_news = news.parse.db.schema.ParsedNews(
+        idx=123,
+        article='abc',
+        category=None,
+        company_id=456,
+        reporter='ghi',
+        timestamp=timestamp,
+        title='jkl',
+        url_pattern='mno',
+    )
+
+    assert parsed_news.pretify() == textwrap.dedent(
+        '''\
+        +-------------------------------------+--------------------------+
+        | idx                                 | 123                      |
+        +-------------------------------------+--------------------------+
+        | company_id                          | 456                      |
+        +-------------------------------------+--------------------------+
+        | url_pattern                         | mno                      |
+        +-------------------------------------+--------------------------+
+        | datetime (timestamp)                | 813456000                |
+        +-------------------------------------+--------------------------+
+        | datetime (YYYY-mm-dd HH:MM:SS+0000) | 1995-10-12 00:00:00+0000 |
+        +-------------------------------------+--------------------------+
+
+        category:
+            None
+
+        reporter:
+            ghi
+
+        title:
+            jkl
+
+        article:
+        abc
+        '''
+    )
+
+
+def test_default_reporter() -> None:
+    r"""Must show `None` when reporter is empty."""
+    timestamp = int(
+        datetime(
+            year=1995,
+            month=10,
+            day=12,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+            tzinfo=timezone.utc,
+        ).timestamp()
+    )
+
+    parsed_news = news.parse.db.schema.ParsedNews(
+        idx=123,
+        article='abc',
+        category='def',
+        company_id=456,
+        reporter=None,
+        timestamp=timestamp,
+        title='jkl',
+        url_pattern='mno',
+    )
+
+    assert parsed_news.pretify() == textwrap.dedent(
+        '''\
+        +-------------------------------------+--------------------------+
+        | idx                                 | 123                      |
+        +-------------------------------------+--------------------------+
+        | company_id                          | 456                      |
+        +-------------------------------------+--------------------------+
+        | url_pattern                         | mno                      |
+        +-------------------------------------+--------------------------+
+        | datetime (timestamp)                | 813456000                |
+        +-------------------------------------+--------------------------+
+        | datetime (YYYY-mm-dd HH:MM:SS+0000) | 1995-10-12 00:00:00+0000 |
+        +-------------------------------------+--------------------------+
+
+        category:
+            def
+
+        reporter:
+            None
+
+        title:
+            jkl
+
+        article:
+        abc
         '''
     )

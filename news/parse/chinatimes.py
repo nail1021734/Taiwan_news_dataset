@@ -1,14 +1,14 @@
 import re
 import unicodedata
 from datetime import datetime, timedelta
-from typing import Final, List
+from typing import List
 
 from bs4 import BeautifulSoup
 
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
-BAD_ARTICLE_PATTERNS: Final[List[re.Pattern]] = [
+BAD_ARTICLE_PATTERNS: List[re.Pattern] = [
     re.compile(r'文章來源:.*'),
     re.compile(r'----------------.*'),
     re.compile(r'更多內容.*'),
@@ -20,7 +20,7 @@ BAD_ARTICLE_PATTERNS: Final[List[re.Pattern]] = [
 ]
 
 
-def parser(raw_news: Final[RawNews]) -> ParsedNews:
+def parser(raw_news: RawNews) -> ParsedNews:
     r"""Parse Chinatimes news from raw HTML."""
     # Information which cannot be parsed from `raw_xml`.
     parsed_news = ParsedNews(

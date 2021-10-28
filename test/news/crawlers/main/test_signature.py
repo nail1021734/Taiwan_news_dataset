@@ -1,7 +1,7 @@
 import argparse
 import inspect
 from inspect import Parameter, Signature
-from typing import Final, List
+from typing import List
 
 import news.crawlers.chinatimes
 import news.crawlers.cna
@@ -28,7 +28,7 @@ def test_module_function_signature() -> None:
                 name='argv',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[List[str]],
+                annotation=List[str],
             ),
         ],
         return_annotation=argparse.Namespace,
@@ -41,7 +41,7 @@ def test_module_function_signature() -> None:
                 name='argv',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[List[str]],
+                annotation=List[str],
             ),
         ],
         return_annotation=None,

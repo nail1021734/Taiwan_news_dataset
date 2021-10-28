@@ -1,6 +1,5 @@
 import test.news.crawlers.conftest
 from datetime import datetime, timedelta, timezone
-from typing import Final
 
 import news.crawlers.util
 from news.crawlers.epochtimes import CATEGORY_API_LOOKUP_TABLE, get_start_page
@@ -28,9 +27,9 @@ def test_get_start_page() -> None:
 
 
 def test_show_progress_bar(
-    response_200: Final[test.news.crawlers.conftest.MockResponse],
-    capsys: Final,
-    monkeypatch: Final,
+    response_200: test.news.crawlers.conftest.MockResponse,
+    capsys,
+    monkeypatch,
 ) -> None:
     r"""Must show progress bar when `debug = True`."""
 
@@ -59,9 +58,9 @@ def test_show_progress_bar(
 
 
 def test_show_error_statistics(
-    response_404: Final[test.news.crawlers.conftest.MockResponse],
-    capsys: Final,
-    monkeypatch: Final,
+    response_404: test.news.crawlers.conftest.MockResponse,
+    capsys,
+    monkeypatch,
 ) -> None:
     r"""Must show error statistics when `debug = True`."""
 

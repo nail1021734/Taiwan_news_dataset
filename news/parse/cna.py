@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Final, List, Tuple
+from typing import List, Tuple
 
 from bs4 import BeautifulSoup
 
@@ -16,7 +16,7 @@ from news.parse.db.schema import ParsedNews
 # MUST have exactly ONE group.  You can use `(?...)` pattern as non-capture
 # group, see python's re module for details.
 ###############################################################################
-REPORTER_PATTERNS: Final[List[re.Pattern]] = [
+REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 201411080177, 201411100007,
     # 201411100229, 201411100306, 201411100454, 201412030042, 201412260115,
     # 201412300008, 201412300122, 201412310239, 201501010002, 201501010021,
@@ -30,16 +30,16 @@ REPORTER_PATTERNS: Final[List[re.Pattern]] = [
         + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
     ),
     # Must match '日' in the middle of text. This observation is made with
-    # `url_pattern = 201911100105, 201501010257, 201412300220`.
+    # `url_pattern = 201911100105, 201501010257, 201412300220, 201602120188`.
     re.compile(
-        r'\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
+        r'\(\s?中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
         + r'\d*?年?\d*?月?\d*\s*?日?\d*?(?:日[^\)]*?)'
         + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
     ),
     # This observation is made with `url_pattern = 201807110178`.
     re.compile(r'中?央社?駐.*?特派員(.*?)/\d*?年?\d+?月?\d+?日'),
 ]
-ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 201901010005`.
     (
         re.compile(r'(\(編輯.*?\))'),
@@ -73,6 +73,18 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         re.compile(r'\((?:賽況)?(?:即時)?更新\)'),
         '',
     ),
+    # Remove update hints. This observation is made with
+    # `url_pattern = 201612180139, 201612070380`.
+    (
+        re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
+        '',
+    ),
+    # Remove list symbols.
+    # This observation is made with `url_pattern = 201909290214`.
+    (
+        re.compile(r'●'),
+        ' ',
+    ),
     # Remove meaningless symbols. This observation is made with
     # `url_pattern = 201412040065, 202110210003`.
     (
@@ -98,15 +110,21 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
-    # 201810030025`.
+    # 201810030025, 201612260025`.
     (
-        re.compile(r'\(特派員專欄\)'),
+        re.compile(r'^\(?特派員[^\s。,]*?專欄\)?'),
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
-    # 201910250015`.
+    # 201910250015, 201708200238`.
     (
-        re.compile(r'\(延伸閱讀:.*?\)'),
+        re.compile(r'\(?延伸閱讀[^\)。,]*\)?(?=\s+?[^\s。,]*)'),
+        '',
+    ),
+    # Remove prefix. This observation is made with `url_pattern =
+    # 201609300395, 201609300396, 201609300393, 201603130226, 201603130227`.
+    (
+        re.compile(r'^[^\s。,]*?專題(?:之[一二三四五六七八九十]+)?(?:\(\d+\))?'),
         '',
     ),
     # Remove special column. This observation is made with `url_pattern =
@@ -140,13 +158,14 @@ ARTICLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
         ''
     )
 ]
-TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
+TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove content hints. This observation is made with
-    # `url_pattern = 201412280286, 201412300008, 201701010135, 201801190132,
-    # 201802070327, 201803060174, 201901010005, 201901010013, 202001010027,
-    # 201910250015, 201911080011, 201912310042`.
+    # `url_pattern = 201412280286, 201412300008, 201612260025,
+    # 201701010135, 201801190132, 201802070327, 201803060174, 201901010005,
+    # 201901010013, 202001010027, 201910250015, 201911080011, 201912310042,
+    # 202012300309`.
     (
-        re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
+        re.compile(r'(【[^】]*?】|\[[^\]]*?\]|\s*?特派專欄\s*?)'),
         '',
     ),
     # Remove meaningless symbols. This observation is made with
@@ -158,7 +177,7 @@ TITLE_SUB_PATTERNS: Final[List[Tuple[re.Pattern, str]]] = [
 ]
 
 
-def parser(raw_news: Final[RawNews]) -> ParsedNews:
+def parser(raw_news: RawNews) -> ParsedNews:
     """Parse CNA news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these information cannot
@@ -180,6 +199,12 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     ###########################################################################
     article = ''
     try:
+        # Some news author information is in `div.author`. This observation is
+        # made with `url_pattern = 202010070112`.
+        reporter_tag = soup.select_one('div.author')
+        if reporter_tag:
+            article += reporter_tag.text
+
         # Only first `div.centralContent div.paragraph` and
         # `div.dictionary > span` contains news.  News are splitted into
         # paragraph by `p` tags, which happens to be the direct children
@@ -259,8 +284,15 @@ def parser(raw_news: Final[RawNews]) -> ParsedNews:
     title = ''
     try:
         # Title is in `div.centralContent h1 span`. This observation is made
-        # with `url_pattern = 201501010002`.
-        title = soup.select_one('div.centralContent h1 span').text
+        # with `url_pattern = 201501010002, 202012120085, 202012120086,
+        # 202012120087`.
+        title = ''.join(
+            map(
+                lambda tag: tag.text, soup.select(
+                    'div.centralContent h1 span',
+                )
+            )
+        )
         title = news.parse.util.normalize.NFKC(title)
     except Exception:
         raise ValueError('Fail to parse CNA news title.')

@@ -1,7 +1,7 @@
 import re
 from collections import Counter
 from datetime import datetime, timezone
-from typing import Dict, Final, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from bs4 import BeautifulSoup
 from tqdm import trange
@@ -15,7 +15,7 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
+CATEGORY_API_LOOKUP_TABLE: Dict[str, str] = {
     '大陸': 'nsc413',
     '美國': 'nsc412',
     '香港': 'ncid1349362',
@@ -26,27 +26,31 @@ CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
     '文化': 'nsc2007',
 }
 # Commit database when crawling 100 pages.
-COMMIT_PAGE_INTERVAL: Final[int] = 100
-COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
-    company='大紀元',
-)
-COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+COMMIT_PAGE_INTERVAL: int = 100
+COMPANY_ID: int = news.crawlers.util.normalize.get_company_id(company='大紀元',)
+COMPANY_URL: str = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
-DATE_PATTERN: Final[re.Pattern] = re.compile(
+DATE_PATTERN: re.Pattern = re.compile(
     COMPANY_URL + r'(\d+)/(\d+)/(\d+)/n\d+\.htm',
 )
 
 
-def get_datetime_from_url(url: Final[str]) -> Union[datetime, None]:
+def get_datetime_from_url(url: str) -> Union[datetime, None]:
     r"""從網址取得 epochtimes 新聞的日期."""
     match = DATE_PATTERN.match(url)
 
     if not match:
         return None
 
+    year = match.group(1)
+    if len(year) == 1:
+        year = f'200{year}'
+    else:
+        year = f'20{year}'
+
     return datetime(
-        year=int('20' + match.group(1)),
+        year=int(year),
         month=int(match.group(2)),
         day=int(match.group(3)),
         tzinfo=timezone.utc,
@@ -54,8 +58,8 @@ def get_datetime_from_url(url: Final[str]) -> Union[datetime, None]:
 
 
 def get_max_page(
-    category_api: Final[str],
-    **kwargs: Final[Optional[Dict]],
+    category_api: str,
+    **kwargs: Optional[Dict],
 ) -> int:
     r"""Get total number of pages under specified category."""
     try:
@@ -81,15 +85,15 @@ def get_max_page(
 
 
 def get_start_page(
-    category_api: Final[str],
-    current_datetime: Final[datetime],
-    max_page: Final[int],
-    past_datetime: Final[datetime],
+    category_api: str,
+    current_datetime: datetime,
+    max_page: int,
+    past_datetime: datetime,
     *,
-    continue_fail_count: Final[Optional[int]] = 5,
-    debug: Final[Optional[bool]] = False,
-    first_page: Final[Optional[int]] = 2,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 5,
+    debug: Optional[bool] = False,
+    first_page: Optional[int] = 2,
+    **kwargs: Optional[Dict],
 ) -> int:
     r"""Get first page under specified category satisfying datetime constraint.
 
@@ -182,15 +186,15 @@ def get_start_page(
 
 
 def get_news_list(
-    category_api: Final[str],
-    current_datetime: Final[datetime],
-    first_page: Final[int],
-    last_page: Final[int],
-    past_datetime: Final[datetime],
+    category_api: str,
+    current_datetime: datetime,
+    first_page: int,
+    last_page: int,
+    past_datetime: datetime,
     *,
-    continue_fail_count: Final[Optional[int]] = 5,
-    debug: Final[Optional[bool]] = False,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 5,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -290,10 +294,10 @@ def get_news_list(
 
 
 def main(
-    current_datetime: Final[datetime],
-    db_name: Final[str],
-    past_datetime: Final[datetime],
-    **kwargs: Final[Optional[Dict]],
+    current_datetime: datetime,
+    db_name: str,
+    past_datetime: datetime,
+    **kwargs: Optional[Dict],
 ) -> None:
     # Value check.
     if current_datetime.tzinfo != timezone.utc:

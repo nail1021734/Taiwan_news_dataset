@@ -1,7 +1,6 @@
 import re
 import unicodedata
 from datetime import timedelta
-from typing import Final
 
 import bs4
 import dateutil.parser
@@ -46,7 +45,7 @@ CATEGORIES = {
 CATEGORY_PATTERN = re.compile(r'/(.*?)/\d+')
 
 
-def parser(raw_news: Final[RawNews]) -> ParsedNews:
+def parser(raw_news: RawNews) -> ParsedNews:
     """Parse TVBS news from raw HTML.
 
     Input news must contain `raw_xml` and `url` since these information cannot

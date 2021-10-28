@@ -1,6 +1,6 @@
 from collections import Counter
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 
 from tqdm import trange
 
@@ -13,21 +13,19 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
-    company='中央社',
-)
-COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+COMPANY_ID: int = news.crawlers.util.normalize.get_company_id(company='中央社',)
+COMPANY_URL: str = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
 
 
 def get_news_list(
-    current_datetime: Final[datetime],
+    current_datetime: datetime,
     *,
-    continue_fail_count: Final[Optional[int]] = 100,
-    debug: Final[Optional[bool]] = False,
-    max_news_per_day: Final[Optional[int]] = 10000,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 100,
+    debug: Optional[bool] = False,
+    max_news_per_day: Optional[int] = 10000,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -86,10 +84,10 @@ def get_news_list(
 
 
 def main(
-    current_datetime: Final[datetime],
-    db_name: Final[str],
-    past_datetime: Final[datetime],
-    **kwargs: Final[Optional[Dict]],
+    current_datetime: datetime,
+    db_name: str,
+    past_datetime: datetime,
+    **kwargs: Optional[Dict],
 ) -> None:
     # Value check.
     if current_datetime.tzinfo != timezone.utc:

@@ -1,6 +1,6 @@
 import re
 from collections import Counter
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 
 from tqdm import tqdm, trange
 
@@ -13,7 +13,7 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
+CATEGORY_API_LOOKUP_TABLE: Dict[str, str] = {
     'local': '1',
     'life': '2',
     'world': '3',
@@ -29,22 +29,20 @@ CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
     'cars': '269',
     'money': '270',
 }
-COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
-    company='tvbs',
-)
-COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+COMPANY_ID: int = news.crawlers.util.normalize.get_company_id(company='tvbs',)
+COMPANY_URL: str = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
 
 
 def get_latest_available_news_idx(
-    category: Final[str],
-    first_idx: Final[int],
-    latest_idx: Final[int],
+    category: str,
+    first_idx: int,
+    latest_idx: int,
     *,
-    continue_fail_count: Final[Optional[int]] = 500,
-    debug: Final[Optional[bool]] = False,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 500,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> int:
     r"""TVBS's API will return latest news index if available.
 
@@ -127,13 +125,13 @@ def get_latest_available_news_idx(
 
 
 def get_all_available_news_idx(
-    category: Final[str],
-    first_idx: Final[int],
-    latest_idx: Final[int],
+    category: str,
+    first_idx: int,
+    latest_idx: int,
     *,
-    continue_fail_count: Final[Optional[int]] = 500,
-    debug: Final[Optional[bool]] = False,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 500,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> List[int]:
     r"""Collecting all available news indices.
 
@@ -227,12 +225,12 @@ def get_all_available_news_idx(
 
 
 def get_news_list(
-    ava_news_idxs: Final[List[int]],
-    category: Final[str],
+    ava_news_idxs: List[int],
+    category: str,
     *,
-    continue_fail_count: Final[Optional[int]] = 500,
-    debug: Final[Optional[bool]] = False,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 500,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -290,12 +288,12 @@ def get_news_list(
 
 
 def main(
-    db_name: Final[str],
-    first_idx: Final[int],
-    latest_idx: Final[int],
+    db_name: str,
+    first_idx: int,
+    latest_idx: int,
     *,
-    records_per_commit: Final[Optional[int]] = 1000,
-    **kwargs: Final[Optional[Dict]],
+    records_per_commit: Optional[int] = 1000,
+    **kwargs: Optional[Dict],
 ) -> None:
     # Value check.
     if first_idx <= 0:

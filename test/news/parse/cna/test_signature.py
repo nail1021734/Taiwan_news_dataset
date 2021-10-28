@@ -1,7 +1,6 @@
 import inspect
 import re
 from inspect import Parameter, Signature
-from typing import Final
 
 import news.crawlers.db.schema
 import news.parse.cna
@@ -19,7 +18,7 @@ def test_module_function_signature() -> None:
                 name='raw_news',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[news.crawlers.db.schema.RawNews],
+                annotation=news.crawlers.db.schema.RawNews,
             ),
         ],
         return_annotation=news.parse.db.schema.ParsedNews,
@@ -36,7 +35,7 @@ def test_module_attribute_signature() -> None:
             + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
         ),
         re.compile(
-            r'\(中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
+            r'\(\s?中?央社?(?:記者|網站)?\d*?日?([^)0-9]*?)'
             + r'\d*?年?\d*?月?\d*\s*?日?\d*?(?:日[^\)]*?)'
             + r'(?:綜合?)?(?:外|專)?(?:電|家)?(?:連線|更新)?(?:特稿|報導)?\)',
         ),
@@ -69,6 +68,14 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
+            re.compile(r'(【[^】]*?】|\[[^\]]*?\])'),
+            '',
+        ),
+        (
+            re.compile(r'●'),
+            ' ',
+        ),
+        (
             re.compile(r'(?:★|\s*?\.$)'),
             '',
         ),
@@ -85,11 +92,15 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'\(特派員專欄\)'),
+            re.compile(r'^\(?特派員[^\s。,]*?專欄\)?'),
             '',
         ),
         (
-            re.compile(r'\(延伸閱讀:.*?\)'),
+            re.compile(r'\(?延伸閱讀[^\)。,]*\)?(?=\s+?[^\s。,]*)'),
+            '',
+        ),
+        (
+            re.compile(r'^[^\s。,]*?專題(?:之[一二三四五六七八九十]+)?(?:\(\d+\))?'),
             '',
         ),
     ]
@@ -101,6 +112,10 @@ def test_module_attribute_signature() -> None:
         ),
         (
             re.compile(r'★'),
+            '',
+        ),
+        (
+            re.compile(r'\s?特派專欄\s?'),
             '',
         ),
     ]

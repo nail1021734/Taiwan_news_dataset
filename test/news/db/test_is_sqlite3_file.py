@@ -1,9 +1,7 @@
-from typing import Final
-
 import news.db
 
 
-def test_is_sqlite3_file(db_path: Final[str], cleanup_db_file: Final) -> None:
+def test_is_sqlite3_file(db_path: str, cleanup_db_file) -> None:
     assert not news.db.is_sqlite3_file(file_path=db_path)
 
     try:

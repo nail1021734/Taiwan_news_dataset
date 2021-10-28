@@ -1,11 +1,10 @@
 import inspect
 import re
 from inspect import Parameter, Signature
-from typing import Final
 
 import news.crawlers.db.schema
-import news.parse.ntdtv
 import news.parse.db.schema
+import news.parse.ntdtv
 import news.parse.util.normalize
 
 
@@ -19,7 +18,7 @@ def test_module_function_signature() -> None:
                 name='raw_news',
                 kind=Parameter.POSITIONAL_OR_KEYWORD,
                 default=Parameter.empty,
-                annotation=Final[news.crawlers.db.schema.RawNews],
+                annotation=news.crawlers.db.schema.RawNews,
             ),
         ],
         return_annotation=news.parse.db.schema.ParsedNews,
@@ -49,16 +48,15 @@ def test_module_attribute_signature() -> None:
     assert hasattr(news.parse.ntdtv, 'REPORTER_PATTERNS')
     assert news.parse.ntdtv.REPORTER_PATTERNS == [
         re.compile(
-            r'\(?(?:(?:這|这)是)?新(?:唐|塘)人(?:記|记)?者?'
-            + r'(?:亞太)?(?:(?:電|电)(?:視|视)(?:台|臺)?)?' + r'([\w、\s]*?)'
-            + r'的?(?:(?:综|綜)合|整理|(?:採|采)(?:訪|访))?(?:報|报)(?:導|导|道)。?\)?'
+            r'\(?(?:[這这]是)?新[唐塘]人[記记]?者?(?:亞太)?(?:[電电][視视][台臺]?)?'
+            + r'([\w、\s]*?)的?(?:[综綜]合|整理|[採采][訪访])?[報报][導导道]。?\)?'
         ),
         re.compile(r'文字:([^/]+?)/.+$'),
     ]
     assert hasattr(news.parse.ntdtv, 'ARTICLE_SUB_PATTERNS')
     assert news.parse.ntdtv.ARTICLE_SUB_PATTERNS == [
         (
-            re.compile(r'\((攝影|圖片):[^)]+?\)'),
+            re.compile(r'\(([攝摄]影|[圖图]片):[^)]+?\)'),
             '',
         ),
         (
@@ -66,23 +64,23 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'[—–─]*\(?轉自[^)\s]*?\)?\s*(有(刪|删)(節|节))?$'),
+            re.compile(r'[—–─]*\(?[轉转]自[^)\s]*?\)?\s*(有[刪删][節节])?$'),
             '',
         ),
         (
-            re.compile(r'─+點閱\s*【.*?】\s*─+'),
+            re.compile(r'─+[點点][閱阅]\s*【.*?】\s*─+'),
             '',
         ),
         (
-            re.compile(r'點閱\s*【.*?】\s*系列文章'),
+            re.compile(r'[點点][閱阅]\s*【.*?】\s*系列文章'),
             '',
         ),
         (
-            re.compile(r'美東時間:\s*.*?【萬年曆】'),
+            re.compile(r'美[東东][時时][间間]:\s*.*?【[萬万]年[曆历]】'),
             '',
         ),
         (
-            re.compile(r'(本文|影片)網址為?:?\s*.*$'),
+            re.compile(r'(本文|影片)[網网]址[為为]?:?\s*.*$'),
             '',
         ),
         (
@@ -90,11 +88,11 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'【新(唐|塘)人[^】]*?訊】?'),
+            re.compile(r'【新[唐塘]人[^】]*?[訊讯]】?'),
             '',
         ),
         (
-            re.compile(r'【禁聞】\S+?\s?\S+?$'),
+            re.compile(r'【禁[聞闻]】\S+?\s?\S+?$'),
             '',
         ),
         (
@@ -102,42 +100,42 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'相(關|关)((鏈|链)(接|結)|(視|视)(頻|频)|新(聞|闻))+?:.*$'),
+            re.compile(r'相[關关]([鏈链][接結]|[視视][頻频]|新[聞闻])+?:.*$'),
             '',
         ),
         (
-            re.compile(r'(撰文|(製|制)作):.*$'),
+            re.compile(r'(撰文|[製制]作):.*$'),
             ' ',
         ),
         (
-            re.compile(r'訂閱\S+?:https://\S+?$'),
+            re.compile(r'[訂订][閱阅]\S+?:https://\S+?$'),
             '',
         ),
         (
             re.compile(
-                r'\(?(大(紀|纪)元|中央社?)((記|记)者)?'
-                + r'[^()0-9]*?\d*?[^()]*?((電|电)|(報|报)(導|导)|特稿|社)\)',
+                r'\(?(大[紀纪]元|中央社?)([記记]者)?'
+                + r'[^()0-9]*?\d*?[^()]*?([電电]|[報报][導导道]|特稿|社)\)',
             ),
             '',
         ),
         (
-            re.compile(r'\(((實|实)(習|习))?(編|编)?(譯|译)者?(:|;)[^)]+\)?'),
+            re.compile(r'\(([實实][習习])?[編编]?[譯译]者?(:|;)[^)]+\)?'),
             '',
         ),
         (
-            re.compile(r'\(本文附?(有|(帶|带))?((影音|(照|相)片)(及|和)?(帶|带)?)+\)'),
+            re.compile(r'\(本文[附有帶带影音照相片及和]+\)'),
             '',
         ),
         (
-            re.compile(r'\((自由亞洲電(臺|台)|美國之音)[^)]*?(报|報)導\)'),
+            re.compile(r'\((自由亞洲電[臺台]|美國之音)[^)]*?[报報][導导道]\)'),
             '',
         ),
         (
-            re.compile(r'社(區|区)(廣|广)角(鏡|镜)\(\d+?\)(提要:)?'),
+            re.compile(r'社[區区][廣广]角[鏡镜]\(\d+?\)(提要:)?'),
             '',
         ),
         (
-            re.compile(r'新(聞|闻)(週|周)刊\(?\d+\)?期?'),
+            re.compile(r'新[聞闻][週周]刊\(?\d+\)?期?'),
             '',
         ),
         (
@@ -149,7 +147,7 @@ def test_module_attribute_signature() -> None:
             ' ',
         ),
         (
-            re.compile(r'(\[(圖|图)卡\d*\]\s*|\((圖|图)片來源:.*?\))'),
+            re.compile(r'(\[[圖图]卡\d*\]\s*|\([圖图]片來源:.*?\))'),
             '',
         ),
         (
@@ -158,16 +156,16 @@ def test_module_attribute_signature() -> None:
         ),
         (
             re.compile(
-                r'新(唐|塘)人(電|电)(視|视)(臺|台)\s*((https?://)?www\.ntdtv\.com)?',
+                r'新[唐塘]人[電电][視视][臺台]\s*((https?://)?www\.ntdtv\.com)?',
             ),
             '',
         ),
         (
-            re.compile(r'(下(載|载)(錄|录)像)'),
+            re.compile(r'(下[載载][錄录]像)'),
             '',
         ),
         (
-            re.compile(r'\((畫|画)面.*?(報|报)(導|导|道)\)'),
+            re.compile(r'\([畫画]面.*?[報报][導导道]\)'),
             '',
         ),
         (
@@ -175,7 +173,7 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'\s+相(關|关)新聞\s+'),
+            re.compile(r'\s+相[關关]新聞\s+'),
             ' ',
         ),
         (
@@ -196,7 +194,7 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'(快(訊|讯)|組(圖|图)|焦(點|点)人物):'),
+            re.compile(r'(快[訊讯]|組[圖图]|焦[點点]人物):'),
             '',
         ),
         (

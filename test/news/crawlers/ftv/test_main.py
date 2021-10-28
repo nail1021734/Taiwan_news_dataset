@@ -1,6 +1,6 @@
 import test.news.crawlers.conftest
 from datetime import datetime, timedelta, timezone
-from typing import Final, List
+from typing import List
 
 import pytest
 
@@ -10,8 +10,8 @@ import news.crawlers.ftv
 
 
 def test_utc_timezone(
-    db_name: Final[str],
-    cleanup_db_file: Final,
+    db_name: str,
+    cleanup_db_file,
 ) -> None:
     r"""`current_datetime` and `past_datetime` must in utc timezone."""
     taiwan_current_datetime = datetime.now(
@@ -40,8 +40,8 @@ def test_utc_timezone(
 
 
 def test_datetime_order(
-    db_name: Final[str],
-    cleanup_db_file: Final,
+    db_name: str,
+    cleanup_db_file,
 ) -> None:
     r"""Must have `past_datetime <= current_datetime`."""
     with pytest.raises(ValueError) as excinfo:
@@ -57,10 +57,10 @@ def test_datetime_order(
 
 
 def test_save_news_to_db(
-    db_name: Final[str],
-    response_200: Final[test.news.crawlers.conftest.MockResponse],
-    cleanup_db_file: Final,
-    monkeypatch: Final,
+    db_name: str,
+    response_200: test.news.crawlers.conftest.MockResponse,
+    cleanup_db_file,
+    monkeypatch,
 ) -> None:
     r"""Save crawling news to database with correct format."""
 

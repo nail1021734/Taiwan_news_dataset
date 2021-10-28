@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
 from tqdm import trange
@@ -13,7 +13,7 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
+CATEGORY_API_LOOKUP_TABLE: Dict[str, str] = {
     '政治': '6',
     '社會': '41',
     '國際': '5',
@@ -28,22 +28,20 @@ CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
     '財經': '2',
     '寵物': '47',
 }
-COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
-    company='三立',
-)
-COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+COMPANY_ID: int = news.crawlers.util.normalize.get_company_id(company='三立',)
+COMPANY_URL: str = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
 
 
 def get_news_list(
-    category_api: Final[str],
+    category_api: str,
     *,
-    continue_fail_count: Final[Optional[int]] = 5,
-    debug: Final[Optional[bool]] = False,
-    first_page: Final[Optional[int]] = 1,
-    max_page: Final[Optional[int]] = 20,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 5,
+    debug: Optional[bool] = False,
+    first_page: Optional[int] = 1,
+    max_page: Optional[int] = 20,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -140,8 +138,8 @@ def get_news_list(
 
 
 def main(
-    db_name: Final[str],
-    **kwargs: Final[Optional[Dict]],
+    db_name: str,
+    **kwargs: Optional[Dict],
 ) -> None:
     # Get database connection.
     db_path = news.crawlers.db.util.get_db_path(db_name=db_name)

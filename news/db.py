@@ -1,9 +1,9 @@
 import os
 import sqlite3
-from typing import Final, List, Sequence
+from typing import List, Sequence
 
 
-def get_conn(db_path: Final[str]) -> sqlite3.Connection:
+def get_conn(db_path: str) -> sqlite3.Connection:
     r"""取得與資料庫的連線
 
     如果指定的資料庫路徑不存在, 則創建路徑與檔案後回傳連線
@@ -21,7 +21,7 @@ def get_conn(db_path: Final[str]) -> sqlite3.Connection:
     return sqlite3.connect(db_path)
 
 
-def is_sqlite3_file(file_path: Final[str]) -> bool:
+def is_sqlite3_file(file_path: str) -> bool:
     r"""Return True if `file_path` is sqlite database file.
 
     Return False when `file_path` is not an absolute path since we did not know
@@ -52,7 +52,7 @@ def is_sqlite3_file(file_path: Final[str]) -> bool:
         return False
 
 
-def get_db_paths(file_paths: Final[Sequence[str]]) -> List[str]:
+def get_db_paths(file_paths: Sequence[str]) -> List[str]:
     r"""Recursively search all file paths to find sqlite database files.
 
     Only absolute paths in `file_paths` will be considered.  Relative paths are

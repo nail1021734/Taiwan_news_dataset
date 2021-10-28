@@ -1,12 +1,12 @@
-from typing import Final, Optional
+from typing import Optional
 
 import requests
 
 
 def get(
-    url: Final[str],
+    url: str,
     *,
-    timeout: Final[Optional[float]] = 20.0,
+    timeout: Optional[float] = 20.0,
 ) -> requests.Response:
     r"""Launch HTTP GET request to specified URL."""
     response = requests.get(

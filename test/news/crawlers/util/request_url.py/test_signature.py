@@ -1,6 +1,6 @@
 import inspect
 from inspect import Parameter, Signature
-from typing import Final, Optional
+from typing import Optional
 
 import requests
 
@@ -18,13 +18,13 @@ def test_module_function_signature() -> None:
                     name='url',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[str],
+                    annotation=str,
                 ),
                 Parameter(
                     name='timeout',
                     kind=Parameter.KEYWORD_ONLY,
                     default=20.0,
-                    annotation=Final[Optional[float]],
+                    annotation=Optional[float],
                 ),
             ],
             return_annotation=requests.Response,

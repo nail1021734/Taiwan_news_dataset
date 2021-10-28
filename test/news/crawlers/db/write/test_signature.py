@@ -2,7 +2,7 @@ import inspect
 import re
 import sqlite3
 from inspect import Parameter, Signature
-from typing import Final, Sequence
+from typing import Sequence
 
 import news.crawlers.db.write
 from news.crawlers.db.schema import RawNews
@@ -19,13 +19,13 @@ def test_module_function_signature() -> None:
                     name='cur',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[sqlite3.Cursor],
+                    annotation=sqlite3.Cursor,
                 ),
                 Parameter(
                     name='news_list',
                     kind=Parameter.POSITIONAL_OR_KEYWORD,
                     default=Parameter.empty,
-                    annotation=Final[Sequence[RawNews]],
+                    annotation=Sequence[RawNews],
                 ),
             ],
             return_annotation=None,

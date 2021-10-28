@@ -1,4 +1,4 @@
-from typing import Final, List
+from typing import List
 
 import pytest
 
@@ -9,8 +9,8 @@ import news.crawlers.util.request_url
 
 
 def test_first_idx(
-    db_name: Final[str],
-    cleanup_db_file: Final,
+    db_name: str,
+    cleanup_db_file,
 ) -> None:
     r"""Must have `first_idx > 0`."""
     with pytest.raises(ValueError) as excinfo:
@@ -24,9 +24,9 @@ def test_first_idx(
 
 
 def test_latest_idx(
-    db_name: Final[str],
-    cleanup_db_file: Final,
-    monkeypatch: Final,
+    db_name: str,
+    cleanup_db_file,
+    monkeypatch,
 ) -> None:
     r"""Must have `latest_idx > 0`"""
     with pytest.raises(ValueError) as excinfo:
@@ -40,8 +40,8 @@ def test_latest_idx(
 
 
 def test_idx_order(
-    db_name: Final[str],
-    cleanup_db_file: Final,
+    db_name: str,
+    cleanup_db_file,
 ) -> None:
     r"""Must have `first_idx <= latest_idx`."""
     with pytest.raises(ValueError) as excinfo:
@@ -55,9 +55,9 @@ def test_idx_order(
 
 
 def test_save_news_to_db(
-    db_name: Final[str],
-    cleanup_db_file: Final,
-    monkeypatch: Final,
+    db_name: str,
+    cleanup_db_file,
+    monkeypatch,
 ) -> None:
     r"""Save crawling news to database with correct format."""
 

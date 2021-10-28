@@ -1,6 +1,6 @@
 from collections import Counter
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Final, List, Optional
+from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
 from tqdm import trange
@@ -14,7 +14,7 @@ import news.crawlers.util.status_code
 import news.db
 from news.crawlers.db.schema import RawNews
 
-CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
+CATEGORY_API_LOOKUP_TABLE: Dict[str, str] = {
     'A': '體育',
     'C': '一般',
     'F': '財經',
@@ -28,15 +28,13 @@ CATEGORY_API_LOOKUP_TABLE: Final[Dict[str, str]] = {
     'U': '社會',
     'W': '一般',
 }
-COMPANY_ID: Final[int] = news.crawlers.util.normalize.get_company_id(
-    company='民視',
-)
-COMPANY_URL: Final[str] = news.crawlers.util.normalize.get_company_url(
+COMPANY_ID: int = news.crawlers.util.normalize.get_company_id(company='民視',)
+COMPANY_URL: str = news.crawlers.util.normalize.get_company_url(
     company_id=COMPANY_ID,
 )
 
 
-def page_not_found(raw_xml: Final[str]) -> bool:
+def page_not_found(raw_xml: str) -> bool:
     r"""Return `True` if page not found.
 
     This is need since FTV always return 200.
@@ -51,13 +49,13 @@ def page_not_found(raw_xml: Final[str]) -> bool:
 
 
 def get_news_list(
-    category_api: Final[str],
-    current_datetime: Final[datetime],
+    category_api: str,
+    current_datetime: datetime,
     *,
-    continue_fail_count: Final[Optional[int]] = 100,
-    debug: Final[Optional[bool]] = False,
-    first_idx: Final[Optional[int]] = 1,
-    **kwargs: Final[Optional[Dict]],
+    continue_fail_count: Optional[int] = 100,
+    debug: Optional[bool] = False,
+    first_idx: Optional[int] = 1,
+    **kwargs: Optional[Dict],
 ) -> List[RawNews]:
     news_list: List[RawNews] = []
     logger = Counter()
@@ -140,10 +138,10 @@ def get_news_list(
 
 
 def main(
-    current_datetime: Final[datetime],
-    db_name: Final[str],
-    past_datetime: Final[datetime],
-    **kwargs: Final[Optional[Dict]],
+    current_datetime: datetime,
+    db_name: str,
+    past_datetime: datetime,
+    **kwargs: Optional[Dict],
 ) -> None:
     # Value check.
     if current_datetime.tzinfo != timezone.utc:

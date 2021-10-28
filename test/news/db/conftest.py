@@ -1,5 +1,4 @@
 import os
-from typing import Final
 
 import pytest
 
@@ -7,12 +6,12 @@ import news.path
 
 
 @pytest.fixture
-def db_path(db_name: Final[str]) -> str:
+def db_path(db_name: str) -> str:
     return os.path.abspath(os.path.join(news.path.DATA_PATH, 'test', db_name))
 
 
 @pytest.fixture
-def cleanup_db_file(db_path: Final[str], request: Final) -> None:
+def cleanup_db_file(db_path: str, request) -> None:
     r"""Delete testing database files."""
 
     def remove():
