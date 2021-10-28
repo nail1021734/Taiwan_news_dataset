@@ -55,9 +55,10 @@ TITLE_SELECTOR_LIST: str = re.sub(
 REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 13-12-23-4041274,
     # 14-1-1-4048455, 14-1-1-4048450, 13-12-31-4046950, 13-12-30-4046025,
-    # 13-12-13-4033178, 13-12-11-4031411, 13-12-9-4030334, 13-7-21-3921942`.
+    # 13-12-13-4033178, 13-12-11-4031411, 13-12-9-4030334, 13-7-21-3921942,
+    # 13-3-12-3820892`.
     re.compile(
-        r'\(\s*(?:[這这]是)?[新大][紀纪]元(?:.{1,2}洲)?(?:[週周]刊\d*?期?,?)?[記记]?者?站?'
+        r'\(?\s*(?:[這这]是)?[新大][紀纪]元(?:.{1,2}洲)?(?:[週周]刊\d*?期?,?)?[記记]?者?站?'
         + r'(?:亞太)?(?:[電电][視视][台臺]?)?'
         + r'([\w、/\s]*?)[的综綜合整理採采訪访編编譯译報报導导道]+?[,。]?\s*\)'
     ),
@@ -187,10 +188,14 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\(?[責责]任?[編编][輯辑]?.*?[:;].*$'),
         '',
     ),
-    # This observation is made with `url_pattern = 13-7-24-3924107,
-    # 13-7-21-3921942`.
+    # This observation is made with `url_pattern = 13-7-24-3924107`.
     (
-        re.compile(r'([視视][频頻]|([Pp]h|[Ff])oto)[:;].*$'),
+        re.compile(r'\(?[視视][频頻][:;][\S]+\)?'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 13-7-21-3921942`.
+    (
+        re.compile(r'(ph|f)oto\s*[:;][:a-z\s]+', re.IGNORECASE),
         '',
     ),
     # This observation is made with `url_pattern = 13-8-3-3932270,
