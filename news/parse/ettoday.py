@@ -118,8 +118,11 @@ REPORTER_PATTERNS: List[re.Pattern] = [
         + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)',
     ),
     # This observation is made with `url_pattern = 1200028, 1200034, 1200168,
-    # 1200197`.
-    re.compile(r'(?:圖、)?文/(?:(?:藥|護理)師)?([\w、]*?)(?:提供)?(?:\([^)]*\))?\s+'),
+    # 1200197, 1200260`.
+    re.compile(
+        r'(?:(?:圖、)?文|彙整整理)/(?:(?:藥|護理)師)?([\w、]*?)'
+        + r'(?:(?:提供|摘自|圖片)\S*)?(?:\([^)]*\))?\s+'
+    ),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove captions.  This is still needed even if we have
@@ -137,10 +140,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # Remove additional information in the middle of paragrapgh.
     # This observation is made with `url_pattern = 2112150, 1200090, 1200243,
-    # 1200077, 1200039, 1200098, 1200146, 1200190`.
+    # 1200077, 1200039, 1200098, 1200146, 1200190, 1200260`.
     (
         re.compile(
-            r'\((參考|(示意)?圖|畫面顯示|左|右|ETtoday寵物雲|補充官方回應|註:|本文轉載?自'
+            r'\((參考|(示意)?圖|畫面顯示|左|右|ETtoday寵物雲|補充官方回應|(註|編按):|本文轉載?自'
             + r'|(科技|[新南]華|人民)([早日]報|網))[^)]*?\)'
         ),
         '',
@@ -153,11 +156,12 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # Remove paragraphs contains additional informations.
     # This observation is made with `url_pattern = 1200161, 1200022, 1200132,
-    # 1200168, 1200234, 1200237`.
+    # 1200168, 1200234, 1200237, 1200267`.
     (
         re.compile(
             r'\s(《ETtoday新聞雲》提醒您|\*[圖片、資料]+來源|到這裡找|這裡悶、那裏痛,親友說吃這個藥卡有效'
-            + r'|(Photo|BLOG|粉絲頁)\s*:\s*|◎鎖定|《?ETtoday寵物雲》?期許每個人都能更重視生命)\S+',
+            + r'|(Photo|BLOG|粉絲頁)\s*:\s*|◎鎖定|《?ETtoday寵物雲》?期許每個人都能更重視生命'
+            + r'|(自殺防治諮詢安心|生命線協談)專線)\S+',
         ),
         ' ',
     ),
@@ -192,13 +196,14 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # Remove recommendations and additional informations at the end of news
-    # article.
+    # article.  Note that `本文作者:` should be the reporter, but since the
+    # format is so fucked up, we say "Fuck it. just remove it".
     # This observation is made with `url_pattern = 1200009, 1200090, 1200165,
-    # 1200190, 1200243, 1200077, 1200181`.
+    # 1200190, 1200243, 1200077, 1200181, 1200260, 1200265`.
     (
         re.compile(
-            r'\s([圖文]/|\*《ETtoday新聞雲》|好文推薦|【?延伸閱讀】?|更多(時尚藝術資訊|精彩影音)|本文摘自'
-            + r'|你可能也想看|關於《雲端最前線》).*$',
+            r'\s([圖文]/|\*《ETtoday新聞雲》|好文推薦|【?延伸閱讀】?|更多(時尚藝術資訊|精彩影音|健康訊息)'
+            + r'|你可能也想看|關於《雲端最前線》|(本文)?(摘自|經授權|作者:)).*$',
         ),
         ' ',
     ),
@@ -249,10 +254,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # ),
     # (
     #     re.compile(r'熱門點閱》'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'授權轉載'),
     #     '',
     # ),
     # (
@@ -394,6 +395,9 @@ def parser(raw_news: RawNews) -> ParsedNews:
                 reporter,
             )
         )
+        # Remove trailing comma.
+        # This observation is made with `url_pattern = 1200260`.
+        reporter = re.sub(',$', '', reporter)
     except Exception:
         # There may not have reporter.
         reporter = ''
