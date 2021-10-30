@@ -129,34 +129,20 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'[▲▼►]\S*。?'),
         '',
     ),
-    # Remove list symbols. ※
+    # Remove list symbols.
     # This observation is made with `url_pattern = 1200034`.
     (
         re.compile(r'\s[●★](\S*)'),
         r' \1',
     ),
-    # Remove captions.
-    # This observation is made with `url_pattern = 2112150`.
+    # Remove additional information in the middle of paragrapgh.
+    # This observation is made with `url_pattern = 2112150, 1200090, 1200243,
+    # 1200077, 1200039, 1200098, 1200146, 1200190`.
     (
-        re.compile(r'\((示意)?圖[^)]*?\)'),
-        '',
-    ),
-    # Remove figure references.
-    # This observation is made with `url_pattern = 1200090`.
-    (
-        re.compile(r'\((畫面顯示[^)]*|左|右)\)'),
-        '',
-    ),
-    # Remove recommendations.
-    # This observation is made with `url_pattern = 1200009`.
-    (
-        re.compile(r'\*《ETtoday新聞雲》.*$'),
-        '',
-    ),
-    # Remove recommendations.
-    # This observation is made with `url_pattern = 1200077`.
-    (
-        re.compile(r'\(ETtoday寵物雲[^)]*?\)'),
+        re.compile(
+            r'\((參考|(示意)?圖|畫面顯示|左|右|ETtoday寵物雲|補充官方回應|註:|本文轉載?自'
+            + r'|(科技|[新南]華|人民)([早日]報|網))[^)]*?\)'
+        ),
         '',
     ),
     # Remove recommendations.
@@ -165,17 +151,15 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\s(《(ETtoday(筋斗|新聞)雲|播吧)》\s*)*\s'),
         ' ',
     ),
-    # Remove recommendations.
-    # This observation is made with `url_pattern = 1200181`.
+    # Remove paragraphs contains additional informations.
+    # This observation is made with `url_pattern = 1200161, 1200022, 1200132,
+    # 1200168, 1200234, 1200237`.
     (
-        re.compile(r'\s關於《雲端最前線》.*$'),
+        re.compile(
+            r'\s(《ETtoday新聞雲》提醒您|\*[圖片、資料]+來源|到這裡找|這裡悶、那裏痛,親友說吃這個藥卡有效'
+            + r'|(Photo|BLOG|粉絲頁)\s*:\s*|◎鎖定|《?ETtoday寵物雲》?期許每個人都能更重視生命)\S+',
+        ),
         ' ',
-    ),
-    # Remove suggestion.
-    # This observation is made with `url_pattern = 1200161`.
-    (
-        re.compile(r'《ETtoday新聞雲》提醒您:\S+'),
-        '',
     ),
     # Remove suggestion.
     # This observation is made with `url_pattern = 1200058`.
@@ -189,34 +173,16 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'喝酒不開車,開車不喝酒。?'),
         '',
     ),
-    # Remove recommendations.
-    # This observation is made with `url_pattern = 1200077`.
-    (
-        re.compile(r'(你可能也想看|更多精采影音):?\S*(\s|$)'),
-        '',
-    ),
-    # Remove information source.
-    # This observation is made with `url_pattern = 1200022`.
-    (
-        re.compile(r'\*[圖片、資料]+來源:\S+'),
-        '',
-    ),
     # Remove editor notes.
     # This observation is made with `url_pattern = 1200039`.
     (
         re.compile(r'(出稿|更新):[\d.:\s]+'),
         '',
     ),
-    # Remove update notes.
-    # This observation is made with `url_pattern = 1200039`.
-    (
-        re.compile(r'\(補充官方回應\)'),
-        '',
-    ),
     # Remove datetime notes.
     # This observation is made with `url_pattern = 1200058, 1200161`.
     (
-        re.compile(r'((報名|舉辦)日期|營業時間):[\d:/()~一二三四五六平假日]+'),
+        re.compile(r'(報名|舉辦|營業)(日期|時間):[\d:/()~一二三四五六平假日]+'),
         '',
     ),
     # Remove copy right notes.
@@ -225,55 +191,16 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\s+(版權聲明:|圖片為版權照片|\*?本文由).*?不得.*?轉載\S*'),
         '',
     ),
-    # Remove recommendations.
-    # This observation is made with `url_pattern = 1200090, 1200190`.
+    # Remove recommendations and additional informations at the end of news
+    # article.
+    # This observation is made with `url_pattern = 1200009, 1200090, 1200165,
+    # 1200190, 1200243, 1200077, 1200181`.
     (
-        re.compile(r'(好文推薦|【延伸閱讀】).*$'),
-        '',
-    ),
-    # Remove news source in fashion category.
-    # This observation is made with `url_pattern = 1200090, 1200165`.
-    (
-        re.compile(r'更多(時尚藝術資訊|精彩影音).*$'),
-        '',
-    ),
-    # Remove picture source.
-    # This observation is made with `url_pattern = 1200090`.
-    (
-        re.compile(r'圖/.*$'),
-        '',
-    ),
-    # Remove article source.  Note that this does not conflict with reporter
-    # pattern `文/([\w、]*)(?:\([^)]*\))?\s+` since it is executed after
-    # searching reporter pattern.
-    # This observation is made with `url_pattern = 1200090`.
-    (
-        re.compile(r'文/.*$'),
-        '',
-    ),
-    # Remove china news copy source.
-    # This observation is made with `url_pattern = 1200098`.
-    (
-        re.compile(r'\((科技|[新南]華|人民)([早日]報|網)\)'),
-        '',
-    ),
-    # Remove writer source.
-    # This observation is made with `url_pattern = 1200132`.
-    (
-        re.compile(r'(BLOG|粉絲頁):\S+'),
-        '',
-    ),
-    # Remove writer source.
-    # This observation is made with `url_pattern = 1200132`.
-    (
-        re.compile(r'到這裡找\S+'),
-        '',
-    ),
-    # Remove side notes.
-    # This observation is made with `url_pattern = 1200146`.
-    (
-        re.compile(r'\(註:[^)]*\)'),
-        '',
+        re.compile(
+            r'\s([圖文]/|\*《ETtoday新聞雲》|好文推薦|【?延伸閱讀】?|更多(時尚藝術資訊|精彩影音)|本文摘自'
+            + r'|你可能也想看|關於《雲端最前線》).*$',
+        ),
+        ' ',
     ),
     # Remove instagram account.
     # This observation is made with `url_pattern = 1200146`.
@@ -287,22 +214,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'如同\(\),'),
         '',
     ),
-    # Remove location, mail and telephone information.
-    # This observation is made with `url_pattern = 1200161`.
+    # Remove location, mail, telephone and tick information.
+    # This observation is made with `url_pattern = 1200161, 1200254`.
     (
-        re.compile(r'\S+(\s*(地址|電話|信箱):\S+)+'),
-        '',
-    ),
-    # Remove recommendation in health category.
-    # This observation is made with `url_pattern = 1200168`.
-    (
-        re.compile(r'這裡悶、那裏痛,親友說吃這個藥卡有效\S+'),
-        '',
-    ),
-    # Remove news recommendation.
-    # This observation is made with `url_pattern = 1200168`.
-    (
-        re.compile(r'◎鎖定\S+'),
+        re.compile(r'\S+(\s*(地址|電話|信箱|票價):\s*\S+)+'),
         '',
     ),
     # Remove content hints.
@@ -311,10 +226,13 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'【第一次[^】]*上手】'),
         '',
     ),
-    # Remove copy source.
-    # This observation is made with `url_pattern = 1200190`.
+    # Remove searching url notes.
+    # This observation is made with `url_pattern = 1200234`.
     (
-        re.compile(r'\(本文轉載?自[^)]*\)'),
+        re.compile(
+            r'(網站)?查詢:'
+            + r'''((https?://)?[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;%=]+\s*)+'''
+        ),
         '',
     ),
     # (
@@ -331,14 +249,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # ),
     # (
     #     re.compile(r'熱門點閱》'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'延伸閱讀：'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'【】'),
     #     '',
     # ),
     # (
