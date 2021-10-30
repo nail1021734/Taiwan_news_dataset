@@ -11,40 +11,50 @@ from news.parse.db.schema import ParsedNews
 # We remove the following content:
 #
 # - Figures and captions:
-#   Located in `img`, `div.story > p:not([class]) strong` and `b` tags.
-#   Note that `div.story > p:not([class]) strong > span` and
-#   `div.story > p:not([class]) span > strong` tags usually appear in the
-#   middle of text and thus are highly likely to be part of paragraph instead
-#   of captions, the only exception is the last paragraph, i.e.,
-#   `div.story > p:not([class]):last-child strong`, which contains extra
-#   information.
+#   Located in `img`, `p:has(img, iframe) + p:has(strong)` and `b` tags.
+#   Note that captions usually follow immediately after `img` or `iframe)`,
+#   thus we use `p:has(img, iframe) + p:has(strong)` to capture captions.
 #   This observation is made with `url_pattern = 2112150, 1200023, 1200034,
-#   1200071, 1200075`.
+#   1200071, 1200075, 1200173`.
+#
+# - Extra informations:
+#   Paragraphs contains one `strong` tags and at least 3 `a` tags are
+#   probabily extra information, thus we use
+#   `p:not([class]):has(strong):has(a ~ a ~ a)` to capture these paragraphs.
+#   This observation is made with `url_pattern = 1200034`.
+#
 # - Videos:
 #   Located in `div.fb-video`
 #   This observation is made with `url_pattern = 1200000`.
+#
 # - Ads:
 #   Located in `div` tags and contains 'ad' in their classname.
 #   This observation is made with `url_pattern = 2112150`.
+#
 # - App download recommendation:
-#   Located in `p` tags immediately precede by a `hr` tag.
+#   Located in `p` tags precede by a `hr` tag.
 #   This observation is made with `url_pattern = 1200011`.
+#
 # - Social media links:
 #   Located in `div` tags and contains 'social' in their classname.
-#   Also exclude instagram post (contains in `blockquote.instagram-media`).
-#   This observation is made with `url_pattern = 2112150, 1200040`.
+#   Also exclude social media post (including instagram, twitter, facebook)
+#   in `blockquote` tags.
+#   This observation is made with `url_pattern = 2112150, 1200040, 1200102,
+#   1200138`.
+#
 # - Related news:
-#   Located in `p.note`, `p a`, `p a strong` and `iframe` tags.
-#   This observation is made with `url_pattern = 2112150, 1200077, 1200097`.
+#   Located in `p.note`, `iframe` and `p a[href*="ettoday"]` tags.
+#   This observation is made with `url_pattern = 2112150, 1200022, 1200077,
+#   1200097, 1200118, 1200132, 1200158`.
 ARTICLE_DECOMPOSE_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
     img,
-    div.story > p:not([class]):not(:has(span[style*="color"] > strong))
-    strong:not(:has(span[style*="color"])),
-    div.story > p:not([class]):last-child strong,
+    p:has(img, iframe) + p:has(strong),
     b,
+
+    p:not([class]):has(strong):has(a ~ a ~ a),
 
     div.fb-video,
 
@@ -57,13 +67,11 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     hr ~ p,
 
     div[class*='et_social'],
-    blockquote.instagram-media,
+    blockquote,
 
     p.note,
-    p:has(strong) ~ p a strong,
-    p a:has(strong) ~ a strong,
     iframe,
-    iframe ~ p a
+    p:has(a[href*="ettoday"]) a
     ''',
 )
 
@@ -103,25 +111,40 @@ TITLE_SELECTOR_LIST: str = re.sub(
 ###############################################################################
 REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 2112150, 1200000, 1200001,
-    # 1200002, 1200002, 1200012, 1200021, 1200025, 1200057, 1200071, 1200085`.
+    # 1200002, 1200002, 1200012, 1200021, 1200025, 1200057, 1200071, 1200085,
+    # 1200115, 1200125, 1200134, 1200161, 1200181`.
     re.compile(
-        r'(?:記者|(?:網搜|寵物)小組|(?:體育|國際|社會|大陸|娛樂|地方|生活|財經)中心)'
-        + r'([\w、\s]*?)/.*?報導',
+        r'(?:(?:實習)?記者|(?:網搜|寵物)小組|(?:體育|國際|社會|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目)中心)'
+        + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)',
     ),
-    # This observation is made with `url_pattern = 1200028, 1200034`.
-    re.compile(r'文/([\w、]*)(?:\([^)]*\))?\s+'),
+    # This observation is made with `url_pattern = 1200028, 1200034, 1200168,
+    # 1200197`.
+    re.compile(r'(?:圖、)?文/(?:(?:藥|護理)師)?([\w、]*?)(?:提供)?(?:\([^)]*\))?\s+'),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
-    # Remove captions.
+    # Remove captions.  This is still needed even if we have
+    # `ARTICLE_DECOMPOSE_LIST` since some captions were located before images.
     # This observation is made with `url_pattern = 2112150, 1200012, 1200028`.
     (
-        re.compile(r'[▲●▼★►※]\S*。?'),
+        re.compile(r'[▲▼►]\S*。?'),
         '',
+    ),
+    # Remove list symbols. ※
+    # This observation is made with `url_pattern = 1200034`.
+    (
+        re.compile(r'\s[●★](\S*)'),
+        r' \1',
     ),
     # Remove captions.
     # This observation is made with `url_pattern = 2112150`.
     (
         re.compile(r'\((示意)?圖[^)]*?\)'),
+        '',
+    ),
+    # Remove figure references.
+    # This observation is made with `url_pattern = 1200090`.
+    (
+        re.compile(r'\((畫面顯示[^)]*|左|右)\)'),
         '',
     ),
     # Remove recommendations.
@@ -134,6 +157,36 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 1200077`.
     (
         re.compile(r'\(ETtoday寵物雲[^)]*?\)'),
+        '',
+    ),
+    # Remove recommendations.
+    # This observation is made with `url_pattern = 1200181`.
+    (
+        re.compile(r'\s(《(ETtoday(筋斗|新聞)雲|播吧)》\s*)*\s'),
+        ' ',
+    ),
+    # Remove recommendations.
+    # This observation is made with `url_pattern = 1200181`.
+    (
+        re.compile(r'\s關於《雲端最前線》.*$'),
+        ' ',
+    ),
+    # Remove suggestion.
+    # This observation is made with `url_pattern = 1200161`.
+    (
+        re.compile(r'《ETtoday新聞雲》提醒您:\S+'),
+        '',
+    ),
+    # Remove suggestion.
+    # This observation is made with `url_pattern = 1200058`.
+    (
+        re.compile(r'《[^》]*》\S+(報名|快訊)\s'),
+        ' ',
+    ),
+    # Remove legal notes.
+    # This observation is made with `url_pattern = 1200161`.
+    (
+        re.compile(r'喝酒不開車,開車不喝酒。?'),
         '',
     ),
     # Remove recommendations.
@@ -161,9 +214,9 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # Remove datetime notes.
-    # This observation is made with `url_pattern = 1200058`.
+    # This observation is made with `url_pattern = 1200058, 1200161`.
     (
-        re.compile(r'(報名|舉辦)日期:[\d/()~一二三四五六日]+'),
+        re.compile(r'((報名|舉辦)日期|營業時間):[\d:/()~一二三四五六平假日]+'),
         '',
     ),
     # Remove copy right notes.
@@ -173,15 +226,15 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # Remove recommendations.
-    # This observation is made with `url_pattern = 1200090`.
+    # This observation is made with `url_pattern = 1200090, 1200190`.
     (
-        re.compile(r'【延伸閱讀】.*$'),
+        re.compile(r'(好文推薦|【延伸閱讀】).*$'),
         '',
     ),
     # Remove news source in fashion category.
-    # This observation is made with `url_pattern = 1200090`.
+    # This observation is made with `url_pattern = 1200090, 1200165`.
     (
-        re.compile(r'更多時尚藝術資訊.*$'),
+        re.compile(r'更多(時尚藝術資訊|精彩影音).*$'),
         '',
     ),
     # Remove picture source.
@@ -202,6 +255,66 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 1200098`.
     (
         re.compile(r'\((科技|[新南]華|人民)([早日]報|網)\)'),
+        '',
+    ),
+    # Remove writer source.
+    # This observation is made with `url_pattern = 1200132`.
+    (
+        re.compile(r'(BLOG|粉絲頁):\S+'),
+        '',
+    ),
+    # Remove writer source.
+    # This observation is made with `url_pattern = 1200132`.
+    (
+        re.compile(r'到這裡找\S+'),
+        '',
+    ),
+    # Remove side notes.
+    # This observation is made with `url_pattern = 1200146`.
+    (
+        re.compile(r'\(註:[^)]*\)'),
+        '',
+    ),
+    # Remove instagram account.
+    # This observation is made with `url_pattern = 1200146`.
+    (
+        re.compile(r'instagram:\s*@[a-z0-9_]+', re.IGNORECASE),
+        '',
+    ),
+    # Remove reference to ETtoday old news.
+    # This observation is made with `url_pattern = 1200022`.
+    (
+        re.compile(r'如同\(\),'),
+        '',
+    ),
+    # Remove location, mail and telephone information.
+    # This observation is made with `url_pattern = 1200161`.
+    (
+        re.compile(r'\S+(\s*(地址|電話|信箱):\S+)+'),
+        '',
+    ),
+    # Remove recommendation in health category.
+    # This observation is made with `url_pattern = 1200168`.
+    (
+        re.compile(r'這裡悶、那裏痛,親友說吃這個藥卡有效\S+'),
+        '',
+    ),
+    # Remove news recommendation.
+    # This observation is made with `url_pattern = 1200168`.
+    (
+        re.compile(r'◎鎖定\S+'),
+        '',
+    ),
+    # Remove content hints.
+    # This observation is made with `url_pattern = 1200190`.
+    (
+        re.compile(r'【第一次[^】]*上手】'),
+        '',
+    ),
+    # Remove copy source.
+    # This observation is made with `url_pattern = 1200190`.
+    (
+        re.compile(r'\(本文轉載?自[^)]*\)'),
         '',
     ),
     # (
