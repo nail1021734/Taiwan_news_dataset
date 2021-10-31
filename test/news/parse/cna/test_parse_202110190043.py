@@ -26,7 +26,7 @@ def test_parsing_result() -> None:
     )
 
     parsed_news = news.parse.cna.parser(raw_news=raw_news)
-    print(parsed_news)
+
     assert parsed_news.article == re.sub(
         r'\n',
         '',

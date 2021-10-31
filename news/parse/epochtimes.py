@@ -321,7 +321,6 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ' ',
     ),
 ]
-URL_PATTERN = re.compile(r'/b5/(\d+)/(\d+)/(\d+)/n\d+\.htm')
 
 
 def parser(raw_news: RawNews) -> ParsedNews:
