@@ -9,9 +9,7 @@ from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
 # Some news authors are located in `div.author`, we include them as part of the
-# news article and parse them using `REPORTER_PATTERNS` later.  Note that
-# `div.author` must always put before any other selector for rest of the
-# parsers below to work.
+# news article and parse them using `REPORTER_PATTERNS` later.
 # This observation is made with `url_pattern = 202010070112`.
 #
 # Only first `div.centralContent div.paragraph` and contains news.  News are

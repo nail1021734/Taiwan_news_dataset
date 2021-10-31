@@ -167,7 +167,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 2011-12-25-636915, 2011-04-02-513571, 2011-07-27-565336,
     # 2011-06-11-545215`.
     (
-        re.compile(r'\(本文[附有帶带影音照相片及和]+\)'),
+        re.compile(r'\(本文[附有帶带影音照相片及和與与]+\)'),
         '',
     ),
     # This observation is made with `url_pattern = 2011-12-31-639655,
