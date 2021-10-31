@@ -123,7 +123,7 @@ def test_module_attribute_signature() -> None:
             '',
         ),
         (
-            re.compile(r'\(本文[附有帶带影音照相片及和]+\)'),
+            re.compile(r'\(本文[附有帶带影音照相片及和與与]+\)'),
             '',
         ),
         (
