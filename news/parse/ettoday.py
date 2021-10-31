@@ -11,19 +11,36 @@ from news.parse.db.schema import ParsedNews
 # We remove the following content:
 #
 # - Figures and captions:
-#   Located in `img`, `p:has(img ~ strong, strong ~ img)`,
-#   `p:has(img, iframe):not(:has(strong)) + p:has(strong)` and `b` tags.
+#   Located in `b`, `img`, `iframe` and `strong` tags.
 #   Sometimes captions are inside the same `p:has(img, iframe)`, thus we use
 #   `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe))` to cover this
-#   inconsistency.  Most of the time captions follow immediately after `img` or
-#   `iframe`, thus we use `p:has(img, iframe):not(has(strong)) + p:has(strong)`
-#   to capture captions.
+#   inconsistency.  Most of the time captions follow **immediately** after
+#   `img` or `iframe`, and captions does not have color highlights.  With this
+#   observation, we apply the following rule to select `strong` tags:
+#
+#   1. Use `:not(:has(span[style*="color"]))` to avoid select color highlighted
+#      tags.  News company must use editor to write down drafts, and those
+#      editor use `span` to perform color highlighting.
+#
+#   2. Avoid any nested combination of `span` and `strong` tags, including
+#      `span strong` or `strong span`.  In this way strong tag would not be
+#      color highlighted.
+#
+#   3. News article always consist of `p` tags, thus we drop `p` tags which
+#      containing `strong` tags, namely `p:has(strong)`.
+#
+#   4. Use `p:has(img, iframe):not(:has(strong)) +` at the begining.  `+`
+#      ensure immediately precedence of `p:has(img, iframe)`.
+#      `:not(:has(strong))` is used to avoid already paired images and
+#      captions, which were already addressed by
+#      `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe))`).
+#
 #   This observation is made with `url_pattern = 2112150, 1200023, 1200034,
 #   1200071, 1200075, 1200173, 1200265`.
 #
 # - Extra informations:
 #   Paragraphs contains one `strong` tags and at least 3 `a` tags are
-#   probabily extra information, thus we use
+#   probably extra information, thus we use
 #   `p:not([class]):has(strong):has(a ~ a ~ a)` to capture these paragraphs.
 #   This observation is made with `url_pattern = 1200034`.
 #
@@ -54,10 +71,14 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
-    img,
-    p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)),
-    p:has(img, iframe):not(:has(strong)) + p:has(strong),
     b,
+    img,
+    iframe,
+    p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)),
+    p:has(img, iframe):not(:has(strong))
+    + p:not(:has(span[style*="color"]:has(strong))):not(:has(
+        strong:has(span[style*="color"])
+    )):has(strong),
 
     p:not([class]):has(strong):has(a ~ a ~ a),
 
@@ -75,7 +96,6 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     blockquote,
 
     p.note,
-    iframe,
     p:has(a[href*="ettoday"]) a
     ''',
 )
@@ -135,10 +155,14 @@ REPORTER_PATTERNS: List[re.Pattern] = [
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove captions.  This is still needed even if we have
     # `ARTICLE_DECOMPOSE_LIST` since some captions were located before images.
+    # Usually captions will have source reference surrounded by parenthese at
+    # the end, for example, `(圖/...)`.  But since ETtoday's format is so fucked
+    # up, there will always have exceptions.  Thus for those case we simply
+    # match as much text as possible.
     # This observation is made with `url_pattern = 1200012, 1200028, 1200278,
     # 2112150`.
     (
-        re.compile(r'[▲▼►]\s*\S*。?\s*(\(圖[^)]*\))?\s*'),
+        re.compile(r'[▲▼►]+(.*?(\([圖影片相照資料來源翻攝][^)]*\))|\s*\S+)\s*'),
         ' ',
     ),
     # Remove list symbols.
