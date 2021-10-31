@@ -13,8 +13,8 @@ from news.parse.db.schema import ParsedNews
 # - Figures and captions:
 #   Located in `b`, `img`, `iframe` and `strong` tags.
 #   Sometimes captions are inside the same `p:has(img, iframe)`, thus we use
-#   `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe))` to cover this
-#   inconsistency.  Most of the time captions follow **immediately** after
+#   `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe))` to select
+#   these captions.  Most of the time captions follow **immediately** after
 #   `img` or `iframe`, and captions does not have color highlights.  With this
 #   observation, we apply the following rule to select `strong` tags:
 #
@@ -205,10 +205,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ' ',
     ),
     # Remove legal notes.
-    # This observation is made with `url_pattern = 1200161`.
+    # This observation is made with `url_pattern = 1200010, 1200161`.
     (
-        re.compile(r'喝酒不開車,開車不喝酒。?'),
-        '',
+        re.compile(r'\s((飲酒過量|有礙健康|喝酒不開車|開車不喝酒).?)+'),
+        ' ',
     ),
     # Remove editor notes.
     # This observation is made with `url_pattern = 1200039`.
@@ -228,15 +228,25 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\s+(版權聲明:|圖片為版權照片|\*?本文由).*?不得.*?轉載\S*'),
         '',
     ),
+    # Remove editor notes at the end of news article.
+    # This observation is made with `url_pattern = 1200090`.
+    (
+        re.compile(
+            r'\s[圖文]/.*$',
+        ),
+        ' ',
+    ),
     # Remove recommendations and additional informations at the end of news
     # article.  Note that `本文作者:` should be the reporter, but since the
     # format is so fucked up, we say "Fuck it. just remove it".
-    # This observation is made with `url_pattern = 1200009,  1200077, 1200090,
-    # 1200165, 1200181, 1200190, 1200243, 1200260, 1200265, 1200278`.
+    # This observation is made with `url_pattern = 1200009,  1200077, 1200081,
+    # 1200090, 1200105, 1200165, 1200181, 1200190, 1200243, 1200260, 1200265,
+    # 1200278`.
     (
         re.compile(
-            r'\s([圖文]/|\*《ETtoday新聞雲》|好文推薦|【?延伸閱讀】?|更多(時尚藝術資訊|精彩影音|健康訊息)'
-            + r'|你可能也想看|關於《(雲端最前線|慧眼看天下)》|(本文)?(摘自|經授權|作者:)).*$',
+            r'(\*《ETtoday新聞雲》|好文推薦|【?延伸閱讀】?|更多(時尚藝術資訊|精[彩采]影音|健康訊息)'
+            + r'|你可能也想看|關於《(雲端最前線|慧眼看天下)》|(本文)?(原刊|摘自|經授權|作者:)'
+            + r'|以上言論不代表本網立場).*$',
         ),
         ' ',
     ),
@@ -275,10 +285,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # (
     #     re.compile(r'【更多新聞】'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'以上言論不代表本網立場。'),
     #     '',
     # ),
     # (
