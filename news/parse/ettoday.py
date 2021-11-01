@@ -212,7 +212,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove suggestion.
     # This observation is made with `url_pattern = 1200058`.
     (
-        re.compile(r'《[^》]*》\S+(報名|快訊)\s'),
+        re.compile(r'《[^》]*》\S+(報名|快訊)\s.*$'),
         ' ',
     ),
     # Remove legal notes.
@@ -225,12 +225,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 1200039`.
     (
         re.compile(r'(出稿|更新):[\d.:\s]+'),
-        '',
-    ),
-    # Remove datetime notes.
-    # This observation is made with `url_pattern = 1200058, 1200161`.
-    (
-        re.compile(r'(報名|舉辦|營業)(日期|時間):[\d:/()~一二三四五六平假日]+'),
         '',
     ),
     # Remove copy right notes.
@@ -285,11 +279,11 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # deleted.  Thus address information in the middle of paragraph will not be
     # deleted (like `url_pattern = 1200387`).
     # This observation is made with `url_pattern = 1200161, 1200193, 1200254,
-    # 1200335, 1200387`.
+    # 1200335, 1200387, 1200411`.
     (
         re.compile(
-            r'\s\S{1,50}(\s*(地址|電話|信箱|票價|基地(規模|位置)|(建築|結構)設計'
-            + r'|(戶數|樓層|產品)規劃|投資建設):\s*([a-zA-Z\d\s,\-]+)?([^a-zA-Z\s]+)?)+',
+            r'\s\S{1,50}(\s*(地址|電話|信箱|票價|基地(規模|位置)|(建築|結構)設計|(報名|舉辦|營業)(日期|時間)'
+            + r'|(戶數|樓層|產品)規劃|投資建設):\s*([a-zA-Z\d\s,\-:]+)?([^a-zA-Z\s]+)?)+',
         ),
         ' ',
     ),
