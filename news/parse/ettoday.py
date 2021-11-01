@@ -43,7 +43,7 @@ from news.parse.db.schema import ParsedNews
 #   1200071, 1200075, 1200173, 1200265`.
 #
 # - Copy right notes:
-#   Paragraph using center style are probably copy rights.
+#   Paragraphs using center style are probably copy rights.
 #   This observation is made with `url_pattern = 1200311`.
 #
 # - Extra informations:
@@ -181,7 +181,8 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\s[●★▇]+(\S*)'),
         r' \1',
     ),
-    # Remove additional information in the middle of paragrapgh.
+    # Remove additional information in the middle of paragraphs which are
+    # surrounded by parenthese.
     # This observation is made with `url_pattern = 1200039, 1200077, 1200090,
     # 1200098, 1200146, 1200243, 1200190, 1200260, 2112150`.
     (
@@ -191,19 +192,21 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
-    # Remove recommendations.
-    # This observation is made with `url_pattern = 1200181`.
+    # Remove recommendations with whitspace at both begin and end.  Use
+    # `(?=...)` to avoid consume whitespace at the end since multiple occurence
+    # may be side by side.
+    # This observation is made with `url_pattern = 1200181, 1200426`.
     (
-        re.compile(r'\s(《(ETtoday(筋斗|新聞)雲|播吧)》\s*)*\s'),
+        re.compile(r'\s(精選書摘|《(ETtoday(筋斗|新聞)雲|播吧)》)(?=\s)'),
         ' ',
     ),
     # Remove paragraphs contains additional informations.
     # This observation is made with `url_pattern = 1200022, 1200132, 1200161,
-    # 1200168, 1200193, 1200234, 1200237, 1200267, 1200392, 1200403`.
+    # 1200168, 1200193, 1200234, 1200237, 1200267, 1200392, 1200403, 1200426`.
     (
         re.compile(
-            r'\s(《(ETtoday新聞雲|ET FASHION)》提醒您|\*[圖片、資料]+來源|到這裡找'
-            + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(Photo|BLOG|粉絲頁|FB)\s*:\s*|◎鎖定'
+            r'(^|\s)(《(ETtoday新聞雲|ET FASHION)》提醒您|\*[圖片、資料]+來源|到這裡找'
+            + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(作者|摘自|Photo|BLOG|粉絲頁|FB)\s*:\s*|◎鎖定'
             + r'|《?ETtoday寵物雲》?期許每個人都能更重視生命|(自殺防治諮詢安心|生命線協談)專線|歡迎加入\S+:)\S+',
             re.IGNORECASE,
         ),
@@ -246,13 +249,13 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # format is so fucked up, we say "Fuck it. just remove it".
     # This observation is made with `url_pattern = 1200009,  1200077, 1200081,
     # 1200090, 1200105, 1200165, 1200181, 1200190, 1200193, 1200243, 1200260,
-    # 1200265, 1200278, 1200311, 1200318, 1200321, 1200362`.
+    # 1200265, 1200278, 1200311, 1200318, 1200321, 1200362, 1200413`.
     (
         re.compile(
             r'(\*《ETtoday新聞雲》|好文推薦|【?延伸閱讀】?|更多(時尚藝術資訊|精[彩采]影音|健康訊息)'
             + r'|你可能也想看|關於《(雲端最前線|慧眼看天下)》|\(?本文(由|原刊|(轉載|摘)自|經授權|作者:)'
             + r'|以上言論不代表本網立場|\S+>{3,}|\S+—基本資料|\(?完整文章請看|商品介紹:'
-            + r'|本集.ETtoday看電影.).*$',
+            + r'|本集.ETtoday看電影.|系列報導可詳見).*$',
         ),
         ' ',
     ),
@@ -276,8 +279,8 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 電話:...
     #
     # Note that `promotion-title` is not longer than 50 words and will be
-    # deleted.  Thus address information in the middle of paragraph will not be
-    # deleted (like `url_pattern = 1200387`).
+    # deleted.  Thus address information in the middle of paragraphs will not
+    # be deleted (like `url_pattern = 1200387`).
     # This observation is made with `url_pattern = 1200161, 1200193, 1200254,
     # 1200335, 1200387, 1200411`.
     (
