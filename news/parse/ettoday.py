@@ -72,9 +72,33 @@ from news.parse.db.schema import ParsedNews
 #   1200138`.
 #
 # - Related news:
-#   Located in `p.note`, `iframe` and `p a[href*="ettoday"]` tags.
+#   Located in `p.note` and `p a` tags.  The following rules applied:
+#
+#   1. Related news are mainly in the format
+#      `p:has(a[href*="ettoday" i]) a`, the `i` in the selector stands for
+#      case-insensitive.  They usually appear at the end of news articles, but
+#      sometimes in the middle of paragraph.  Thus we only remove the
+#      occurrence of `a` tags.
+#
+#   2. For news under movie category, related news may come from different
+#      sites.  These include `p:has(a[href*="dramaqueen"]) a`.
+#
+#   3. For news on facebook, we use `p:has(a[href*="facebook.com/ettoday" i])`
+#      to capture.  Since they ALWAYS appear at the end of news article, we
+#      drop these `p` tags along with all the `p` tags follow by using
+#      `p:has(a[href*="facebook.com/ettoday" i]) ~ p`.
+#
+#   4. For news under finance category, we use
+#      `p:has(a[href*="businessweekly"])` to capture.  Since they ALWAYS appear
+#      at the end of news article, we drop these `p` tags along with all the
+#      `p` tags follow by using `p:has(a[href*="businessweekly"]) ~ p`.
+#
+#   5. For news under traveling category, related news may include address
+#      wrapped inside google map, thus we use
+#      `p:has(a[href*="google.com/maps"])`.
+#
 #   This observation is made with `url_pattern = 2112150, 1200022, 1200077,
-#   1200097, 1200118, 1200132, 1200158, 1200478`.
+#   1200097, 1200118, 1200132, 1200158, 1200478, 1200491, 1200547, 1200562`.
 ARTICLE_DECOMPOSE_LIST: str = re.sub(
     r'\s+',
     ' ',
@@ -106,8 +130,13 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     blockquote,
 
     p.note,
-    p:has(a[href*="ettoday"]) a,
-    p:has(a[href*="dramaqueen"]) a
+    p:has(a[href*="ettoday" i]) a,
+    p:has(a[href*="dramaqueen"]) a,
+    p:has(a[href*="facebook.com/ettoday" i]),
+    p:has(a[href*="facebook.com/ettoday" i]) ~ p,
+    p:has(a[href*="businessweekly"]),
+    p:has(a[href*="businessweekly"]) ~ p,
+    p:has(a[href*="google.com/maps"])
     ''',
 )
 
@@ -129,7 +158,7 @@ ARTICLE_SELECTOR_LIST: str = re.sub(
 )
 
 # News title is located in `h1.title`.
-# This observation is made with `url_pattern = `.
+# This observation is made with `url_pattern = 2112150`.
 TITLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
@@ -151,17 +180,18 @@ TITLE_SELECTOR_LIST: str = re.sub(
 REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 1200000, 1200001, 1200002,
     # 1200012, 1200021, 1200025, 1200057, 1200071, 1200085, 1200115, 1200125,
-    # 1200134, 1200161, 1200181, 1200286, 1200474, 2112150`.
+    # 1200134, 1200161, 1200181, 1200286, 1200474, 1200501, 2112150, 1200554,
+    # 1200581`.
     re.compile(
         r'(?:(?:實習|振道)?記者|(?:網搜|寵物)小組|'
-        + r'(?:體育|國際|社會|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目)中心)'
-        + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)',
+        + r'(?:體育|國際|社[群會]|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目)中心)'
+        + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)(?:、攝影)?',
     ),
     # This observation is made with `url_pattern = 1200028, 1200034, 1200168,
-    # 1200197, 1200260, 1200280, 1200297, 1200436`.
+    # 1200197, 1200260, 1200280, 1200297, 1200436, 1200592`.
     re.compile(
-        r'(?:(?:圖、|撰)?文(?:、圖)?|彙整整理|編輯)/(?:(?:藥|護理)師)?(?:特約撰述\s*)?([\w、]*?)'
-        + r'(?:(?:提供|摘自|圖片)\S*)?(?:\([^)]*\))?\s+'
+        r'(?:(?:圖、?|撰)?文(?:、?圖)?|彙整整理|編輯)/(?:(?:藥|護理)師)?(?:特約撰述\s*)?([\w、]*?)'
+        + r'(?:(?:提供|摘自|圖片|\s*\S*觀點)\S*)?(?:\([^)]*\))?\s+'
     ),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
@@ -178,19 +208,20 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ' ',
     ),
     # Remove list symbols.
-    # This observation is made with `url_pattern = 1200034, 1200318, 1200403`.
+    # This observation is made with `url_pattern = 1200034, 1200318, 1200403,
+    # 1200591`.
     (
-        re.compile(r'\s[●★▇]+(\S*)'),
+        re.compile(r'\s[●★▇※]+(\S*)'),
         r' \1',
     ),
     # Remove additional information in the middle of paragraphs which are
     # surrounded by parenthese.
     # This observation is made with `url_pattern = 1200039, 1200077, 1200090,
-    # 1200098, 1200146, 1200243, 1200190, 1200260, 2112150`.
+    # 1200098, 1200146, 1200243, 1200190, 1200260, 1200493, 2112150`.
     (
         re.compile(
             r'\((參考|(示意)?圖|畫面顯示|左|右|ETtoday寵物雲|補充官方回應|(註|編按):|本文轉載?自'
-            + r'|(科技|[新南]華|人民)([早日]報|網))[^)]*?\)'
+            + r'|(科技|[新南]華|人民|經濟參考|中新)([早日]?報|網))[^)]*?\)'
         ),
         '',
     ),
@@ -205,12 +236,13 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove paragraphs contains additional informations.
     # This observation is made with `url_pattern = 1200022, 1200132, 1200161,
     # 1200168, 1200193, 1200234, 1200237, 1200267, 1200392, 1200403, 1200426,
-    # 1200436`.
+    # 1200436, 1200526, 1200577, 1200579`.
     (
         re.compile(
             r'(^|\s)(《(ETtoday新聞雲|ET FASHION)》提醒您|\*[圖片、資料]+來源|到這裡找'
             + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(作者|摘自|Photo|BLOG|粉絲頁|FB|附註)\s*:\s*|◎鎖定'
-            + r'|《?ETtoday寵物雲》?期許每個人都能更重視生命|(自殺防治諮詢安心|生命線協談)專線|歡迎加入\S+:)\S+',
+            + r'|《?ETtoday寵物雲》?期許每個人都能更重視生命|(自殺防治諮詢安心|生命線協談)專線|歡迎加入\S+:'
+            + r'|\(?(圖|攝?影|撰文)/|\*+以下有)\S+',
             re.IGNORECASE,
         ),
         ' ',
@@ -239,12 +271,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\s+(版權聲明:|圖片為版權照片|\*?本文由).*?不得.*?轉載\S*'),
         '',
     ),
-    # Remove editor notes at the end of news article.
-    # This observation is made with `url_pattern = 1200090`.
+    # Remove editor notes with slash `/` at the end of news article.
+    # This observation is made with `url_pattern = 1200090, 1200492`.
     (
-        re.compile(
-            r'\s[圖文]/.*$',
-        ),
+        re.compile(r'\s([圖文]|Text|Photo)/.*$', re.IGNORECASE),
         ' ',
     ),
     # Remove recommendations and additional informations at the end of news
@@ -253,14 +283,17 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 1200009,  1200077, 1200081,
     # 1200090, 1200105, 1200165, 1200181, 1200190, 1200193, 1200243, 1200260,
     # 1200265, 1200278, 1200311, 1200318, 1200321, 1200362, 1200413, 1200436,
-    # 1200442, 1200452, 1200470, 1200474`.
+    # 1200442, 1200452, 1200470, 1200474, 1200510, 1200511, 1200521, 1200526,
+    # 1200534, 1200547, 1200558, 1200563, 1200578, 1200579, 1200591, 1200594`.
     (
         re.compile(
-            r'(更多(時尚藝術資訊|精[彩采]影音|健康訊息|\S+?新消息,都在)|\*《ETtoday新聞雲》|好文推薦'
-            + r'|(商品介紹|活動詳情|聯繫窗口|服務諮詢專線):|你可能也想看|關於《(雲端最前線|慧眼看天下)》'
-            + r'|\(?本文(由|原刊|(轉載|摘)自|經授權|作者:)|以上言論不代表本網立場|\S+—基本資料|\(?完整文章請看'
-            + r'|【?延伸閱讀】?|本集.ETtoday看電影.|系列報導可詳見|\S+>{3,}|\S+★'
-            + r'|這場我有另外個選項,有興趣讀者).*$',
+            r'(更多(時尚藝術資訊|精[彩采](影音|內容|報導)|健康訊息|\S+?新消息,都在)|\*《ETtoday新聞雲》|好文推薦'
+            + r'|(商品介紹|活動詳情|聯繫窗口|服務諮詢專線|\S*(售票|店家)資訊|◎活動(時間|辦法)|作者介紹|開放時間|門票):'
+            + r'|\(?本文(由|原刊|(轉載|摘)自|經(授權)?|作者:)|\S*以上言論不代表本網立場|\S+—基本資料'
+            + r'|【(貼心提醒|延伸閱讀|更多新聞)】|本集.ETtoday看電影.|\S+>{3,}|\S+★|\[info\]'
+            + r'|這場我有另外個選項,有興趣讀者|\S+詳細活動內容|\*關於\S+\s*詳細介紹'
+            + r'|\(?(完整|系列)(文章|報導)[請可]|相關資訊可至|延伸閱讀|熱門點閱》|原文出處|你可能也想看'
+            + r'|關於《(雲端最前線|慧眼看天下)》).*$',
         ),
         ' ',
     ),
@@ -287,10 +320,11 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # deleted.  Thus address information in the middle of paragraphs will not
     # be deleted (like `url_pattern = 1200387`).
     # This observation is made with `url_pattern = 1200161, 1200193, 1200254,
-    # 1200335, 1200387, 1200411`.
+    # 1200335, 1200387, 1200411, 1200594`.
     (
         re.compile(
-            r'\s\S{1,50}(\s*(地址|電話|信箱|票價|基地(規模|位置)|(建築|結構)設計|(報名|舉辦|營業)(日期|時間)'
+            r'\s\S{1,50}(\s*(地址|電話|信箱|票價|門票|基地(規模|位置)'
+            + r'|(建築|結構)設計|(活動|報名|舉辦|營業|開放)(日期|時間|辦法)'
             + r'|(戶數|樓層|產品)規劃|投資建設):\s*([a-zA-Z\d\s,\-:]+)?([^a-zA-Z\s]+)?)+',
         ),
         ' ',
@@ -310,28 +344,22 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
+    # Remove inviting url inside parenthese.
+    # This observation is made with `url_pattern = 1200584`.
+    (
+        re.compile(
+            r'\(\s*'
+            + r'''(https?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;%=]+\s*)+'''
+            + r'\s*\)'
+        ),
+        '',
+    ),
     # Remove content hints.
     # This observation is made with `url_pattern = 1200285, 1200321`.
     (
         re.compile(r'(^|\s)【[^】]*】(→\S+)?(\s|$)'),
         ' ',
     ),
-    # (
-    #     re.compile(r'【更多新聞】'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'圖[一二三四五六七八九十]+、'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'熱門點閱》'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'原文出處'),
-    #     '',
-    # ),
 ]
 
 TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
@@ -340,10 +368,11 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'精彩回顧看這邊?!?'),
         '',
     ),
-    # Remove content hints.
-    # This observation is made with `url_pattern = 1200017, 1200019`.
+    # Remove content hints followed by a slash `/`.  Note that if word before
+    # slash is too long, then it is probably not a content hint.
+    # This observation is made with `url_pattern = 1200017, 1200019, 1200501`.
     (
-        re.compile(r'^[^/]*?/'),
+        re.compile(r'^[^/]{1,10}/'),
         '',
     ),
     # Remove useless symbol.
@@ -358,14 +387,6 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'(【[^】]*】|\([^)]*\))'),
         '',
     ),
-    # (
-    #     re.compile(r'(快[訊讯]|組[圖图]|焦[點点]人物):'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'(—)+'),
-    #     ' ',
-    # ),
 ]
 
 
