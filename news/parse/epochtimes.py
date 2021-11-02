@@ -76,6 +76,8 @@ REPORTER_PATTERNS: List[re.Pattern] = [
     ),
     # This observation is made with `url_pattern = 13-2-10-3798072`.
     re.compile(r'\(大[紀纪]元[記记]者([\w、/\s]*?)\)'),
+    # This observation is made with 'urs_pattern = 19-12-5-11701493'
+    re.compile(r'\(英文大紀元資深記者([\w]*)\([\w\s)]*\)採訪報導\/([\w]*)編譯\)'),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove list symbols.
@@ -284,6 +286,37 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 13-2-24-3807746`.
     (
         re.compile(r'文:\S*?$'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-12-22-11738876`.
+    (
+        re.compile(r'\s?文字整理:\w*[,。]?$'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-12-17-11728852,
+    # 19-12-17-11750457`
+    (
+        re.compile(r'[#]?((大紀元《新聞看點》|新唐人《新聞拍案驚奇》)製作組)*[#]?'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-12-17-11750457`
+    (
+        re.compile(r'^大家好,歡迎(?:大家關注新聞看點|收看《新聞拍案驚奇》),我是\w*[。,]'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 20-1-1-11759086`
+    (
+        re.compile(r'[\W*\w*]*⊙Opening'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 20-1-1-11759086`
+    (
+        re.compile(r'(⊙Ending|網絡收看方式|【直播日期】)[\w*\W*]*'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 20-1-1-11759265`
+    (
+        re.compile(r'(大紀元每天為讀者梳理翻牆必看的文章|編輯按):'),
         '',
     ),
 ]
