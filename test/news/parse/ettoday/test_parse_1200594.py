@@ -46,6 +46,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '旅遊'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1531054860
-    assert parsed_news.reporter == 'J'
+    assert parsed_news.reporter == 'J-O'
     assert parsed_news.title == '香港中環新景點「大館」 古蹟藝術並存能窺見監獄原貌'
     assert parsed_news.url_pattern == '1200594'

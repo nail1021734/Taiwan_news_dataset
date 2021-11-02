@@ -187,6 +187,15 @@ REPORTER_PATTERNS: List[re.Pattern] = [
         + r'(?:體育|國際|社[群會]|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目|消費)中心)'
         + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)(?:、攝影)?',
     ),
+    # Reporter name with leading English characters.  Only English characters
+    # can have whitespace in between, other characters cannot.
+    # This observation is made with `url_pattern = 1200594`.
+    re.compile(
+        r'(?:(?:圖、?|撰)?文(?:、?圖)?|彙整整理|編輯)/'
+        + r'([a-zA-Z\d]+(?:(?:\s[a-zA-Z\d]+)+[^(\s]*)?)'
+        + r'(?:(?:提供|摘自|圖片|\s*\S*觀點)\S*)?(?:\([^)]*\))?\s+'
+    ),
+    # Reporter name with no whitespace.
     # This observation is made with `url_pattern = 1200028, 1200034, 1200168,
     # 1200197, 1200260, 1200280, 1200297, 1200436, 1200592`.
     re.compile(
@@ -365,7 +374,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Thus this pattern must always put at the end of all patterns.
     # This observation is made with `url_pattern = 1200594, 1200601`.
     (
-        re.compile(r'^(Emmy|O 是小眼睛)\s'),
+        re.compile(r'^(Emmy|是小眼睛)\s'),
         ' ',
     ),
     # Remove stand along character at the begining.  This kind of paragraphs
@@ -506,14 +515,21 @@ def parser(raw_news: RawNews) -> ParsedNews:
             )
         # Reporters are comma seperated.
         reporter = ','.join(map(news.parse.util.normalize.NFKC, reporter_list))
-        # Some reporters are separated by whitespaces or '、'.
+        # Some reporters are separated by whitespaces or '、'.  We replace
+        # whitespace precede (or follow) an english character.  This is needed
+        # since some reporters have English names.
         # This observation is made with `url_pattern = 1200037`.
         reporter = news.parse.util.normalize.NFKC(
-            re.sub(
-                r'[\s、]+',
-                ',',
-                reporter,
-            )
+            re.sub(r'[、]+', ',', reporter),
+        )
+        reporter = news.parse.util.normalize.NFKC(
+            re.sub(r'([a-zA-Z\d])\s+(?=\w)', r'\1-', reporter),
+        )
+        reporter = news.parse.util.normalize.NFKC(
+            re.sub(r'(?<=\w)\s+([a-zA-Z\d])', r'-\1', reporter),
+        )
+        reporter = news.parse.util.normalize.NFKC(
+            re.sub(r'\s+', ',', reporter),
         )
         # Remove trailing comma.
         # This observation is made with `url_pattern = 1200260`.
