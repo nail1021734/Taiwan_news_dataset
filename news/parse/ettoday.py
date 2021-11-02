@@ -181,10 +181,10 @@ REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 1200000, 1200001, 1200002,
     # 1200012, 1200021, 1200025, 1200057, 1200071, 1200085, 1200115, 1200125,
     # 1200134, 1200161, 1200181, 1200286, 1200474, 1200501, 2112150, 1200554,
-    # 1200581`.
+    # 1200581, 1200621`.
     re.compile(
         r'(?:(?:實習|振道)?記者|(?:網搜|寵物)小組|'
-        + r'(?:體育|國際|社[群會]|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目)中心)'
+        + r'(?:體育|國際|社[群會]|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目|消費)中心)'
         + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)(?:、攝影)?',
     ),
     # This observation is made with `url_pattern = 1200028, 1200034, 1200168,
@@ -209,19 +209,19 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # Remove list symbols.
     # This observation is made with `url_pattern = 1200034, 1200318, 1200403,
-    # 1200591`.
+    # 1200591, 1200623`.
     (
-        re.compile(r'\s[●★▇※]+(\S*)'),
+        re.compile(r'\s[●★▇※◎]+(\S*)'),
         r' \1',
     ),
     # Remove additional information in the middle of paragraphs which are
     # surrounded by parenthese.
     # This observation is made with `url_pattern = 1200039, 1200077, 1200090,
-    # 1200098, 1200146, 1200243, 1200190, 1200260, 1200493, 2112150`.
+    # 1200098, 1200146, 1200243, 1200190, 1200260, 1200493, 1200601, 2112150`.
     (
         re.compile(
             r'\((參考|(示意)?圖|畫面顯示|左|右|ETtoday寵物雲|補充官方回應|(註|編按):|本文轉載?自'
-            + r'|(科技|[新南]華|人民|經濟參考|中新)([早日]?報|網))[^)]*?\)'
+            + r'|(科技|[新南]華|人民|經濟參考|中新)([早日]?報|網)|日本足球觀察家)[^)]*?\)'
         ),
         '',
     ),
@@ -240,7 +240,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (
         re.compile(
             r'(^|\s)(《(ETtoday新聞雲|ET FASHION)》提醒您|\*[圖片、資料]+來源|到這裡找'
-            + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(作者|摘自|Photo|BLOG|粉絲頁|FB|附註)\s*:\s*|◎鎖定'
+            + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(作者|摘自|Photo|BLOG|粉絲頁|FB|附註)\s*:\s*|鎖定每日刊文'
             + r'|《?ETtoday寵物雲》?期許每個人都能更重視生命|(自殺防治諮詢安心|生命線協談)專線|歡迎加入\S+:'
             + r'|\(?(圖|攝?影|撰文)/|\*+以下有)\S+',
             re.IGNORECASE,
@@ -288,7 +288,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (
         re.compile(
             r'(更多(時尚藝術資訊|精[彩采](影音|內容|報導)|健康訊息|\S+?新消息,都在)|\*《ETtoday新聞雲》|好文推薦'
-            + r'|(商品介紹|活動詳情|聯繫窗口|服務諮詢專線|\S*(售票|店家)資訊|◎活動(時間|辦法)|作者介紹|開放時間|門票):'
+            + r'|(商品介紹|活動詳情|聯繫窗口|服務諮詢專線|\S*(售票|店家)資訊|活動(時間|辦法)|作者介紹|開放時間|門票):'
             + r'|\(?本文(由|原刊|(轉載|摘)自|經(授權)?|作者:)|\S*以上言論不代表本網立場|\S+—基本資料'
             + r'|【(貼心提醒|延伸閱讀|更多新聞)】|本集.ETtoday看電影.|\S+>{3,}|\S+★|\[info\]'
             + r'|這場我有另外個選項,有興趣讀者|\S+詳細活動內容|\*關於\S+\s*詳細介紹'
@@ -358,6 +358,30 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 1200285, 1200321`.
     (
         re.compile(r'(^|\s)【[^】]*】(→\S+)?(\s|$)'),
+        ' ',
+    ),
+    # Remove failed parsing paragraph at the begining. This kind of paragraphs
+    # are consist of what ever we left after parsing from all patterns above.
+    # Thus this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 1200594, 1200601`.
+    (
+        re.compile(r'^(Emmy|O 是小眼睛)\s'),
+        ' ',
+    ),
+    # Remove stand along character at the begining.  This kind of paragraphs
+    # are consist of what ever we left after parsing from all patterns above.
+    # Thus this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 1200594`.
+    (
+        re.compile(r'^([\da-zA-Z\u4e00-\u9fff](?=\s))+'),
+        ' ',
+    ),
+    # Remove stand along character at the end.  This kind of paragraphs are
+    # consist of what ever we left after parsing from all patterns above.  Thus
+    # this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 1200601`.
+    (
+        re.compile(r'((?<=\s)[\da-zA-Z\u4e00-\u9fff])+$'),
         ' ',
     ),
 ]
