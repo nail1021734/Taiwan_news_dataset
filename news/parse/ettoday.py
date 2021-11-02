@@ -42,9 +42,9 @@ from news.parse.db.schema import ParsedNews
 #   This observation is made with `url_pattern = 2112150, 1200023, 1200034,
 #   1200071, 1200075, 1200173, 1200265`.
 #
-# - Copy right notes:
-#   Paragraphs using center style are probably copy rights.
-#   This observation is made with `url_pattern = 1200311`.
+# - Copy rights or fortune telling:
+#   Paragraphs using center style are probably copy rights or fortune telling.
+#   This observation is made with `url_pattern = 1200311, 1200480`.
 #
 # - Extra informations:
 #   Paragraphs contains one `strong` tags and at least 3 `a` tags are
@@ -74,7 +74,7 @@ from news.parse.db.schema import ParsedNews
 # - Related news:
 #   Located in `p.note`, `iframe` and `p a[href*="ettoday"]` tags.
 #   This observation is made with `url_pattern = 2112150, 1200022, 1200077,
-#   1200097, 1200118, 1200132, 1200158`.
+#   1200097, 1200118, 1200132, 1200158, 1200478`.
 ARTICLE_DECOMPOSE_LIST: str = re.sub(
     r'\s+',
     ' ',
@@ -106,7 +106,8 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     blockquote,
 
     p.note,
-    p:has(a[href*="ettoday"]) a
+    p:has(a[href*="ettoday"]) a,
+    p:has(a[href*="dramaqueen"]) a
     ''',
 )
 
@@ -150,15 +151,16 @@ TITLE_SELECTOR_LIST: str = re.sub(
 REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 1200000, 1200001, 1200002,
     # 1200012, 1200021, 1200025, 1200057, 1200071, 1200085, 1200115, 1200125,
-    # 1200134, 1200161, 1200181, 1200286, 2112150`.
+    # 1200134, 1200161, 1200181, 1200286, 1200474, 2112150`.
     re.compile(
-        r'(?:(?:實習)?記者|(?:網搜|寵物)小組|(?:體育|國際|社會|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目)中心)'
+        r'(?:(?:實習|振道)?記者|(?:網搜|寵物)小組|'
+        + r'(?:體育|國際|社會|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目)中心)'
         + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)',
     ),
     # This observation is made with `url_pattern = 1200028, 1200034, 1200168,
-    # 1200197, 1200260, 1200280, 1200297`.
+    # 1200197, 1200260, 1200280, 1200297, 1200436`.
     re.compile(
-        r'(?:(?:圖、|撰)?文|彙整整理|編輯)/(?:(?:藥|護理)師)?(?:特約撰述\s*)?([\w、]*?)'
+        r'(?:(?:圖、|撰)?文(?:、圖)?|彙整整理|編輯)/(?:(?:藥|護理)師)?(?:特約撰述\s*)?([\w、]*?)'
         + r'(?:(?:提供|摘自|圖片)\S*)?(?:\([^)]*\))?\s+'
     ),
 ]
@@ -202,11 +204,12 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # Remove paragraphs contains additional informations.
     # This observation is made with `url_pattern = 1200022, 1200132, 1200161,
-    # 1200168, 1200193, 1200234, 1200237, 1200267, 1200392, 1200403, 1200426`.
+    # 1200168, 1200193, 1200234, 1200237, 1200267, 1200392, 1200403, 1200426,
+    # 1200436`.
     (
         re.compile(
             r'(^|\s)(《(ETtoday新聞雲|ET FASHION)》提醒您|\*[圖片、資料]+來源|到這裡找'
-            + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(作者|摘自|Photo|BLOG|粉絲頁|FB)\s*:\s*|◎鎖定'
+            + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(作者|摘自|Photo|BLOG|粉絲頁|FB|附註)\s*:\s*|◎鎖定'
             + r'|《?ETtoday寵物雲》?期許每個人都能更重視生命|(自殺防治諮詢安心|生命線協談)專線|歡迎加入\S+:)\S+',
             re.IGNORECASE,
         ),
@@ -249,13 +252,15 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # format is so fucked up, we say "Fuck it. just remove it".
     # This observation is made with `url_pattern = 1200009,  1200077, 1200081,
     # 1200090, 1200105, 1200165, 1200181, 1200190, 1200193, 1200243, 1200260,
-    # 1200265, 1200278, 1200311, 1200318, 1200321, 1200362, 1200413`.
+    # 1200265, 1200278, 1200311, 1200318, 1200321, 1200362, 1200413, 1200436,
+    # 1200442, 1200452, 1200470, 1200474`.
     (
         re.compile(
-            r'(\*《ETtoday新聞雲》|好文推薦|【?延伸閱讀】?|更多(時尚藝術資訊|精[彩采]影音|健康訊息)'
-            + r'|你可能也想看|關於《(雲端最前線|慧眼看天下)》|\(?本文(由|原刊|(轉載|摘)自|經授權|作者:)'
-            + r'|以上言論不代表本網立場|\S+>{3,}|\S+—基本資料|\(?完整文章請看|商品介紹:'
-            + r'|本集.ETtoday看電影.|系列報導可詳見).*$',
+            r'(更多(時尚藝術資訊|精[彩采]影音|健康訊息|\S+?新消息,都在)|\*《ETtoday新聞雲》|好文推薦'
+            + r'|(商品介紹|活動詳情|聯繫窗口|服務諮詢專線):|你可能也想看|關於《(雲端最前線|慧眼看天下)》'
+            + r'|\(?本文(由|原刊|(轉載|摘)自|經授權|作者:)|以上言論不代表本網立場|\S+—基本資料|\(?完整文章請看'
+            + r'|【?延伸閱讀】?|本集.ETtoday看電影.|系列報導可詳見|\S+>{3,}|\S+★'
+            + r'|這場我有另外個選項,有興趣讀者).*$',
         ),
         ' ',
     ),
