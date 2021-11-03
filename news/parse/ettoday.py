@@ -37,7 +37,11 @@ from news.parse.db.schema import ParsedNews
 #      captions, which were already addressed by
 #      `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe))`).
 #
-#   5. Even with this level of specifity, we still find bugs, but those bugs
+#   5. Use `p:not(:has(img, iframe))` to make sure dropping candidates does not
+#      have `img` or `iframe` tags.  This is need to avoid confliction with
+#      `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)) strong`.
+#
+#   6. Even with this level of specifity, we still find bugs, but those bugs
 #      are beyond repaired since the formatting of ETtoday suck ass.
 #      This observation is made with `url_pattern = 1200297`.
 #
@@ -108,11 +112,14 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     b,
     img,
     iframe,
-    p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)) strong,
-    p:has(img, iframe):not(:has(strong))
-    + p:not(:has(span[style*="color"]:has(strong))):not(:has(
-        strong:has(span[style*="color"])
-    )):has(strong),
+    p:has(:is(img, iframe) + strong, strong + :is(img, iframe)) strong,
+    p:has(img, iframe):not(:has(strong)) + p:not(
+        :has(img, iframe)
+    ):not(
+        :has(span[style*="color"]:has(strong))
+    ):not(
+        :has(strong:has(span[style*="color"]))
+    ):has(strong),
 
     p[style*="text-align: center"],
 
@@ -211,11 +218,14 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Usually captions will have source reference surrounded by parenthese at
     # the end, for example, `(圖/...)`.  But since ETtoday's format is so fucked
     # up, there will always have exceptions.  Thus for those case we simply
-    # match as much text as possible.
-    # This observation is made with `url_pattern = 1200012, 1200028, 1200278,
-    # 2112150`.
+    # match as much text as possible.  Note that parentheses inside parenthese
+    # are allowed.
+    # This observation is made with `url_pattern = 1200012, 1200028, 1200192,
+    # 1200193, 1200278, 2112150`.
     (
-        re.compile(r'[▲▼►]+(.*?(\([圖影片相照資料來源翻攝][^)]*\))|\s*\S+)\s*'),
+        re.compile(
+            r'[▲▼►]+(.*?\([組合圖影片相照資料來源翻攝採訪撰稿剪輯][^)]*\)([^()]+\))?|\s*\S+)\s*',
+        ),
         ' ',
     ),
     # Remove list symbols.
@@ -245,15 +255,15 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ' ',
     ),
     # Remove paragraphs contains additional informations.
-    # This observation is made with `url_pattern = 1200022, 1200132, 1200161,
-    # 1200168, 1200193, 1200234, 1200237, 1200267, 1200392, 1200403, 1200426,
-    # 1200436, 1200526, 1200577, 1200579`.
+    # This observation is made with `url_pattern = 1200022, 1200132, 1200152,
+    # 1200161, 1200168, 1200193, 1200234, 1200237, 1200267, 1200392, 1200403,
+    # 1200426, 1200436, 1200526, 1200577, 1200579`.
     (
         re.compile(
             r'(^|\s)(《(ETtoday新聞雲|ET FASHION)》提醒您|\*[圖片、資料]+來源|到這裡找'
             + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(作者|摘自|Photo|BLOG|粉絲頁|FB|附註)\s*:\s*|鎖定每日刊文'
             + r'|《?ETtoday寵物雲》?期許每個人都能更重視生命|(自殺防治諮詢安心|生命線協談)專線|歡迎加入\S+:'
-            + r'|\(?(圖|攝?影|撰文)/|\*+以下有)\S+',
+            + r'|\(?(圖|攝?影|撰文)/|\*+以下有|影片恐會引起部分讀者不適,請自行斟酌觀看|影音連結)\S+',
             re.IGNORECASE,
         ),
         ' ',
