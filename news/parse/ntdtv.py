@@ -272,7 +272,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 2011-12-20-634429, 2011-12-17-633168, 2011-12-15-632169,
     # 2011-04-14-518582, 2011-04-04-514246`.
     (
-        re.compile(r'''[0-9a-zA-sÀ-ÿ,.:;?!&/“”’'"$%『』\[\]()*=—–─\-\s]+$'''),
+        re.compile(r'''[0-9a-zA-ZÀ-ÿ,.:;?!&/“”’'"$%『』\[\]()*=—–─\-\s]+$'''),
         '',
     ),
     # Remove the editor information. This observation is made with `url_pattern
