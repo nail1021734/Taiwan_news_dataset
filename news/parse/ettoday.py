@@ -12,10 +12,12 @@ from news.parse.db.schema import ParsedNews
 #
 # - Figures and captions:
 #   Located in `b`, `img`, `iframe` and `strong` tags.
-#   Sometimes captions are inside the same `p:has(img, iframe)`, thus we use
-#   `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe))` to select
-#   these captions.  Most of the time captions follow **immediately** after
-#   `img` or `iframe`, and captions does not have color highlights.  With this
+#   Sometimes captions are inside the same `p` tag which satisfying
+#   `p:has(img, iframe)`, thus we use
+#   `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)) strong` to
+#   select these captions.  Most of the time captions are inside
+#   `p:has(strong)` which follow **immediately** after `p:has(img)` or
+#   `p:has(iframe)`, and captions does not have color highlights.  With this
 #   observation, we apply the following rule to select `strong` tags:
 #
 #   1. Use `:not(:has(span[style*="color"]))` to avoid select color highlighted
@@ -106,7 +108,7 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     b,
     img,
     iframe,
-    p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)),
+    p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)) strong,
     p:has(img, iframe):not(:has(strong))
     + p:not(:has(span[style*="color"]:has(strong))):not(:has(
         strong:has(span[style*="color"])
@@ -422,6 +424,55 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
 ]
 
+BR_PATTERN: re.Pattern = re.compile(r'(\s*<br\s*/>)+\s*')
+FIX_PATTERN: re.Pattern = re.compile(
+    r'(<strong[^>]*>[^<]*)(<img[^>]*>)([^<]*)',
+)
+
+
+def fix_raw_xml(raw_xml: str) -> str:
+    r"""Fix raw XML.
+
+    ETtoday's news sometimes has following structure:
+
+    <strong>
+        ...
+        <img .../>
+        ...
+    </strong>
+
+    This make CSS selector hard to select strong tags.  Thus we fix it with
+    the following structure:
+
+    <strong>
+        ...
+    </strong>
+        <img .../>
+    <strong>
+        ...
+    </strong>
+
+    Note that paragraphs may contain lots of `<br />` tags, thus we replace
+    them with whitespace to make fixing much easier.
+    """
+    # Remove `<br/>` tags and replace with single whitespace.
+    raw_xml = BR_PATTERN.sub(' ', raw_xml)
+
+    # Extract `<strong><img/></strong>`.
+    while True:
+        match = FIX_PATTERN.search(raw_xml)
+
+        if not match:
+            break
+
+        raw_xml = (
+            raw_xml[:match.start()] + match.group(1) + '</strong>'
+            + match.group(2) + '<strong>' + match.group(3)
+            + raw_xml[match.end():]
+        )
+
+    return raw_xml
+
 
 def parser(raw_news: RawNews) -> ParsedNews:
     """Parse ETtoday news from raw HTML.
@@ -436,7 +487,7 @@ def parser(raw_news: RawNews) -> ParsedNews:
     )
 
     try:
-        soup = BeautifulSoup(raw_news.raw_xml, 'html.parser')
+        soup = BeautifulSoup(fix_raw_xml(raw_news.raw_xml), 'html.parser')
     except Exception:
         raise ValueError('Invalid html format.')
 

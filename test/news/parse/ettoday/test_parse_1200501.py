@@ -47,6 +47,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '民生消費'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1530088020
-    assert parsed_news.reporter is None
+    assert parsed_news.reporter == '徐恩樂'
     assert parsed_news.title == '星巴克聯名BAN.DO!熱帶花卉11款單品7/3限量搶購'
     assert parsed_news.url_pattern == '1200501'
