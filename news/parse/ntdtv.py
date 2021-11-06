@@ -62,6 +62,11 @@ REPORTER_PATTERNS: List[re.Pattern] = [
     ),
     # This observation is made with `url_pattern = 2012-01-01-640083`.
     re.compile(r'文字:([^/]+?)/.+$'),
+    # This observation is made with `url_pattern = 2013-12-06-1018651`.
+    re.compile(r'\(美[國国]之音記者(.*?)報導\)'),
+    # This observation is made with `url_pattern = 2013-08-04-943508,
+    # 2013-08-04-943532`.
+    re.compile(r'\s*記者/\s*(.*?);編輯/.*?;後製/.*?;旁白(?:.*)\s*。?$'),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 2011-04-17-519983,
@@ -243,9 +248,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ' ',
     ),
     # Remove unclear links. This observation is made with `url_pattern =
-    # 2011-04-14-518847`.
+    # 2011-04-14-518847, 2013-12-27-1032242`.
     (
-        re.compile(r'\.html#video target=_blank>'),
+        re.compile(
+            r'(\.html#video target=_blank>|frameborder="0′′ allowfullscreen>)'),
         '',
     ),
     # Remove traslation and datetime string at the end. Note that
@@ -261,6 +267,39 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'''[0-9a-zA-sÀ-ÿ,.:;?!&/“”’'"$%『』\[\]()*=—–─\-\s]+$'''),
         '',
     ),
+    # Remove special suffix at the end of article. `url_pattern =
+    # 2014-01-01-1034872`
+    (
+        re.compile(r'\s?採訪編輯/(?:.*?)\s後製/(?:.*?)$'),
+        '',
+    ),
+    # Remove special suffix at the end of article. `url_pattern =
+    # 2013-08-19-951813, 2013-08-16-950720, 2013-08-15-950231,
+    # 2013-08-15-950276, 2013-04-23-885733`
+    (
+        re.compile(
+            r'(?:\s?採訪/.*?\s?編輯/.*?\s?後製/.*?|\s'
+            + r'?\(?[Yy]ouTube視頻,內容若遭移除請見諒\)?)$'),
+        '',
+    ),
+    # Remove special prefix at the start of article. `url_pattern =
+    # 2014-01-01-1035035, 2014-01-01-1034743, 2014-01-01-1034722,
+    # 2013-12-31-1034652, 2013-12-28-1032509, 2013-12-19-1026801,
+    # 2013-03-26-869872`
+    (
+        re.compile(r'^(?:BBC報導|\(美[國国]之音(.*?)(?:倫敦|華盛頓)?電?\)),?\s?'),
+        '',
+    ),
+    # Remove special suffix at the end of article. `url_pattern =
+    # 2013-08-20-952909, 2013-04-17-882078, 2013-12-25-1030400,
+    # 2013-12-20-1028082, 2013-03-27-870104, 2013-03-25-869138`
+    (
+        re.compile(r'\s*?(?:相關視頻|[Yy]ouTube視頻|資料來源.*|'
+                   + r'熱線電話:[\d-]+。|相关網絡圖片|'
+                   + r'\(?本文只代表作者的觀點和陳述)\s*?$'),
+        '',
+    )
+
 ]
 TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove content hints. This observation is made with `url_pattern =
