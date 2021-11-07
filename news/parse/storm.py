@@ -8,6 +8,11 @@ import news.parse.util.normalize
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
 
+# Remove the following content:
+# - Extra information about this article:
+#   Paragraphs in `blockquote` tags are usually article supplementary
+#   information.
+#   This observation is made with `url_pattern  = 4029670, 4032502'.
 ARTICLE_DECOMPOSE_LIST: str = re.sub(
     r'\s+',
     ' ',
@@ -18,7 +23,10 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     ''',
 )
 
-# second rule is for: 4031507
+# News paragraphs are in the `article > div#CMS_wrapper p[aid]`.
+# Select the `p` tags with a `aid` attribute. But there is a case that articles
+# are wrapped in the `p[dir]` tag.
+# This observation is made with `url_pattern = 4031507`.
 ARTICLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
@@ -28,6 +36,8 @@ ARTICLE_SELECTOR_LIST: str = re.sub(
     ''',
 )
 
+# Title is in `h1#article_title`.
+# This observation is made with `url_pattern = 4031976`.
 TITLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
@@ -35,7 +45,6 @@ TITLE_SELECTOR_LIST: str = re.sub(
     h1#article_title
     ''',
 )
-
 
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove author information in the end of article. This observation is made
@@ -50,20 +59,26 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\s*(?:責任|採訪|編輯|後製|撰稿)?(?:採訪|編輯|後製|撰稿)[:/]\w*'),
         '',
     ),
-    # Remove the image source. This observation is made with `url_pattern
-    # = 21314`.
+    # Remove the source infomation. This observation is made with `url_pattern
+    # = 21314, 26309`.
     (
-        re.compile(r'\(圖片來源:[^\)]*\)'),
+        re.compile(r'\(?(?:資料|圖片)來源:[^\)]*\)?'),
         '',
     ),
-    # Remove the url. This observation is made with `url_pattern = 21336`.
+    # Remove the url. This observation is made with `url_pattern = 21336, 21747`.
     (
-        re.compile(r'研究報告網址:https?:\/\/[\da-z\.-_\/]+'),
+        re.compile(r'(?:研究報告|探險隊遠征直播)?(?:網址|網站)?[\s:]*?https?:\/\/[\da-z\.-_\/]+'),
         '',
     ),
 ]
-
-
+TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
+    # Remove fraction information. This observation is made with `url_pattern
+    # = 26950`.
+    (
+        re.compile(r'\(\d*?分?之\d*?\)'),
+        ''
+    ),
+]
 
 def parser(raw_news: RawNews) -> ParsedNews:
     """Parse STORM news from raw HTML.
@@ -110,6 +125,9 @@ def parser(raw_news: RawNews) -> ParsedNews:
     ###########################################################################
     category = ''
     try:
+        # News category is always in the `div#title_tags_wrapper` tag. Since
+        # there may be multiple `a` tags in the `title_tags_wrapper`, so we
+        # use comma to concat them.
         category = news.parse.util.normalize.NFKC(
             ','.join(
                 map(
@@ -127,6 +145,8 @@ def parser(raw_news: RawNews) -> ParsedNews:
     ###########################################################################
     timestamp = 0
     try:
+        # News publishing date and time is always in the `span#info_time` tag.
+        # We will convert datetime to POSIX time which is under UTC time zone.
         timestamp = datetime.strptime(
             soup.select('span#info_time')[0].text,
             '%Y-%m-%d %H:%M',
@@ -143,6 +163,10 @@ def parser(raw_news: RawNews) -> ParsedNews:
     ###########################################################################
     reporter = ''
     try:
+        # News reporter is always in `div#author_block span.info_author` tag.
+        # There are some news com from other news website then the reporter tag
+        # will display the source of this news directly.
+        # This observation is made with `url_pattern = 4034287`.
         reporter = news.parse.util.normalize.NFKC(
             soup.select('div#author_block span.info_author')[0].text
         )
@@ -177,6 +201,20 @@ def parser(raw_news: RawNews) -> ParsedNews:
             )
     except Exception:
         raise ValueError('Fail to substitude STORM article pattern.')
+
+    ###########################################################################
+    # Substitude some title pattern.
+    ###########################################################################
+    try:
+        for title_pttn, title_sub_str in TITLE_SUB_PATTERNS:
+            title = news.parse.util.normalize.NFKC(
+                title_pttn.sub(
+                    title_sub_str,
+                    title,
+                )
+            )
+    except Exception:
+        raise ValueError('Fail to substitude STORM title pattern.')
 
     parsed_news.article = article
     parsed_news.category = category
