@@ -22,7 +22,7 @@ COMPANY_ID_LOOKUP_TABLE: Dict[str, int] = {
 
 COMPANY_URL_LOOKUP_TABLE: Dict[int, str] = {
     COMPANY_ID_LOOKUP_TABLE['中時']:
-        r'https://www.chinatimes.com/realtimenews/',
+        r'https://www.chinatimes.com/',
     COMPANY_ID_LOOKUP_TABLE['中央社']:
         r'https://www.cna.com.tw/news/aipl/',
     COMPANY_ID_LOOKUP_TABLE['大紀元']:
@@ -54,48 +54,48 @@ COMPANY_URL_FASTEST_LOOKUP_TABLE: List[str] = [
 COMPRESS_URL_PATTERN_LOOKUP_TABLE: Dict[int, re.Pattern] = {
     COMPANY_ID_LOOKUP_TABLE['中時']:
         re.compile(
-            r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)',
-        ),
+            r'https://www.chinatimes.com/(realtimenews|newspapers)/(\d+)-(\d+)',
+    ),
     COMPANY_ID_LOOKUP_TABLE['中央社']:
         re.compile(
             r'https://www.cna.com.tw/news/aipl/(\d+)\.aspx',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['大紀元']:
         re.compile(
             r'https://www.epochtimes.com/b5/(\d+)/(\d+)/(\d+)/n(\d+)\.htm',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['東森']:
         re.compile(
             r'https://star.ettoday.net/news/(\d+)',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['民視']:
         re.compile(
             r'https://www.ftvnews.com.tw/news/detail/(.+)',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['自由']:
         re.compile(
             r'https://news.ltn.com.tw/news/(\w+)/breakingnews/(\d+)',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['新唐人']:
         re.compile(
             r'https://www.ntdtv.com/b5/(\d+)/(\d+)/(\d+)/a(\d+)\.html',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['三立']:
         re.compile(
             r'https://www.setn.com/News.aspx\?.*NewsID=(\d+)',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['風傳媒']:
         re.compile(
             r'https://www.storm.mg/article/(\d+)',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['tvbs']:
         re.compile(
             r'https://news.tvbs.com.tw/(\w+)/(\d+)',
-        ),
+    ),
     COMPANY_ID_LOOKUP_TABLE['聯合報']:
         re.compile(
             r'https://udn.com/news/story/(\d+)/(\d+)',
-        ),
+    ),
 }
 
 # List lookup with index is O(1).
