@@ -54,7 +54,7 @@ COMPANY_URL_FASTEST_LOOKUP_TABLE: List[str] = [
 COMPRESS_URL_PATTERN_LOOKUP_TABLE: Dict[int, re.Pattern] = {
     COMPANY_ID_LOOKUP_TABLE['中時']:
         re.compile(
-            r'https://www.chinatimes.com/(realtimenews|newspapers)/(\d+)-(\d+)',
+            r'https://www.chinatimes.com/([rn])(?:ealtimenews|ewspapers)/(\d+)-(\d+)',
     ),
     COMPANY_ID_LOOKUP_TABLE['中央社']:
         re.compile(

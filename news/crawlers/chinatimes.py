@@ -82,8 +82,8 @@ def get_news_list(
         # correct `category_idx` which the `news_idx` belongs to.  If no
         # `category_idx` match, then `news_idx` does not exist.
         for category_idx in CATEGORY_ID_LOOKUP_TABLE.values():
-            # 觀察到chinatimes有兩種URL路徑都有新聞,由於'newspapers'的hit率比較高因此
-            # 排在前面先搜尋
+            # 觀察到 chinatimes 有兩種 URL 路徑都有新聞,由於 'newspapers' 的
+            # hit rate 比較高因此排在前面先搜尋
             for domain_path in ['newspapers', 'realtimenews']:
                 url = f'{COMPANY_URL}{domain_path}/{datetime_str}{news_idx:06d}-{category_idx}'
                 response = None
@@ -114,7 +114,7 @@ def get_news_list(
                     break
                 except Exception as err:
                     if err.args \
-                            and isinstance(response, requests.Response) \
+                            and response is not None \
                             and response.status_code != 404:
                         fail_count += 1
                         logger.update([err.args[0]])
@@ -122,8 +122,9 @@ def get_news_list(
             # If hit then break category loop.
             if response is not None and response.status_code == 200:
                 break
+
         # Request timeout.
-        if not isinstance(response, requests.Response):
+        if response is not None:
             fail_count += 1
             logger.update(['Request timeout.'])
         # `news_idx` does not exist.
