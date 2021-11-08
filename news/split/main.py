@@ -34,7 +34,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         --debug                  \
         --records_per_split 1000
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument(
         '--db_name',
         action='append',

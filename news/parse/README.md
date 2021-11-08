@@ -33,7 +33,6 @@ python -m news.parse.main \
 | `title`      | `TEXT`    | `NOT NULL`                  |新聞標題|
 | `url_pattern`| `TEXT`    | `NOT NULL`                  |新聞 URL|
 
-
 ### `id`
 
 - 資料庫中的流水號, 由於我們使用 SQLite, 因此所有 `id` 皆為正整數.

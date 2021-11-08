@@ -1,13 +1,12 @@
 # Taiwan News Data project
 
-蒐集台灣新聞網站與文字處理工具，主要應用於產生大量具有結構的繁體中文文本。
+蒐集台灣新聞網站與文字處理工具, 主要應用於產生大量具有結構的繁體中文文本.
 
 ## Tools' Links
 
 - [crawlers](news/crawlers)
-  - 爬蟲腳本，用於蒐集新聞內容原始資訊（XML）
+  - 爬蟲腳本, 用於蒐集新聞內容原始資訊 (XML)
   - 新聞網站列表請見 [crawlers](news/crawlers/README.md)
-- [formatter](news/formatter/README.md)
 - [merge](news/merge/README.md)
 - [migration](news/migration/README.md)
 - [parse](news/parse/README.md)
@@ -18,10 +17,6 @@
 
 ```sh
 news
-|- formatter
-|    |- README.md
-|	   |- formatter.py
-|    |- schema.py
 |- crawlers
 |- parse
 |    |- README.md
@@ -61,62 +56,12 @@ news
 |    |    |- util.py
 ```
 
-## DB Schema
-
-### Crawler
-
-|field|type|Constraint|
-|-|-|-|
-|id|int|primary key|
-|company_id|tinyint||
-|raw_xml|text||
-|url_pattern|text||
-
-### Parse
-
-|field|type|Constraint|
-|-|-|-|
-|id|int|primary key|
-|article|text||
-|category|text||
-|company_id|tinyint||
-|datetime|int||
-|reporter|text||
-|title|text||
-|url_pattern|text||
-
-### Merge
-
-|field|type|Constraint|
-|-|-|-|
-|id|int|primary key|
-|article|text||
-|category|text||
-|company_id|tinyint||
-|datetime|int||
-|reporter|text||
-|title|text||
-|url_pattern|text||
-
-### Pre-process
-
-|field|type|Constraint|
-|-|-|-|
-|id|int|primary key|
-|article|text||
-|category|text||
-|company_id|tinyint||
-|datetime|int||
-|reporter|text||
-|title|text||
-|url_pattern|text||
-
 ## Testing
 
 ```sh
-# 執行測試
+# 執行測試.
 pipenv run test
 
-# 觀看測試覆蓋範圍
+# 觀看測試覆蓋範圍.
 pipenv run test-coverage
 ```

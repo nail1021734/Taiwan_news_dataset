@@ -45,7 +45,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         --debug True                       \
         --past_datetime 2010-01-01+0000
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument(
         '--crawler_name',
         choices=CRAWLER_SCRIPT_LOOKUP_TABLE.keys(),

@@ -74,7 +74,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         --debug               \
         --save_db_name out.db
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument(
         '--batch_size',
         type=int,
