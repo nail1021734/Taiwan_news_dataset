@@ -23,6 +23,7 @@
 - 所有的新聞都是**流水號**, 分配到不同的**類別**之下.
 - 每天新聞數的最大上限為 `100000`, 真實產出的新聞數為 `5000+`.
 - **最早**可以爬到的新聞日期為 `2010-01-01`.
+- 觀察到中國時報有兩種網址一種為在 `newspapers` 之下另一種在 `realtimenews` 之下.
 
 ```sh
 python -m news.crawlers.main --crawler_name chinatimes --db_name chinatimes.db --debug --past_datetime 2010-01-01+0000
