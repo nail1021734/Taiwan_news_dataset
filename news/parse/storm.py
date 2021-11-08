@@ -17,13 +17,13 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
-    article > div#CMS_wrapper > blockquote,
-    article > div#CMS_wrapper .related_copy_content,
-    article > div#CMS_wrapper > p[aid] > .typeform-share link
+    div#CMS_wrapper > blockquote,
+    div#CMS_wrapper .related_copy_content,
+    div#CMS_wrapper > p[aid] > .typeform-share link
     ''',
 )
 
-# News paragraphs are in the `article > div#CMS_wrapper p[aid]`.
+# News paragraphs are in the `div#CMS_wrapper p[aid]`.
 # Select the `p` tags with a `aid` attribute. But there is a case that articles
 # are wrapped in the `p[dir]` tag.
 # This observation is made with `url_pattern = 4031507`.
@@ -31,8 +31,8 @@ ARTICLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
-    div#article_inner_wrapper > article > div#CMS_wrapper p[aid],
-    div#article_inner_wrapper > article > div#CMS_wrapper p[dir]
+    div#CMS_wrapper p[aid],
+    div#CMS_wrapper p[dir]
     ''',
 )
 
@@ -67,7 +67,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # Remove the url. This observation is made with `url_pattern = 21336, 21747`.
     (
-        re.compile(r'(?:研究報告|探險隊遠征直播)?(?:網址|網站)?[\s:]*?https?:\/\/[\da-z\.-_\/]+'),
+        re.compile(
+            r'(?:研究報告|探險隊遠征直播)?(?:網址|網站)?[\s:]*?'
+            + r'https?:\/\/[\da-z\.-_\/]+'
+        ),
         '',
     ),
 ]
@@ -164,8 +167,8 @@ def parser(raw_news: RawNews) -> ParsedNews:
     reporter = ''
     try:
         # News reporter is always in `div#author_block span.info_author` tag.
-        # There are some news com from other news website then the reporter tag
-        # will display the source of this news directly.
+        # 有些新聞來自其他新聞網站, reporter tag 會直接顯示該新聞來源, 如來自中央社的新聞,
+        # `reporter` == '中央社'.
         # This observation is made with `url_pattern = 4034287`.
         reporter = news.parse.util.normalize.NFKC(
             soup.select('div#author_block span.info_author')[0].text
