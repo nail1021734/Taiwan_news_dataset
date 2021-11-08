@@ -17,12 +17,12 @@ def get_conn(db_path: str) -> sqlite3.Connection:
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)
 
-    # Create sqlite database file and return connection.
+    # Create SQLite database file and return connection.
     return sqlite3.connect(db_path)
 
 
 def is_sqlite3_file(file_path: str) -> bool:
-    r"""Return True if `file_path` is sqlite database file.
+    r"""Return True if `file_path` is SQLite database file.
 
     Return False when `file_path` is not an absolute path since we did not know
     where the file is located.
@@ -53,7 +53,7 @@ def is_sqlite3_file(file_path: str) -> bool:
 
 
 def get_db_paths(file_paths: Sequence[str]) -> List[str]:
-    r"""Recursively search all file paths to find sqlite database files.
+    r"""Recursively search all file paths to find SQLite database files.
 
     Only absolute paths in `file_paths` will be considered.  Relative paths are
     discard by default since we did not know where the file is located.

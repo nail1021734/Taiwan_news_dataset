@@ -22,12 +22,15 @@ url_pattern 代表該新聞網頁的 url 格式.
 
 import sqlite3
 
+# We use unique constraint to avoid duplicated records.  When inserting
+# duplicated records, we simply ignore them.
 SQL: str = """
     CREATE TABLE IF NOT EXISTS raw_news (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         company_id  INTEGER NOT NULL,
         raw_xml     TEXT    NOT NULL,
-        url_pattern TEXT    NOT NULL
+        url_pattern TEXT    NOT NULL,
+        UNIQUE(company_id, url_pattern) ON CONFLICT IGNORE
     );
 """
 

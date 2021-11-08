@@ -12,7 +12,7 @@ def test_abs_path(db_name: str) -> None:
 
 
 def test_rel_path(db_name: str) -> None:
-    r"""Must return absolute path of sqlite database file."""
+    r"""Must return absolute path of SQLite database file."""
     db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
 
     assert isinstance(db_name, str)

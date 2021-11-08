@@ -36,7 +36,8 @@ def test_module_attribute_signature() -> None:
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 company_id  INTEGER NOT NULL,
                 raw_xml     TEXT    NOT NULL,
-                url_pattern TEXT    NOT NULL
+                url_pattern TEXT    NOT NULL,
+                UNIQUE(company_id, url_pattern) ON CONFLICT IGNORE
             );
         """
         )

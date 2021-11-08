@@ -40,7 +40,8 @@ def test_module_attribute_signature() -> None:
                 reporter    TEXT    DEFAULT NULL,
                 timestamp   INTEGER     NOT NULL,
                 title       TEXT        NOT NULL,
-                url_pattern TEXT        NOT NULL
+                url_pattern TEXT        NOT NULL,
+                UNIQUE(company_id, url_pattern) ON CONFLICT IGNORE
             );
         """
         )
