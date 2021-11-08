@@ -117,7 +117,8 @@ def parser(raw_news: RawNews) -> ParsedNews:
     timestamp = 0
     try:
         url_datetime = parsed_news.url_pattern.split('/')[-1][:7]
-        url_datetime = f'{url_datetime[:4]}{int("0x" + url_datetime[4], 0):02}{url_datetime[5:]}'
+        url_datetime = f'{url_datetime[:4]}' + \
+            f'{int("0x" + url_datetime[4], 0):02}{url_datetime[5:]}'
         timestamp = datetime.strptime(
             url_datetime,
             '%Y%m%d',

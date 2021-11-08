@@ -79,8 +79,9 @@ REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 2013-08-04-943508,
     # 2013-08-04-943532`.
     re.compile(
-        r'(?:採訪)?(?:(?:記者/\s?([^;。]+)|編輯/[^;。]+|'
-        + r'後製/[^;。]+|旁白/[^;。]+)(?:[;。])?)+'),
+        r'(?:[採采][訪访])?(?:[記记]者/\s*([^\s;。]+))'
+        + r'(?:;?(?:[編编][輯辑]|[後后][製制]|旁白)/[^;。]+)+。?'
+    ),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 2011-04-17-519983,
@@ -191,8 +192,8 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 2013-03-26-869872`.
     (
         re.compile(
-            r'\((自由亞洲電[臺台]|美[國国]之音)[^)]*?'
-            + r'(?:倫敦|華盛頓|[报報][導导道])?電?\)'),
+            r'\((自由亞洲電[臺台]|美[國国]之音)[^)]*?[报報導导道電]*?\)',
+        ),
         '',
     ),
     # This observation is made with `url_pattern = 2011-12-26-636848,
@@ -269,8 +270,37 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 2011-04-14-518847, 2013-12-27-1032242`.
     (
         re.compile(
-            r'(?:\.html#video target=_blank|'
-            + r'frameborder="0′′ allowfullscreen)>'),
+            r'(\.html#video\s*target=_blank|'
+            + r'frameborder="0′′\s*allowfullscreen)>'
+        ),
+        '',
+    ),
+    # Remove the editor information. This observation is made with `url_pattern
+    # = 2018-03-04-1365990, 2018-08-06-1386361, 2018-11-21-1400130`.
+    (
+        re.compile(
+            r'\s*(?:[採采][訪访]|[編编][輯辑]|[後后][製制]|撰稿)?'
+            + r'(?:[採采][訪访]|[編编][輯辑]|[後后][製制]|撰稿)[:/]\w*'
+        ),
+        '',
+    ),
+    # Remove the to be continue information. This observation is made with
+    # `url_pattern = 2018-12-25-102473518`.
+    (
+        re.compile(r'\(未完待[續续]'),
+        '',
+    ),
+    # Remove special suffix at the end of article. `url_pattern =
+    # 2013-08-20-952909, 2013-04-17-882078, 2013-12-25-1030400,
+    # 2013-12-20-1028082, 2013-03-27-870104, 2013-03-25-869138,
+    # 2013-08-19-951813, 2013-08-16-950720, 2013-08-15-950231,
+    # 2013-08-15-950276, 2013-04-23-885733`
+    (
+        re.compile(
+            r'\s*\(?((相[關关]|youtube)([網网][絡路][圖图]片|視[頻频])|'
+            + r'[資资]料[來来]源|[熱热][線线][電电][話话]:' + r'|本文只代表作者的)\S*\)?\s*$',
+            re.IGNORECASE
+        ),
         '',
     ),
     # Remove traslation and datetime string at the end. Note that
@@ -286,31 +316,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'''[0-9a-zA-ZÀ-ÿ,.:;?!&/“”’'"$%『』\[\]()*=—–─\-\s]+$'''),
         '',
     ),
-    # Remove the editor information. This observation is made with `url_pattern
-    # = 2018-03-04-1365990, 2018-08-06-1386361, 2018-11-21-1400130`.
-    (
-        re.compile(r'\s*(?:採訪|編輯|後製|撰稿)?(?:採訪|編輯|後製|撰稿)[:/]\w*'),
-        '',
-    ),
-    # Remove the to be continue information. This observation is made with
-    # `url_pattern = 2018-12-25-102473518`.
-    (
-        re.compile(r'\(未完待續'),
-        '',
-    ),
-    # Remove special suffix at the end of article. `url_pattern =
-    # 2013-08-20-952909, 2013-04-17-882078, 2013-12-25-1030400,
-    # 2013-12-20-1028082, 2013-03-27-870104, 2013-03-25-869138,
-    # 2013-08-19-951813, 2013-08-16-950720, 2013-08-15-950231,
-    # 2013-08-15-950276, 2013-04-23-885733`
-    (
-        re.compile(
-            r'\s*\(?(?:相關視頻|[Yy]ouTube視頻.*|'
-            + r'資料來源.*|熱線電話:[\d-]+。|'
-            + r'相关網絡圖片|本文只代表作者的觀點和陳述)\)?\s*$'),
-        '',
-    )
-
 ]
 TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove content hints. This observation is made with `url_pattern =

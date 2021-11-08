@@ -30,10 +30,8 @@ def test_parsing_result() -> None:
     assert parsed_news.article == re.sub(
         r'\n',
         '',
-        textwrap.dedent(
-            '''\
-            '''
-        ),
+        textwrap.dedent('''\
+            '''),
     )
     assert parsed_news.category == '奇聞'
     assert parsed_news.company_id == company_id

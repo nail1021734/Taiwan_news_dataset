@@ -2,7 +2,6 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
-import requests
 from tqdm import trange
 
 import news.crawlers.db.create
@@ -85,7 +84,8 @@ def get_news_list(
             # 觀察到 chinatimes 有兩種 URL 路徑都有新聞,由於 'newspapers' 的
             # hit rate 比較高因此排在前面先搜尋
             for domain_path in ['newspapers', 'realtimenews']:
-                url = f'{COMPANY_URL}{domain_path}/{datetime_str}{news_idx:06d}-{category_idx}'
+                url = f'{COMPANY_URL}{domain_path}/{datetime_str}' + \
+                    f'{news_idx:06d}-{category_idx}'
                 response = None
                 try:
                     response = news.crawlers.util.request_url.get(url=url)
@@ -99,10 +99,10 @@ def get_news_list(
                     news_list.append(
                         RawNews(
                             company_id=COMPANY_ID,
-                            raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                                raw_xml=response.text,
-                            ),
-                            url_pattern=news.crawlers.util.normalize.compress_url(
+                            raw_xml=news.crawlers.util.normalize
+                            .compress_raw_xml(raw_xml=response.text,),
+                            url_pattern=news.crawlers.util.normalize
+                            .compress_url(
                                 company_id=COMPANY_ID,
                                 url=url,
                             ),

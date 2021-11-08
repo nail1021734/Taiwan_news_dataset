@@ -125,7 +125,8 @@ def test_module_attribute_signature() -> None:
     assert news.crawlers.util.normalize.COMPRESS_URL_PATTERN_LOOKUP_TABLE == {
         0:
             re.compile(
-                r'https://www.chinatimes.com/([rn])(?:ealtimenews|ewspapers)/(\d+)-(\d+)',
+                r'https://www.chinatimes.com/([rn])'
+                + r'(?:ealtimenews|ewspapers)/(\d+)-(\d+)',
             ),
         1:
             re.compile(
@@ -176,7 +177,8 @@ def test_module_attribute_signature() -> None:
         news.crawlers.util.normalize.COMPRESS_URL_PATTERN_FASTEST_LOOKUP_TABLE
         == [
             re.compile(
-                r'https://www.chinatimes.com/([rn])(?:ealtimenews|ewspapers)/(\d+)-(\d+)',
+                r'https://www.chinatimes.com/([rn])'
+                + r'(?:ealtimenews|ewspapers)/(\d+)-(\d+)',
             ),
             re.compile(
                 r'https://www.cna.com.tw/news/aipl/(\d+)\.aspx',
