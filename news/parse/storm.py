@@ -51,7 +51,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # with `url_pattern = 4020745, 4029623`.
     (
         re.compile(r'\*?作者(?:為|:)?[\s\w]*?$'),
-        ''
+        '',
     ),
     # Remove the editor information. This observation is made with `url_pattern
     # = 4028800`.
@@ -65,11 +65,11 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\(?(?:資料|圖片)來源:[^\)]*\)?'),
         '',
     ),
-    # Remove the url. This observation is made with `url_pattern = 21336, 21747`.
+    # Remove the url. This observation is made with `url_pattern = 21336,
+    # 21747`.
     (
         re.compile(
-            r'(?:研究報告|探險隊遠征直播)?(?:網址|網站)?[\s:]*?'
-            + r'https?:\/\/[\da-z\.-_\/]+'
+            r'(?:研究報告|探險隊遠征直播)?(?:網址|網站)?[\s:]*?https?:\/\/[\da-z\.-_\/]+',
         ),
         '',
     ),
@@ -79,9 +79,10 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # = 26950`.
     (
         re.compile(r'\(\d*?分?之\d*?\)'),
-        ''
+        '',
     ),
 ]
+
 
 def parser(raw_news: RawNews) -> ParsedNews:
     """Parse STORM news from raw HTML.

@@ -1,7 +1,8 @@
 from datetime import datetime
-import news.parse.main
+
 import news.crawlers.db.schema
 import news.parse.db.schema
+import news.parse.main
 
 
 def test_parse_raw_news() -> None:

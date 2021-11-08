@@ -4,8 +4,8 @@ import textwrap
 import news.crawlers.db.schema
 import news.crawlers.util.normalize
 import news.crawlers.util.request_url
-import news.parse.storm
 import news.parse.db.schema
+import news.parse.storm
 
 
 def test_parsing_result() -> None:
