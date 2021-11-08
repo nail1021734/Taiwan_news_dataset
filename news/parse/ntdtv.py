@@ -55,13 +55,33 @@ REPORTER_PATTERNS: List[re.Pattern] = [
     # 2011-12-30-639201, 2011-12-30-639175, 2011-12-28-638568,
     # 2011-12-25-636878, 2011-12-22-635455, 2011-12-21-635019,
     # 2011-12-20-634655, 2011-12-18-633615, 2011-12-15-632140,
-    # 2011-12-13-631155, 2011-04-17-519983, 2011-04-15-519037`.
+    # 2011-12-13-631155, 2011-04-17-519983, 2011-04-15-519037,
+    # 2018-11-26-1400746`.
     re.compile(
         r'\(?(?:[這这]是)?新[唐塘]人[記记]?者?(?:亞太)?(?:[電电][視视][台臺]?)?'
-        + r'([\w、\s]*?)的?(?:[综綜]合|整理|[採采][訪访])?[報报][導导道]。?\)?'
+        + r'([\w、\s]*?)(?:的|在)?(?:香港|[综綜]合|整理|[採采][訪访])?(?:)'
+        + r'[報报][導导道]?。?\)?'
+    ),
+    # This observation is made with `url_pattern = 2018-12-10-102462948,
+    # 2018-12-29-102476332`.
+    re.compile(
+        r'\(?(?:[這这]是|轉自)?新?[唐塘]?人?[記记]?者?(?:亞太|大紀元)?(?:[電电][視视][台臺]?)?'
+        + r'([\w、\s]*?)的?(?:[综綜]合|整理|[採采][訪访])?[報报]?[導导道]?'
+        + r'(?:/?責任編輯:[^\)]*)。?\)?'
+    ),
+    # This observation is made with `url_pattern = 2018-09-17-1391777`.
+    re.compile(
+        r'\(?(?:[這这]是)?新[唐塘]人[記记]?者?(?:亞太)?(?:[電电][視视][台臺]?)?'
+        + r'([\w、\s]*?)。?\)?$'
     ),
     # This observation is made with `url_pattern = 2012-01-01-640083`.
     re.compile(r'文字:([^/]+?)/.+$'),
+    # This observation is made with `url_pattern = 2013-08-04-943508,
+    # 2013-08-04-943532`.
+    re.compile(
+        r'(?:[採采][訪访])?(?:[記记]者/\s*([^\s;。]+))'
+        + r'(?:;?(?:[編编][輯辑]|[後后][製制]|旁白)/[^;。]+)+。?'
+    ),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 2011-04-17-519983,
@@ -167,9 +187,13 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # This observation is made with `url_pattern = 2011-12-31-639655,
     # 2011-12-29-638743, 2011-12-28-638138, 2011-12-26-637224,
-    # 2011-12-17-633228`.
+    # 2011-12-17-633228, 2014-01-01-1035035, 2014-01-01-1034743,
+    # 2014-01-01-1034722, 2013-12-28-1032509, 2013-12-19-1026801,
+    # 2013-03-26-869872`.
     (
-        re.compile(r'\((自由亞洲電[臺台]|美國之音)[^)]*?[报報][導导道]\)'),
+        re.compile(
+            r'\((自由亞洲電[臺台]|美[國国]之音)[^)]*?[报報導导道電]*?\)',
+        ),
         '',
     ),
     # This observation is made with `url_pattern = 2011-12-26-636848,
@@ -243,9 +267,40 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ' ',
     ),
     # Remove unclear links. This observation is made with `url_pattern =
-    # 2011-04-14-518847`.
+    # 2011-04-14-518847, 2013-12-27-1032242`.
     (
-        re.compile(r'\.html#video target=_blank>'),
+        re.compile(
+            r'(\.html#video\s*target=_blank|'
+            + r'frameborder="0′′\s*allowfullscreen)>'
+        ),
+        '',
+    ),
+    # Remove the editor information. This observation is made with `url_pattern
+    # = 2018-03-04-1365990, 2018-08-06-1386361, 2018-11-21-1400130`.
+    (
+        re.compile(
+            r'\s*(?:[採采][訪访]|[編编][輯辑]|[後后][製制]|撰稿)?'
+            + r'(?:[採采][訪访]|[編编][輯辑]|[後后][製制]|撰稿)[:/]\w*'
+        ),
+        '',
+    ),
+    # Remove the to be continue information. This observation is made with
+    # `url_pattern = 2018-12-25-102473518`.
+    (
+        re.compile(r'\(未完待[續续]'),
+        '',
+    ),
+    # Remove special suffix at the end of article. `url_pattern =
+    # 2013-08-20-952909, 2013-04-17-882078, 2013-12-25-1030400,
+    # 2013-12-20-1028082, 2013-03-27-870104, 2013-03-25-869138,
+    # 2013-08-19-951813, 2013-08-16-950720, 2013-08-15-950231,
+    # 2013-08-15-950276, 2013-04-23-885733`
+    (
+        re.compile(
+            r'\s*\(?((相[關关]|youtube)([網网][絡路][圖图]片|視[頻频])|'
+            + r'[資资]料[來来]源|[熱热][線线][電电][話话]:' + r'|本文只代表作者的)\S*\)?\s*$',
+            re.IGNORECASE
+        ),
         '',
     ),
     # Remove traslation and datetime string at the end. Note that

@@ -4,7 +4,7 @@ import news.crawlers.util.normalize
 def test_get_company_url() -> None:
     r"""Must reserve company id and url mapping."""
     assert news.crawlers.util.normalize.get_company_url(0) \
-        == r'https://www.chinatimes.com/realtimenews/'
+        == r'https://www.chinatimes.com/'
     assert news.crawlers.util.normalize.get_company_url(1) \
         == r'https://www.cna.com.tw/news/aipl/'
     assert news.crawlers.util.normalize.get_company_url(2) \
