@@ -6,7 +6,7 @@ import news.parse.db.util
 import news.parse.db.write
 
 
-def test_get_num_of_records(db_name: str, cleanup_db_file) -> None:
+def test_get_timestamp_bounds(db_name: str, cleanup_db_file) -> None:
     # Randomly create two records.
     # Note that sqlite's index start with 1.
     news_list = [
@@ -56,4 +56,7 @@ def test_get_num_of_records(db_name: str, cleanup_db_file) -> None:
         conn.close()
 
     # No error is good.
-    assert news.parse.db.read.get_num_of_records(db_name=db_name) == 3
+    assert news.parse.db.read.get_timestamp_bounds(db_name=db_name) == (
+        222,
+        654,
+    )

@@ -6,7 +6,7 @@ import news.crawlers.db.write
 import news.db
 
 
-def test_read_all_records(db_name: str, cleanup_db_file) -> None:
+def test_read_some_records(db_name: str, cleanup_db_file) -> None:
     # Randomly create two records.
     # Note that sqlite's index start with 1.
     news_list = [
