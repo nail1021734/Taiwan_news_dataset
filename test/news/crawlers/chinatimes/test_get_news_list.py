@@ -85,6 +85,5 @@ def test_show_error_statistics(
     )
     captured = capsys.readouterr()
 
-    # Actually, it will output 'URL not found'.  However, since we are mocking
-    # `request_url.get`, `response` is not an instance of `requests.Response`.
-    assert 'Request timeout.' in captured.out
+    # It will output 'URL not found'.
+    assert 'URL not found.' in captured.out

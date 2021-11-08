@@ -124,7 +124,7 @@ def get_news_list(
                 break
 
         # Request timeout.
-        if response is not None:
+        if response is None:
             fail_count += 1
             logger.update(['Request timeout.'])
         # `news_idx` does not exist.
