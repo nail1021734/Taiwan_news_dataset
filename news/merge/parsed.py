@@ -66,9 +66,8 @@ def merge_parsed_news_db(args: argparse.Namespace) -> None:
             q = batch_ids[:, 1] == db_idx
             if not any(q):
                 continue
-            batch.extend(
-                sorted(get_by_id(db_path, batch_ids[q][:, 0]),
-                       key=itemgetter(5)))
+            batch.extend(get_by_id(db_path, batch_ids[q][:, 0]))
+        batch = sorted(batch, key=itemgetter(5))
 
         news.parse.db.write.write_new_records(
             cur=cur,
