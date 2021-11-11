@@ -74,6 +74,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '健康'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1530242280
-    assert parsed_news.reporter is None
+    assert parsed_news.reporter == 'MedPartner美的好朋友'
     assert parsed_news.title == '化妝怎麼補防曬? 實測「濃妝、淡妝、素顏」補法大不同!'
     assert parsed_news.url_pattern == '1200265'

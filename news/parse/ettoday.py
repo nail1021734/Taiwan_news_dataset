@@ -11,15 +11,50 @@ from news.parse.db.schema import ParsedNews
 # We remove the following content:
 #
 # - Figures and captions:
-#   Located in `img`, `p:has(img, iframe) + p:has(strong)` and `b` tags.
-#   Note that captions usually follow immediately after `img` or `iframe)`,
-#   thus we use `p:has(img, iframe) + p:has(strong)` to capture captions.
+#   Located in `b`, `img`, `iframe` and `strong` tags.
+#   Sometimes captions are inside the same `p` tag which satisfying
+#   `p:has(img, iframe)`, thus we use
+#   `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)) strong` to
+#   select these captions.  Most of the time captions are inside
+#   `p:has(strong)` which follow **immediately** after `p:has(img)` or
+#   `p:has(iframe)`, and captions does not have color highlights.  With this
+#   observation, we apply the following rule to select `strong` tags:
+#
+#   1. Use `:not(:has(span[style*="color"]))` to avoid select color highlighted
+#      tags.  News company must use editor to write down drafts, and those
+#      editor use `span` to perform color highlighting.
+#
+#   2. Avoid any nested combination of `span` and `strong` tags, including
+#      `span strong` or `strong span`.  In this way strong tag would not be
+#      color highlighted.
+#
+#   3. News article always consist of `p` tags, thus we drop `p` tags which
+#      containing `strong` tags, namely `p:has(strong)`.
+#
+#   4. Use `p:has(img, iframe):not(:has(strong)) +` at the begining.  `+`
+#      ensure immediately precedence of `p:has(img, iframe)`.
+#      `:not(:has(strong))` is used to avoid already paired images and
+#      captions, which were already addressed by
+#      `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe))`).
+#
+#   5. Use `p:not(:has(img, iframe))` to make sure dropping candidates does not
+#      have `img` or `iframe` tags.  This is need to avoid confliction with
+#      `p:has(:is(img, iframe) ~ strong, strong ~ :is(img, iframe)) strong`.
+#
+#   6. Even with this level of specifity, we still find bugs, but those bugs
+#      are beyond repaired since the formatting of ETtoday suck ass.
+#      This observation is made with `url_pattern = 1200297`.
+#
 #   This observation is made with `url_pattern = 2112150, 1200023, 1200034,
-#   1200071, 1200075, 1200173`.
+#   1200071, 1200075, 1200173, 1200265`.
+#
+# - Copy rights or fortune telling:
+#   Paragraphs using center style are probably copy rights or fortune telling.
+#   This observation is made with `url_pattern = 1200311, 1200480`.
 #
 # - Extra informations:
 #   Paragraphs contains one `strong` tags and at least 3 `a` tags are
-#   probabily extra information, thus we use
+#   probably extra information, thus we use
 #   `p:not([class]):has(strong):has(a ~ a ~ a)` to capture these paragraphs.
 #   This observation is made with `url_pattern = 1200034`.
 #
@@ -43,16 +78,51 @@ from news.parse.db.schema import ParsedNews
 #   1200138`.
 #
 # - Related news:
-#   Located in `p.note`, `iframe` and `p a[href*="ettoday"]` tags.
+#   Located in `p.note` and `p a` tags.  The following rules applied:
+#
+#   1. Related news are mainly in the format
+#      `p:has(a[href*="ettoday" i]) a`, the `i` in the selector stands for
+#      case-insensitive.  They usually appear at the end of news articles, but
+#      sometimes in the middle of paragraph.  Thus we only remove the
+#      occurrence of `a` tags.
+#
+#   2. For news under movie category, related news may come from different
+#      sites.  These include `p:has(a[href*="dramaqueen"]) a`.
+#
+#   3. For news on facebook, we use `p:has(a[href*="facebook.com/ettoday" i])`
+#      to capture.  Since they ALWAYS appear at the end of news article, we
+#      drop these `p` tags along with all the `p` tags follow by using
+#      `p:has(a[href*="facebook.com/ettoday" i]) ~ p`.
+#
+#   4. For news under finance category, we use
+#      `p:has(a[href*="businessweekly"])` to capture.  Since they ALWAYS appear
+#      at the end of news article, we drop these `p` tags along with all the
+#      `p` tags follow by using `p:has(a[href*="businessweekly"]) ~ p`.
+#
+#   5. For news under traveling category, related news may include address
+#      wrapped inside google map, thus we use
+#      `p:has(a[href*="google.com/maps"])`.
+#
 #   This observation is made with `url_pattern = 2112150, 1200022, 1200077,
-#   1200097, 1200118, 1200132, 1200158`.
+#   1200097, 1200118, 1200132, 1200158, 1200478, 1200491, 1200547, 1200562,
+#   10715`.
 ARTICLE_DECOMPOSE_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
-    img,
-    p:has(img, iframe) + p:has(strong),
     b,
+    img,
+    iframe,
+    p:has(:is(img, iframe) + strong, strong + :is(img, iframe)) strong,
+    p:has(img, iframe):not(:has(strong)) + p:not(
+        :has(img, iframe)
+    ):not(
+        :has(span[style*="color"]:has(strong))
+    ):not(
+        :has(strong:has(span[style*="color"]))
+    ):has(strong),
+
+    p[style*="text-align: center"],
 
     p:not([class]):has(strong):has(a ~ a ~ a),
 
@@ -64,33 +134,44 @@ ARTICLE_DECOMPOSE_LIST: str = re.sub(
     div[class*='ad_txt'],
     div[class^='ad'],
 
+    div.story > table,
+    div.story div.comment,
+
     hr ~ p,
 
     div[class*='et_social'],
     blockquote,
 
     p.note,
-    iframe,
-    p:has(a[href*="ettoday"]) a
+    p:has(a[href*="ettoday" i]) a,
+    p:has(a[href*="dramaqueen"]) a,
+    p:has(a[href*="facebook.com/ettoday" i]),
+    p:has(a[href*="facebook.com/ettoday" i]) ~ p,
+    p:has(a[href*="businessweekly"]),
+    p:has(a[href*="businessweekly"]) ~ p,
+    p:has(a[href*="google.com/maps"])
     ''',
 )
 
-# News articles are located in `div.story p(:not([class]))`.
-# Sometimes ETtoday has bug, for example, news article might located in
+# News articles are located in `div.story > p(:not([class]))`.
+# ETtoday has inconsistent format.  For example, news article might located in
 # `div.story > link > p:not([class])` which is caused by forgetting closeing
-# `link` tags with `</link>`.  Thus we only use `div.story p(:not([class]))`
-# instead of `div.story > p(:not([class]))`.
+# `link` tags with `</link>`.  These cases should be consider as bug, and
+# we should simply include it.  For example, we include
+# `div.story > link > p(:not([class]))`.  Note that always use `>` operator
+# since `p` tags might include another `p` tags.
 # This observation is made with `url_pattern = 2112150`.
 ARTICLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
     '''
-    div.story p:not([class])
+    div.story > p:not([class]),
+    div.story > link > p:not([class])
     ''',
 )
 
 # News title is located in `h1.title`.
-# This observation is made with `url_pattern = `.
+# This observation is made with `url_pattern = 2112150`.
 TITLE_SELECTOR_LIST: str = re.sub(
     r'\s+',
     ' ',
@@ -110,83 +191,115 @@ TITLE_SELECTOR_LIST: str = re.sub(
 # group, see python's re module for details.
 ###############################################################################
 REPORTER_PATTERNS: List[re.Pattern] = [
-    # This observation is made with `url_pattern = 2112150, 1200000, 1200001,
-    # 1200002, 1200002, 1200012, 1200021, 1200025, 1200057, 1200071, 1200085,
-    # 1200115, 1200125, 1200134, 1200161, 1200181`.
+    # This observation is made with `url_pattern = 1200000, 1200001, 1200002,
+    # 1200012, 1200021, 1200025, 1200057, 1200071, 1200085, 1200115, 1200125,
+    # 1200134, 1200161, 1200181, 1200286, 1200474, 1200501, 2112150, 1200554,
+    # 1200581, 1200621, 261, 7626, 520, 379, 1021, 9616`.
     re.compile(
-        r'(?:(?:實習)?記者|(?:網搜|寵物)小組|(?:體育|國際|社會|大陸|娛樂|地方|生活|財經|政治|旅遊|新聞節目)中心)'
-        + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)',
+        r'(?:(?:東森新聞)?(?:實習|振道)?記者|(?:網搜|寵物)小組|'
+        + r'(?:影視|影劇|體育|運動|國際|社[群會]|大陸(?:新聞)?|娛樂|地方|生活|要聞|財經|政治|旅遊|新聞節目|消費)中心)'
+        + r'([\w、\s]*?)/.*?(?:綜合)?(?:報導|編譯)(?:、攝影)?',
     ),
-    # This observation is made with `url_pattern = 1200028, 1200034, 1200168,
-    # 1200197, 1200260`.
+    # Reporter name with leading English characters.  Only English characters
+    # can have whitespace in between, other characters cannot.
+    # This observation is made with `url_pattern = 1200594`.
     re.compile(
-        r'(?:(?:圖、)?文|彙整整理)/(?:(?:藥|護理)師)?([\w、]*?)'
-        + r'(?:(?:提供|摘自|圖片)\S*)?(?:\([^)]*\))?\s+'
+        r'(?:(?:圖、?|撰)?文(?:、?圖)?|彙整整理|編輯)/'
+        + r'([a-zA-Z\d]+(?:(?:\s[a-zA-Z\d]+)+[^(\s]*)?)'
+        + r'(?:(?:提供|摘自|圖片|\s*\S*觀點)\S*)?(?:\([^)]*\))?\s+'
+    ),
+    # Reporter name with no whitespace.
+    # This observation is made with `url_pattern = 1200028, 1200034, 1200168,
+    # 1200197, 1200260, 1200280, 1200297, 1200436, 1200592`.
+    re.compile(
+        r'(?:(?:圖、?|撰)?文(?:、?圖)?|彙整整理|編輯)/(?:(?:藥|護理)師)?(?:特約撰述\s*)?([\w、]*?)'
+        + r'(?:(?:提供|摘自|圖片|\s*\S*觀點)\S*)?(?:\([^)]*\))?\s+'
     ),
 ]
 ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove captions.  This is still needed even if we have
     # `ARTICLE_DECOMPOSE_LIST` since some captions were located before images.
-    # This observation is made with `url_pattern = 2112150, 1200012, 1200028`.
+    # Usually captions will have source reference surrounded by parenthese at
+    # the end, for example, `(圖/...)`.  But since ETtoday's format is so fucked
+    # up, there will always have exceptions.  Thus for those case we simply
+    # match as much text as possible.  Note that parentheses inside parenthese
+    # are allowed.
+    # This observation is made with `url_pattern = 1200012, 1200028, 1200192,
+    # 1200193, 1200278, 2112150, 520`.
     (
-        re.compile(r'[▲▼►]\S*。?'),
-        '',
+        re.compile(
+            r'[▲▼►]+(.*?\([組合圖影片相照資料來源翻攝採訪撰稿剪輯轉][^)]*\)([^()]+\))?|\s*\S+)((?<=[a-zA-Z])[a-zA-Z\d\s]+)?\s*',
+        ),
+        ' ',
+    ),
+    # Remove reference hint.
+    # This observation is made with `url_pattern = 8565, 9616`.
+    (
+        re.compile(r'[◎※]+\S*?$'),
+        ' ',
     ),
     # Remove list symbols.
-    # This observation is made with `url_pattern = 1200034`.
+    # This observation is made with `url_pattern = 1200034, 1200318, 1200403,
+    # 1200591, 1200623`.
     (
-        re.compile(r'\s[●★](\S*)'),
+        re.compile(r'\s[●★▇※◎]+(\S*)'),
         r' \1',
     ),
-    # Remove additional information in the middle of paragrapgh.
-    # This observation is made with `url_pattern = 2112150, 1200090, 1200243,
-    # 1200077, 1200039, 1200098, 1200146, 1200190, 1200260`.
+    # Remove additional information in the middle of paragraphs which are
+    # surrounded by parenthese.
+    # This observation is made with `url_pattern = 1200039, 1200077, 1200090,
+    # 1200098, 1200146, 1200243, 1200190, 1200260, 1200493, 1200601, 2112150`.
     (
         re.compile(
             r'\((參考|(示意)?圖|畫面顯示|左|右|ETtoday寵物雲|補充官方回應|(註|編按):|本文轉載?自'
-            + r'|(科技|[新南]華|人民)([早日]報|網))[^)]*?\)'
+            + r'|(科技|[新南]華|人民|經濟參考|中新)([早日]?報|網)|日本足球觀察家)[^)]*?\)'
         ),
         '',
     ),
-    # Remove recommendations.
-    # This observation is made with `url_pattern = 1200181`.
+    # Remove recommendations with whitspace at both begin and end.  Use
+    # `(?=...)` to avoid consume whitespace at the end since multiple occurence
+    # may be side by side.
+    # This observation is made with `url_pattern = 1200181, 1200426`.
     (
-        re.compile(r'\s(《(ETtoday(筋斗|新聞)雲|播吧)》\s*)*\s'),
+        re.compile(r'\s(精選書摘|《(ETtoday(筋斗|新聞)雲|播吧)》)(?=\s)'),
         ' ',
     ),
     # Remove paragraphs contains additional informations.
-    # This observation is made with `url_pattern = 1200161, 1200022, 1200132,
-    # 1200168, 1200234, 1200237, 1200267`.
+    # This observation is made with `url_pattern = 1200022, 1200132, 1200152,
+    # 1200161, 1200168, 1200193, 1200234, 1200237, 1200267, 1200392, 1200403,
+    # 1200426, 1200436, 1200526, 1200577, 1200579, 7427`.
     (
         re.compile(
-            r'\s(《ETtoday新聞雲》提醒您|\*[圖片、資料]+來源|到這裡找|這裡悶、那裏痛,親友說吃這個藥卡有效'
-            + r'|(Photo|BLOG|粉絲頁)\s*:\s*|◎鎖定|《?ETtoday寵物雲》?期許每個人都能更重視生命'
-            + r'|(自殺防治諮詢安心|生命線協談)專線)\S+',
+            r'(^|[\s.])(《?(ETtoday新聞雲|ET FASHION)》?提醒您?|\*[圖片、資料]+來源|到這裡找'
+            + r'|這裡悶、那裏痛,親友說吃這個藥卡有效|(作者|摘自|Photo|BLOG|粉絲頁|FB|附註)\s*:\s*|鎖定每日刊文'
+            + r'|《?ETtoday寵物雲》?期許每個人都能更重視生命|(自殺防治諮詢安心|生命線協談)專線|歡迎加入\S+:'
+            + r'|\(?(圖|攝?影|撰文)/|\*+以下有|影片恐會引起部分讀者不適,請自行斟酌觀看|影音連結)\S+',
+            re.IGNORECASE,
         ),
+        ' ',
+    ),
+    # Remove suicide informations.
+    # This observation is made with `url_pattern = 5043`.
+    (
+        re.compile(r'(張老師|安心)專線\S*?$'),
         ' ',
     ),
     # Remove suggestion.
     # This observation is made with `url_pattern = 1200058`.
     (
-        re.compile(r'《[^》]*》\S+(報名|快訊)\s'),
+        re.compile(r'《[^》]*》\S+(報名|快訊)\s.*$'),
         ' ',
     ),
     # Remove legal notes.
-    # This observation is made with `url_pattern = 1200161`.
+    # This observation is made with `url_pattern = 1200010, 1200161`.
     (
-        re.compile(r'喝酒不開車,開車不喝酒。?'),
-        '',
+        re.compile(r'\s((飲酒過量|有礙健康|喝酒不開車|開車不喝酒).?)+'),
+        ' ',
     ),
     # Remove editor notes.
     # This observation is made with `url_pattern = 1200039`.
     (
         re.compile(r'(出稿|更新):[\d.:\s]+'),
-        '',
-    ),
-    # Remove datetime notes.
-    # This observation is made with `url_pattern = 1200058, 1200161`.
-    (
-        re.compile(r'(報名|舉辦|營業)(日期|時間):[\d:/()~一二三四五六平假日]+'),
         '',
     ),
     # Remove copy right notes.
@@ -195,15 +308,30 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\s+(版權聲明:|圖片為版權照片|\*?本文由).*?不得.*?轉載\S*'),
         '',
     ),
+    # Remove editor notes with slash `/` at the end of news article.
+    # This observation is made with `url_pattern = 1200090, 1200492`.
+    (
+        re.compile(r'\s([圖文]|Text|Photo)/.*$', re.IGNORECASE),
+        ' ',
+    ),
     # Remove recommendations and additional informations at the end of news
     # article.  Note that `本文作者:` should be the reporter, but since the
     # format is so fucked up, we say "Fuck it. just remove it".
-    # This observation is made with `url_pattern = 1200009, 1200090, 1200165,
-    # 1200190, 1200243, 1200077, 1200181, 1200260, 1200265`.
+    # This observation is made with `url_pattern = 1200009,  1200077, 1200081,
+    # 1200090, 1200105, 1200165, 1200181, 1200190, 1200193, 1200243, 1200260,
+    # 1200265, 1200278, 1200311, 1200318, 1200321, 1200362, 1200413, 1200436,
+    # 1200442, 1200452, 1200470, 1200474, 1200510, 1200511, 1200521, 1200526,
+    # 1200534, 1200547, 1200558, 1200563, 1200578, 1200579, 1200591, 1200594
+    # 5210, 3728`.
     (
         re.compile(
-            r'\s([圖文]/|\*《ETtoday新聞雲》|好文推薦|【?延伸閱讀】?|更多(時尚藝術資訊|精彩影音|健康訊息)'
-            + r'|你可能也想看|關於《雲端最前線》|(本文)?(摘自|經授權|作者:)).*$',
+            r'(更多(時尚藝術資訊|精[彩采](影音|內容|報導)|活動訊息|健康訊息|\S+?新消息,)(都在|請洽)?|\*《ETtoday新聞雲》|好文推薦'
+            + r'|(商品介紹|活動詳情|聯繫窗口|服務諮詢專線|\S*(售票|店家)資訊|活動(時間|辦法)|作者介紹|開放時間|門票):'
+            + r'|\(?本文(由|原刊|(轉載|摘)自|經(授權)?|作者:)|\S*以上言論不代表本網立場|\S+—基本資料'
+            + r'|【(貼心提醒|延伸閱讀|更多新聞)】|本集.ETtoday看電影.|\S+>{3,}|\S+★|\[info\]'
+            + r'|這場我有另外個選項,有興趣讀者|\S+詳細活動內容|\*關於\S+\s*詳細介紹'
+            + r'|\(?(完整|系列)(文章|報導)[請可]|相關資訊可至|延伸閱讀|熱門點閱》|原文出處|你可能也想看'
+            + r'|關於《(雲端最前線|慧眼看天下)》|\S*?投票網址).*?$',
         ),
         ' ',
     ),
@@ -219,11 +347,25 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'如同\(\),'),
         '',
     ),
-    # Remove location, mail, telephone and tick information.
-    # This observation is made with `url_pattern = 1200161, 1200254`.
+    # Remove promote information follow by a colon `:`.  This kind of
+    # information usually appear at the end, with structure like the follow:
+    #
+    # promotion-title
+    # 地址:...
+    # 電話:...
+    #
+    # Note that `promotion-title` is not longer than 50 words and will be
+    # deleted.  Thus address information in the middle of paragraphs will not
+    # be deleted (like `url_pattern = 1200387`).
+    # This observation is made with `url_pattern = 1200161, 1200193, 1200254,
+    # 1200335, 1200387, 1200411, 1200594`.
     (
-        re.compile(r'\S+(\s*(地址|電話|信箱|票價):\s*\S+)+'),
-        '',
+        re.compile(
+            r'\s\S{1,50}(\s*(地址|電話|信箱|票價|門票|基地(規模|位置)'
+            + r'|(建築|結構)設計|(活動|報名|舉辦|營業|開放)(日期|時間|辦法)'
+            + r'|(戶數|樓層|產品)規劃|投資建設):\s*([a-zA-Z\d\s,\-:]+)?([^a-zA-Z\s]+)?)+',
+        ),
+        ' ',
     ),
     # Remove content hints.
     # This observation is made with `url_pattern = 1200190`.
@@ -240,26 +382,78 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
-    # (
-    #     re.compile(r'【更多新聞】'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'以上言論不代表本網立場。'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'圖[一二三四五六七八九十]+、'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'熱門點閱》'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'原文出處'),
-    #     '',
-    # ),
+    # Remove inviting url inside parenthese.
+    # This observation is made with `url_pattern = 1200584`.
+    (
+        re.compile(
+            r'\(\s*'
+            + r'''(https?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;%=]+\s*)+'''
+            + r'\s*\)'
+        ),
+        '',
+    ),
+    # Remove content hints.
+    # This observation is made with `url_pattern = 1200285, 1200321`.
+    (
+        re.compile(r'(^|\s)【[^】]*】(→\S+)?(\s|$)'),
+        ' ',
+    ),
+    # Remove failed parsing paragraph at the begining. This kind of paragraphs
+    # are consist of what ever we left after parsing from all patterns above.
+    # Thus this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 1200594, 1200601`.
+    (
+        re.compile(r'^(Emmy|是小眼睛)\s'),
+        ' ',
+    ),
+    # Remove failed parsing paragraph at the begining. This kind of paragraphs
+    # are consist of what ever we left after parsing from all patterns above.
+    # Thus this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 1021`.
+    (
+        re.compile(r'看更多圖片$'),
+        ' ',
+    ),
+    # Remove stand along character at the begining.  This kind of paragraphs
+    # are consist of what ever we left after parsing from all patterns above.
+    # Thus this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 1200594`.
+    (
+        re.compile(r'^([\da-zA-Z\u4e00-\u9fff](?=\s))+'),
+        ' ',
+    ),
+    # Remove stand along character at the end.  This kind of paragraphs are
+    # consist of what ever we left after parsing from all patterns above.  Thus
+    # this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 1200601`.
+    (
+        re.compile(r'((?<=\s)[\da-zA-Z\u4e00-\u9fff])+$'),
+        ' ',
+    ),
+    # Remove stand along character at the end.  This kind of paragraphs are
+    # consist of what ever we left after parsing from all patterns above.  Thus
+    # this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 5452, 10034`.
+    (
+        re.compile(r'請快來「ETtoday\S*?」\S*?$'),
+        ' ',
+    ),
+    # Remove stand along character at the end.  This kind of paragraphs are
+    # consist of what ever we left after parsing from all patterns above.  Thus
+    # this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 8902`.
+    (
+        re.compile(r'\(新聞來源:東森新聞台\)'),
+        ' ',
+    ),
+    # Remove stand along character at the end.  This kind of paragraphs are
+    # consist of what ever we left after parsing from all patterns above.  Thus
+    # this pattern must always put at the end of all patterns.
+    # This observation is made with `url_pattern = 3186`.
+    (
+        re.compile(r'如遇緊急狀況\S+?聯絡資料如下.*?$'),
+        ' ',
+    ),
 ]
 
 TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
@@ -268,10 +462,11 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'精彩回顧看這邊?!?'),
         '',
     ),
-    # Remove content hints.
-    # This observation is made with `url_pattern = 1200017, 1200019`.
+    # Remove content hints followed by a slash `/`.  Note that if word before
+    # slash is too long, then it is probably not a content hint.
+    # This observation is made with `url_pattern = 1200017, 1200019, 1200501`.
     (
-        re.compile(r'^[^/]*?/'),
+        re.compile(r'^[^/]{1,10}/'),
         '',
     ),
     # Remove useless symbol.
@@ -280,19 +475,62 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'[❤]'),
         '',
     ),
-    # (
-    #     re.compile(r'(【[^】]*?】|\([^)]*?\))'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'(快[訊讯]|組[圖图]|焦[點点]人物):'),
-    #     '',
-    # ),
-    # (
-    #     re.compile(r'(—)+'),
-    #     ' ',
-    # ),
+    # Remove content hints.
+    # This observation is made with `url_pattern = 1200285`.
+    (
+        re.compile(r'(【[^】]*】|\([^)]*\))'),
+        '',
+    ),
 ]
+
+BR_PATTERN: re.Pattern = re.compile(r'(\s*<br\s*/>)+\s*')
+FIX_PATTERN: re.Pattern = re.compile(
+    r'(<strong[^>]*>[^<]*)(<img[^>]*>)([^<]*)',
+)
+
+
+def fix_raw_xml(raw_xml: str) -> str:
+    r"""Fix raw XML.
+
+    ETtoday's news sometimes has following structure:
+
+    <strong>
+        ...
+        <img .../>
+        ...
+    </strong>
+
+    This make CSS selector hard to select strong tags.  Thus we fix it with
+    the following structure:
+
+    <strong>
+        ...
+    </strong>
+        <img .../>
+    <strong>
+        ...
+    </strong>
+
+    Note that paragraphs may contain lots of `<br />` tags, thus we replace
+    them with whitespace to make fixing much easier.
+    """
+    # Remove `<br/>` tags and replace with single whitespace.
+    raw_xml = BR_PATTERN.sub(' ', raw_xml)
+
+    # Extract `<strong><img/></strong>`.
+    while True:
+        match = FIX_PATTERN.search(raw_xml)
+
+        if not match:
+            break
+
+        raw_xml = (
+            raw_xml[:match.start()] + match.group(1) + '</strong>'
+            + match.group(2) + '<strong>' + match.group(3)
+            + raw_xml[match.end():]
+        )
+
+    return raw_xml
 
 
 def parser(raw_news: RawNews) -> ParsedNews:
@@ -308,7 +546,7 @@ def parser(raw_news: RawNews) -> ParsedNews:
     )
 
     try:
-        soup = BeautifulSoup(raw_news.raw_xml, 'html.parser')
+        soup = BeautifulSoup(fix_raw_xml(raw_news.raw_xml), 'html.parser')
     except Exception:
         raise ValueError('Invalid html format.')
 
@@ -323,6 +561,7 @@ def parser(raw_news: RawNews) -> ParsedNews:
                 soup.select(ARTICLE_DECOMPOSE_LIST),
             )
         )
+
         # Next we retrieve tags contains article text.  This statement must
         # always put after tags removing statement.
         article = ' '.join(
@@ -350,8 +589,9 @@ def parser(raw_news: RawNews) -> ParsedNews:
             )[-1].text
         )
         # Some category start with `ETtoday` and end with `雲`.
-        # This observation is made with `url_pattern = 1200034, 1200090`.
-        category = re.sub(r'ET(?:today)?([^雲]*)雲?', r'\1', category)
+        # This observation is made with `url_pattern = 1200034, 1200090,
+        # 12000105, 1200318`.
+        category = re.sub(r'(?:ET)?(?:today)?([^雲]*)雲?$', r'\1', category)
     except Exception:
         # There may not have category.
         category = ''
@@ -386,14 +626,21 @@ def parser(raw_news: RawNews) -> ParsedNews:
             )
         # Reporters are comma seperated.
         reporter = ','.join(map(news.parse.util.normalize.NFKC, reporter_list))
-        # Some reporters are separated by whitespaces or '、'.
+        # Some reporters are separated by whitespaces or '、'.  We replace
+        # whitespace precede (or follow) an english character.  This is needed
+        # since some reporters have English names.
         # This observation is made with `url_pattern = 1200037`.
         reporter = news.parse.util.normalize.NFKC(
-            re.sub(
-                r'[\s、]+',
-                ',',
-                reporter,
-            )
+            re.sub(r'[、]+', ',', reporter),
+        )
+        reporter = news.parse.util.normalize.NFKC(
+            re.sub(r'([a-zA-Z\d])\s+(?=\w)', r'\1-', reporter),
+        )
+        reporter = news.parse.util.normalize.NFKC(
+            re.sub(r'(?<=\w)\s+([a-zA-Z\d])', r'-\1', reporter),
+        )
+        reporter = news.parse.util.normalize.NFKC(
+            re.sub(r'\s+', ',', reporter),
         )
         # Remove trailing comma.
         # This observation is made with `url_pattern = 1200260`.
