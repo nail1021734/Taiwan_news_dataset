@@ -8,14 +8,13 @@ import news.crawlers.db.read
 import news.crawlers.db.util
 import news.crawlers.db.write
 import news.db
+import news.merge.parsed
+import news.merge.raw
 import news.parse.db.create
 import news.parse.db.read
 import news.parse.db.util
 import news.parse.db.write
 import news.path
-
-import news.merge.raw
-import news.merge.parsed
 
 
 def parse_args(argv: List[str]) -> argparse.Namespace:

@@ -1,14 +1,15 @@
-import gc
 import argparse
-from typing import Tuple, List
-from operator import itemgetter
-import news.db
-import news.parse.db.util
-import news.parse.db.read
-import news.parse.db.create
-import news.parse.db.write
-import numpy as np
 import sqlite3
+from operator import itemgetter
+from typing import List, Tuple
+
+import numpy as np
+
+import news.db
+import news.parse.db.create
+import news.parse.db.read
+import news.parse.db.util
+import news.parse.db.write
 
 
 def get_timestamp_list(db_path: str) -> List[Tuple[int, int]]:
@@ -27,11 +28,13 @@ def get_by_id(
     conn: sqlite3.Connection = news.db.get_conn(db_path=db_path)
     cur: sqlite3.Cursor = conn.cursor()
     q = f'= {ids[0]}' if len(ids) == 1 else f'IN {tuple(ids)}'
-    return cur.execute(f"""
+    return cur.execute(
+        f"""
         SELECT id, article, category, company_id, reporter, timestamp, title, url_pattern
         FROM   parsed_news
         WHERE id {q};
-        """).fetchall()
+        """
+    ).fetchall()
 
 
 def sort_index(db_paths: List[str]) -> np.ndarray:
@@ -57,10 +60,13 @@ def sort_index(db_paths: List[str]) -> np.ndarray:
     for idx, db_path in enumerate(db_paths):
         timestamp_list = np.array(get_timestamp_list(db_path))  # Ni, 2
         ts.append(
-            np.hstack((
-                timestamp_list,
-                np.full((timestamp_list.shape[0], 1), idx, dtype=int),
-            )))  # Ni, 3
+            np.hstack(
+                (
+                    timestamp_list,
+                    np.full((timestamp_list.shape[0], 1), idx, dtype=int),
+                )
+            )
+        )  # Ni, 3
     ts = np.vstack(ts)  # number of db, Ni, 3 -> sum(Ni), 3
     ts = np.take(
         ts,
@@ -74,11 +80,14 @@ def sort_index(db_paths: List[str]) -> np.ndarray:
 def merge_parsed_news_db(args: argparse.Namespace) -> None:
     # Map relative paths to absolute paths. `db_paths` will only include paths
     # of database files.
-    db_paths = news.db.get_db_paths(file_paths=list(
-        map(
-            news.parse.db.util.get_db_path,
-            args.db_name + args.db_dir,
-        )))
+    db_paths = news.db.get_db_paths(
+        file_paths=list(
+            map(
+                news.parse.db.util.get_db_path,
+                args.db_name + args.db_dir,
+            )
+        )
+    )
 
     # No sqlite database files found.  In this case no need to merge anything.
     if not db_paths:
@@ -86,7 +95,8 @@ def merge_parsed_news_db(args: argparse.Namespace) -> None:
 
     # Get connection and create table if table does not exists.
     conn = news.db.get_conn(
-        db_path=news.parse.db.util.get_db_path(args.save_db_name))
+        db_path=news.parse.db.util.get_db_path(args.save_db_name)
+    )
     cur = conn.cursor()
     news.parse.db.create.create_table(cur=cur)
     conn.commit()
@@ -125,7 +135,8 @@ def merge_parsed_news_db(args: argparse.Namespace) -> None:
                     title,
                     url_pattern,
                 ) in batch
-            ])
+            ]
+        )
         conn.commit()
 
     conn.close()

@@ -1,11 +1,13 @@
-import gc
 import argparse
+import gc
+
 from tqdm import trange
-import news.db
-import news.crawlers.db.util
-import news.crawlers.db.read
+
 import news.crawlers.db.create
+import news.crawlers.db.read
+import news.crawlers.db.util
 import news.crawlers.db.write
+import news.db
 
 
 def merge_raw_news_db(args: argparse.Namespace) -> None:
