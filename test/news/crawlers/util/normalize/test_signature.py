@@ -158,7 +158,7 @@ def test_module_attribute_signature() -> None:
             ),
         8:
             re.compile(
-                r'https://www.storm.mg/article/(\d+)',
+                r'https://www.storm.mg/article/(\d+)\?mode=whole',
             ),
         9:
             re.compile(
@@ -202,7 +202,7 @@ def test_module_attribute_signature() -> None:
                 r'https://www.setn.com/News.aspx\?.*NewsID=(\d+)',
             ),
             re.compile(
-                r'https://www.storm.mg/article/(\d+)',
+                r'https://www.storm.mg/article/(\d+)\?mode=whole',
             ),
             re.compile(
                 r'https://news.tvbs.com.tw/(\w+)/(\d+)',

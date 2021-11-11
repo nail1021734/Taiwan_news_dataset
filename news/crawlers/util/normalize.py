@@ -87,7 +87,7 @@ COMPRESS_URL_PATTERN_LOOKUP_TABLE: Dict[int, re.Pattern] = {
         ),
     COMPANY_ID_LOOKUP_TABLE['風傳媒']:
         re.compile(
-            r'https://www.storm.mg/article/(\d+)',
+            r'https://www.storm.mg/article/(\d+)\?mode=whole',
         ),
     COMPANY_ID_LOOKUP_TABLE['tvbs']:
         re.compile(
