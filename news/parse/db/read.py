@@ -1,5 +1,5 @@
 import sqlite3
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import news.db
 import news.parse.db.create
@@ -25,6 +25,12 @@ READ_SOME_RECORDS_SQL: str = """
 # 讀取資料數的 SQL 指令.
 READ_NUM_OF_RECORDS_SQL: str = """
     SELECT COUNT(id)
+    FROM   parsed_news;
+"""
+
+# 讀取最小與最大 timestamp 的 SQL 指令.
+READ_TIMESTAMP_BOUNDS: str = """
+    SELECT MIN(timestamp), MAX(timestamp)
     FROM   parsed_news;
 """
 
@@ -148,3 +154,25 @@ def get_num_of_records(db_name: str,) -> int:
         conn.close()
 
     return num_of_records
+
+
+def get_timestamp_bounds(db_name: str,) -> Tuple[int, int]:
+    r"""讀取指定 `db_name` 中 `ParsedNews` 的最小與最大 timestamp."""
+
+    # 檢查是否有給予 `db_name`, 如果都沒有則無法進行後續讀取.
+    if not isinstance(db_name, str):
+        raise TypeError('`db_name` must be an instance of `str`.')
+    if not db_name:
+        raise ValueError('`db_name` cannot be empty.')
+
+    try:
+        db_path: str = news.parse.db.util.get_db_path(db_name=db_name)
+        conn: sqlite3.Connection = news.db.get_conn(db_path=db_path)
+        cur: sqlite3.Cursor = conn.cursor()
+
+        timestamp_bound = list(cur.execute(READ_TIMESTAMP_BOUNDS))[0]
+    finally:
+        # 關閉資料庫連線
+        conn.close()
+
+    return timestamp_bound
