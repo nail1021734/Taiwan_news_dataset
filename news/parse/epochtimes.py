@@ -234,11 +234,12 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 20-8-31-12371094
-    # 20-9-21-12420158, 20-9-21-12420158'.
+    # 20-9-21-12420158`.
     (
         re.compile(r'(【[^】]*?】)+'),
         '',
     ),
+    # This observation is made with `url_pattern = 20-9-21-12420158`.
     (
         re.compile(r'\(待續\)'),
         '',
