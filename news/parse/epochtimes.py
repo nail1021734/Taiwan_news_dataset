@@ -210,6 +210,11 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\(?[點点][閱阅]\s*【.*?】\s*系列文章。\)?'),
         '',
     ),
+    # This observation is made with `url_pattern = 20-10-10-12466941.'
+    (
+        re.compile(r'接上文:(.+?)\(\d\)'),
+        r'\1',
+    ),
     # This observation is made with `url_pattern = 13-2-23-3807193`.
     (
         re.compile(r'看更多文章»'),
@@ -228,8 +233,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'(本文|影片)網址為?:?\s*.*$'),
         '',
     ),
+    # This observation is made with `url_pattern = 20-8-31-12371094
+    # 20-9-21-12420158, 20-9-21-12420158'.
     (
-        re.compile(r'^(【[^】]*?】)+'),
+        re.compile(r'(【[^】]*?】)+'),
         '',
     ),
     (
@@ -300,12 +307,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 20-10-15-12478440`.
     (
         re.compile(r'#$'),
-        '',
-    ),
-    # This observation is made with `url_pattern = 20-8-31-12371094
-    # 20-9-21-12420158, 20-9-21-12420158`.
-    (
-        re.compile(r'【\S+?】'),
         '',
     ),
 ]
