@@ -106,7 +106,7 @@ python -m news.crawlers.main --crawler_name setn --db_name setn.db --debug --fir
 
 - 有做爬蟲防禦, 但一律使用 `200` 作為回覆, 因此不會有 bad request.
 - **最早**可以爬到的新聞流水號為 `21016`.
-- 對於多頁數的新聞, 未作特別處理, 故目前只爬了第一頁.
+- 對於多頁數的新聞, 使用全文閱讀模式 `mode=whole` 獲取完整文章.
 
 ```sh
 # The first available index of storm is 21016.
