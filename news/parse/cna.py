@@ -150,7 +150,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove special column.
     # This observation is made with `url_pattern = 201910250015, 201708200238`.
     (
-        re.compile(r'\(?延伸閱讀[^\)。,]*?\)?(?=\s[^。,]*)'),
+        re.compile(r'\(?延伸閱讀[^\)。,]*\)?(?=\s+?[^\s。,]*)'),
         '',
     ),
     # Remove prefix.

@@ -68,11 +68,11 @@ REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 13-12-23-4041274,
     # 14-1-1-4048455, 14-1-1-4048450, 13-12-31-4046950, 13-12-30-4046025,
     # 13-12-13-4033178, 13-12-11-4031411, 13-12-9-4030334, 13-7-21-3921942,
-    # 13-3-12-3820892, 13-3-1-3811503, 13-2-20-3804661, 20-11-9-12536603`.
+    # 13-3-12-3820892, 13-3-1-3811503, 13-2-20-3804661`.
     re.compile(
-        r'\(?\s*\S*?[新大][紀纪]元(?:.{1,2}洲)?(?:[週周]刊\d*?期?,?)?(?:資深)?[記记]?者?站?'
+        r'\(?\s*(?:[這这]是)?[新大][紀纪]元(?:.{1,2}洲)?(?:[週周]刊\d*?期?,?)?[記记]?者?站?'
         + r'(?:亞太)?(?:[電电][視视][台臺]?)?'
-        + r'([\w、/\s]*?)[的综綜合整理採采訪访編编譯译報报導导道告訊讯]+?[,。]?(?:/\w+?)?\s*\)'
+        + r'([\w、/\s]*?)[的综綜合整理採采訪访編编譯译報报導导道告訊讯]+?[,。]?\s*\)'
     ),
     # This observation is made with `url_pattern = 13-2-10-3798072`.
     re.compile(r'\(大[紀纪]元[記记]者([\w、/\s]*?)\)'),
@@ -181,7 +181,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 13-12-22-4040557,
-    # 13-8-13-3939870, 20-10-10-12466941`.
+    # 13-8-13-3939870`.
     (
         re.compile(
             r'([瞭了]解|更多)德[國国].*?'
@@ -231,10 +231,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'^(【[^】]*?】)+'),
         '',
     ),
-    (
-        re.compile(r'\(待續\)'),
-        '',
-    ),
     # This observation is made with `url_pattern = 13-7-21-3922412`.
     (
         re.compile(r'【大[紀纪]元[^】]*?[訊讯]】?'),
@@ -261,6 +257,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
+    # This observation is made with `url_pattern = 21-10-27-13332627,
     # 14-1-1-4048468, 14-1-1-4048456, 14-1-1-4047776, 13-12-15-4034530,
     # 13-8-5-3933454`.
     (
@@ -287,23 +284,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 13-2-24-3807746`.
     (
         re.compile(r'文:\S*?$'),
-        '',
-    ),
-    # This observation is made with `url_pattern = 13-8-3-3932270,
-    # 13-7-29-3928497, 20-10-10-12466941`.
-    (
-        re.compile(r'\(?文字整理:[^)]*?(\)|$)'),
-        '',
-    ),
-    # This observation is made with `url_pattern = 20-10-15-12478440`.
-    (
-        re.compile(r'#$'),
-        '',
-    ),
-    # This observation is made with `url_pattern = 20-8-31-12371094
-    # 20-9-21-12420158, 20-9-21-12420158`.
-    (
-        re.compile(r'【\S+?】'),
         '',
     ),
 ]
