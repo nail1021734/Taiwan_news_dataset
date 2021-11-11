@@ -50,7 +50,8 @@ def get_news_list(
             disable=not debug,
             dynamic_ncols=True,
     ):
-        url = f'{COMPANY_URL}{news_idx}'
+        # 多頁新聞可以用 `mode=whole` 得到全文.
+        url = f'{COMPANY_URL}{news_idx}?mode=whole'
         try:
             response = news.crawlers.util.request_url.get(url=url)
 
