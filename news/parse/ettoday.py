@@ -464,7 +464,7 @@ TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # slash is too long, then it is probably not a content hint.
     # This observation is made with `url_pattern = 1200017, 1200019, 1200501`.
     (
-        re.compile(r'^[^/]{1,10}/'),
+        re.compile(r'^[^/]{1,11}/'),
         '',
     ),
     # Remove useless symbol.

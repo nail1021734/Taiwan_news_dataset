@@ -72,5 +72,5 @@ def test_parsing_result() -> None:
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1634109600
     assert parsed_news.reporter == '林楚茵'
-    assert parsed_news.title == '向網路巨擘收費》林楚茵/媒體與網路平台議價 政府能扮演什麼角色?'
+    assert parsed_news.title == '媒體與網路平台議價 政府能扮演什麼角色?'
     assert parsed_news.url_pattern == '2100299'
