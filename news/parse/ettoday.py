@@ -247,9 +247,9 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # Remove list symbols.
     # This observation is made with `url_pattern = 1200034, 1200318, 1200403,
-    # 1200591, 1200623`.
+    # 1200591, 1200623, 2104523`.
     (
-        re.compile(r'\s[●★▇※◎]+(\S*)'),
+        re.compile(r'\s[■●★▇※◎]+(\S*)'),
         r' \1',
     ),
     # Remove additional information in the middle of paragraphs which are
