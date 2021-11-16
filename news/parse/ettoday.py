@@ -115,7 +115,7 @@ from news.parse.db.schema import ParsedNews
 #
 #   This observation is made with `url_pattern = 2112150, 1200022, 1200077,
 #   1200097, 1200118, 1200132, 1200158, 1200478, 1200491, 1200547, 1200562,
-#   10715, 2000176, 2000195, 2004431, 2015327`.
+#   10715, 2000176, 2000195, 2004431, 2015327, 8902`.
 ARTICLE_DECOMPOSE_LIST: str = re.sub(
     r'\s+',
     ' ',
