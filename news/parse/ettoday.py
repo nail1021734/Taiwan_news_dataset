@@ -107,8 +107,8 @@ from news.parse.db.schema import ParsedNews
 #
 #   7. 過濾掉宇宙人外信的廣告 `p:has(a[href*="vip"]) a,`.
 #
-#   8. 過濾掉房產廣告 `p:has(a[href*="lihi.cc"]) a`,不只比對"cc"是因為"cc"有包含PTT的
-#   內容過濾掉PTT網址會影響新聞內容.
+#   8. 過濾掉房產廣告 `p:has(a[href*="lihi.cc"]) a`,不只比對 "cc" 是因為 "cc"
+#   有包含 PTT 的內容過濾掉 PTT 網址會影響新聞內容.
 #
 #   9. 夏日宅家自制氣泡飲廣告 `p:has(a[href*="u-mall"]) a`.
 #
