@@ -461,7 +461,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 將重複句點換成一個.
     # This observation is made with `url_pattern = 2100012, 2000210, 2026349`.
     (
-        re.compile(r'。\s*?。$'),
+        re.compile(r'。[\s*?。]+$'),
         '。',
     ),
     # 移除文章開頭的贅詞.
