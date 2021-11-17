@@ -1,12 +1,14 @@
-from datetime import datetime, timezone
-import gc
 import argparse
-from typing import Tuple, List
+import gc
+from datetime import datetime, timezone
+from typing import List, Tuple
+
 from tqdm import trange
+
 import news.db
-import news.parse.db.util
-import news.parse.db.read
 import news.parse.db.create
+import news.parse.db.read
+import news.parse.db.util
 import news.parse.db.write
 from news.merge.bucket import ParsedNewsBucket
 

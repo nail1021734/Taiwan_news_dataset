@@ -1,15 +1,17 @@
-from tqdm import trange
-import os
 import gc
-from datetime import datetime, timezone
-from typing import List, Final, Tuple, Optional
-from news.parse.db.schema import ParsedNews
-import news.parse.db.read
-import news.parse.db.write
-import news.parse.db.create
-import news.parse.db.util
-import news.db
+import os
 import uuid
+from datetime import datetime, timezone
+from typing import Final, List, Optional, Tuple
+
+from tqdm import trange
+
+import news.db
+import news.parse.db.create
+import news.parse.db.read
+import news.parse.db.util
+import news.parse.db.write
+from news.parse.db.schema import ParsedNews
 
 
 class ParsedNewsBucket:
