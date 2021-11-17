@@ -11,7 +11,7 @@ import news.parse.storm
 def test_parsing_result() -> None:
     r"""Ensure parsing result consistency."""
     company_id = news.crawlers.util.normalize.get_company_id(company='風傳媒')
-    url = r'https://www.storm.mg/article/4029623'
+    url = r'https://www.storm.mg/article/4029623?mode=whole'
     response = news.crawlers.util.request_url.get(url=url)
 
     raw_news = news.crawlers.db.schema.RawNews(
