@@ -60,6 +60,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '健康'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1530981300
-    assert parsed_news.reporter == '蘋汝妹'
+    assert parsed_news.reporter is None
     assert parsed_news.title == '盡情吃我吧! 「晨間愛愛」5好處...做1小時就瘦了'
     assert parsed_news.url_pattern == '1200521'
