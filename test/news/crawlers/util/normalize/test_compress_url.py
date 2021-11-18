@@ -6,7 +6,11 @@ def test_compress_url() -> None:
     assert news.crawlers.util.normalize.compress_url(
         company_id=0,
         url=r'https://www.chinatimes.com/realtimenews/20211012000001-260407',
-    ) == r'20211012000001-260407'
+    ) == r'r-20211012000001-260407'
+    assert news.crawlers.util.normalize.compress_url(
+        company_id=0,
+        url=r'https://www.chinatimes.com/newspapers/20211012000001-260407',
+    ) == r'n-20211012000001-260407'
     assert news.crawlers.util.normalize.compress_url(
         company_id=1,
         url=r'https://www.cna.com.tw/news/aipl/202110120001.aspx',
@@ -37,7 +41,7 @@ def test_compress_url() -> None:
     ) == r'1'
     assert news.crawlers.util.normalize.compress_url(
         company_id=8,
-        url=r'https://www.storm.mg/article/1',
+        url=r'https://www.storm.mg/article/1?mode=whole',
     ) == r'1'
     assert news.crawlers.util.normalize.compress_url(
         company_id=9,

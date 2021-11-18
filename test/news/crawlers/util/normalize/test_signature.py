@@ -20,7 +20,7 @@ def test_module_function_signature() -> None:
                 ),
             ],
             return_annotation=str,
-        )
+    )
     assert hasattr(news.crawlers.util.normalize, 'compress_url')
     assert inspect.isfunction(news.crawlers.util.normalize.compress_url)
     assert inspect.signature(news.crawlers.util.normalize.compress_url) \
@@ -40,7 +40,7 @@ def test_module_function_signature() -> None:
                 ),
             ],
             return_annotation=str,
-        )
+    )
     assert hasattr(news.crawlers.util.normalize, 'get_company_id')
     assert inspect.isfunction(news.crawlers.util.normalize.get_company_id)
     assert inspect.signature(news.crawlers.util.normalize.get_company_id) \
@@ -54,7 +54,7 @@ def test_module_function_signature() -> None:
                 ),
             ],
             return_annotation=int,
-        )
+    )
     assert hasattr(news.crawlers.util.normalize, 'get_company_url')
     assert inspect.isfunction(news.crawlers.util.normalize.get_company_url)
     assert inspect.signature(news.crawlers.util.normalize.get_company_url) \
@@ -68,7 +68,7 @@ def test_module_function_signature() -> None:
                 ),
             ],
             return_annotation=str,
-        )
+    )
 
 
 def test_module_attribute_signature() -> None:
@@ -89,7 +89,7 @@ def test_module_attribute_signature() -> None:
     }
     assert hasattr(news.crawlers.util.normalize, 'COMPANY_URL_LOOKUP_TABLE')
     assert news.crawlers.util.normalize.COMPANY_URL_LOOKUP_TABLE == {
-        0: r'https://www.chinatimes.com/realtimenews/',
+        0: r'https://www.chinatimes.com/',
         1: r'https://www.cna.com.tw/news/aipl/',
         2: r'https://www.epochtimes.com/b5/',
         3: r'https://star.ettoday.net/news/',
@@ -106,7 +106,7 @@ def test_module_attribute_signature() -> None:
         'COMPANY_URL_FASTEST_LOOKUP_TABLE',
     )
     assert news.crawlers.util.normalize.COMPANY_URL_FASTEST_LOOKUP_TABLE == [
-        r'https://www.chinatimes.com/realtimenews/',
+        r'https://www.chinatimes.com/',
         r'https://www.cna.com.tw/news/aipl/',
         r'https://www.epochtimes.com/b5/',
         r'https://star.ettoday.net/news/',
@@ -125,7 +125,8 @@ def test_module_attribute_signature() -> None:
     assert news.crawlers.util.normalize.COMPRESS_URL_PATTERN_LOOKUP_TABLE == {
         0:
             re.compile(
-                r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)',
+                r'https://www.chinatimes.com/([rn])'
+                + r'(?:ealtimenews|ewspapers)/(\d+)-(\d+)',
             ),
         1:
             re.compile(
@@ -157,7 +158,7 @@ def test_module_attribute_signature() -> None:
             ),
         8:
             re.compile(
-                r'https://www.storm.mg/article/(\d+)',
+                r'https://www.storm.mg/article/(\d+)\?mode=whole',
             ),
         9:
             re.compile(
@@ -176,7 +177,8 @@ def test_module_attribute_signature() -> None:
         news.crawlers.util.normalize.COMPRESS_URL_PATTERN_FASTEST_LOOKUP_TABLE
         == [
             re.compile(
-                r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)',
+                r'https://www.chinatimes.com/([rn])'
+                + r'(?:ealtimenews|ewspapers)/(\d+)-(\d+)',
             ),
             re.compile(
                 r'https://www.cna.com.tw/news/aipl/(\d+)\.aspx',
@@ -200,7 +202,7 @@ def test_module_attribute_signature() -> None:
                 r'https://www.setn.com/News.aspx\?.*NewsID=(\d+)',
             ),
             re.compile(
-                r'https://www.storm.mg/article/(\d+)',
+                r'https://www.storm.mg/article/(\d+)\?mode=whole',
             ),
             re.compile(
                 r'https://news.tvbs.com.tw/(\w+)/(\d+)',

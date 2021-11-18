@@ -22,7 +22,7 @@ COMPANY_ID_LOOKUP_TABLE: Dict[str, int] = {
 
 COMPANY_URL_LOOKUP_TABLE: Dict[int, str] = {
     COMPANY_ID_LOOKUP_TABLE['中時']:
-        r'https://www.chinatimes.com/realtimenews/',
+        r'https://www.chinatimes.com/',
     COMPANY_ID_LOOKUP_TABLE['中央社']:
         r'https://www.cna.com.tw/news/aipl/',
     COMPANY_ID_LOOKUP_TABLE['大紀元']:
@@ -54,7 +54,8 @@ COMPANY_URL_FASTEST_LOOKUP_TABLE: List[str] = [
 COMPRESS_URL_PATTERN_LOOKUP_TABLE: Dict[int, re.Pattern] = {
     COMPANY_ID_LOOKUP_TABLE['中時']:
         re.compile(
-            r'https://www.chinatimes.com/realtimenews/(\d+)-(\d+)',
+            r'https://www.chinatimes.com/([rn])'
+            + r'(?:ealtimenews|ewspapers)/(\d+)-(\d+)',
         ),
     COMPANY_ID_LOOKUP_TABLE['中央社']:
         re.compile(
@@ -86,7 +87,7 @@ COMPRESS_URL_PATTERN_LOOKUP_TABLE: Dict[int, re.Pattern] = {
         ),
     COMPANY_ID_LOOKUP_TABLE['風傳媒']:
         re.compile(
-            r'https://www.storm.mg/article/(\d+)',
+            r'https://www.storm.mg/article/(\d+)\?mode=whole',
         ),
     COMPANY_ID_LOOKUP_TABLE['tvbs']:
         re.compile(

@@ -111,5 +111,3 @@ def test_parsing_result() -> None:
     assert parsed_news.reporter is None
     assert parsed_news.title == '歷史驗證了錢穆對中共的預言'
     assert parsed_news.url_pattern == '19-10-30-11623041'
-
-    

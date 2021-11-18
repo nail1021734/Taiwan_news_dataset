@@ -116,3 +116,17 @@ def test_module_attribute_signature() -> None:
         FROM   parsed_news;
         """,
     )
+    assert hasattr(news.parse.db.read, 'READ_TIMESTAMP_BOUNDS')
+    assert isinstance(news.parse.db.read.READ_TIMESTAMP_BOUNDS, str)
+    assert re.sub(
+        r'\s+',
+        ' ',
+        news.parse.db.read.READ_TIMESTAMP_BOUNDS,
+    ) == re.sub(
+        r'\s+',
+        ' ',
+        """
+        SELECT MIN(timestamp), MAX(timestamp)
+        FROM   parsed_news;
+        """,
+    )

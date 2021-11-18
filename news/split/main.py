@@ -34,16 +34,18 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         --debug                  \
         --records_per_split 1000
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument(
         '--db_name',
         action='append',
         type=str,
         help=textwrap.dedent(
             f"""\
-            sqlite database file name wanted to split.  If absolute path is
-            given, then use the given path as database file and read records
-            from the given path.
+            SQLite database file name wanted to split.  If absolute path is
+            given, then treat the given path as database file and read records
+            directly from the given path.
 
             For example, excuting
 
@@ -111,8 +113,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         type=str,
         help=textwrap.dedent(
             f"""\
-            Directory contains sqlite database files.  If absolute path is
-            given, then recursively search the directory to find all sqlite
+            Directory contains SQLite database files.  If absolute path is
+            given, then recursively search the directory to find all SQLite
             database files.
 
             For example, if `/abs/dir` contains
@@ -143,7 +145,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
             If relative path is given, then we assume the given directory is
             under the path `PROJECT_ROOT/data/db_type`, where `db_type` is
             determined by `--db_type` argument.  Currently project root is set
-            set to {news.path.PROJECT_ROOT}.
+            to {news.path.PROJECT_ROOT}.
 
             For example, if `PROJECT_ROOT/data/parsed/rel/dir` contains
 
@@ -218,12 +220,19 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
               file.  All relative paths specified by `--db_name` and `--db_dir`
               are assumed to be under the path `PROJECT_ROOT/data/raw`. All
               database files specified by `--db_name` and `--db_dir` will be
-              queried with `news.crawlers.db.read.read_some_records`.
+              queried with:
+
+              - `news.crawlers.db.read.read_some_records`
+              - `news.crawlers.db.read.get_num_of_records`
+
             - `parsed`: Split `news.parse.db.schema.ParsedNews` in the database
               file.  All relative paths specified by `--db_name` and `--db_dir`
               are assumed to be under the path `PROJECT_ROOT/data/parse`.
               All database files specified by `--db_name` and `--db_dir`
-              will be queried with `news.parse.db.read.read_some_records`.
+              will be queried with:
+
+              - `news.parse.db.read.read_some_records`
+              - `news.parse.db.read.get_num_of_records`
             """
         ),
     )
@@ -347,7 +356,7 @@ def main(argv: List[str]) -> None:
                     offset=offset,
                 )
 
-                # Use `offset + 1` since sqlite id start with 1 but offset
+                # Use `offset + 1` since SQLite id start with 1 but offset
                 # start with 0.
                 output_db_path = get_output_db_path(
                     db_name=db_name,

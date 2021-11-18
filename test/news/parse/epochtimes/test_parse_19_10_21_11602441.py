@@ -107,5 +107,3 @@ def test_parsing_result() -> None:
     assert parsed_news.reporter == '余亨之'
     assert parsed_news.title == '硅谷理財Guno:助您順利拿到「助學金」'
     assert parsed_news.url_pattern == '19-10-21-11602441'
-
-    

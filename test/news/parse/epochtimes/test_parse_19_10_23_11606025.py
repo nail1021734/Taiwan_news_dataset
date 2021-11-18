@@ -79,5 +79,3 @@ def test_parsing_result() -> None:
     assert parsed_news.reporter == '馮尚琳'
     assert parsed_news.title == '準備強大的大學申請:被常春藤盟校錄取不是夢'
     assert parsed_news.url_pattern == '19-10-23-11606025'
-
-    

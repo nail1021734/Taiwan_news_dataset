@@ -121,5 +121,3 @@ def test_parsing_result() -> None:
     assert parsed_news.reporter == '余天白'
     assert parsed_news.title == '他,挽救了地毯'
     assert parsed_news.url_pattern == '19-11-2-11628263'
-
-    

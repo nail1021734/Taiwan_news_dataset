@@ -100,5 +100,3 @@ def test_parsing_result() -> None:
     assert parsed_news.reporter is None
     assert parsed_news.title == '紀實散文:一夜驚夢'
     assert parsed_news.url_pattern == '19-10-7-11574545'
-
-    

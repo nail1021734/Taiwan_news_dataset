@@ -164,5 +164,3 @@ def test_parsing_result() -> None:
     assert parsed_news.reporter is None
     assert parsed_news.title == '林輝:外國名人如此仰慕中華文化'
     assert parsed_news.url_pattern == '19-6-1-11293517'
-
-    

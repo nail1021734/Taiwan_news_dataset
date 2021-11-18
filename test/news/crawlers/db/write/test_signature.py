@@ -34,20 +34,10 @@ def test_module_function_signature() -> None:
 
 def test_module_attribute_signature() -> None:
     r"""Ensure module attributes' signature."""
-    assert hasattr(news.crawlers.db.write, 'READ_SQL')
-    assert isinstance(news.crawlers.db.write.READ_SQL, str)
+    assert hasattr(news.crawlers.db.write, 'SQL')
+    assert isinstance(news.crawlers.db.write.SQL, str)
     assert (
-        re.sub(r'\s+', ' ', news.crawlers.db.write.READ_SQL) == re.sub(
-            r'\s+', ' ', """
-            SELECT url_pattern
-            FROM   raw_news;
-        """
-        )
-    )
-    assert hasattr(news.crawlers.db.write, 'WRITE_SQL')
-    assert isinstance(news.crawlers.db.write.WRITE_SQL, str)
-    assert (
-        re.sub(r'\s+', ' ', news.crawlers.db.write.WRITE_SQL) == re.sub(
+        re.sub(r'\s+', ' ', news.crawlers.db.write.SQL) == re.sub(
             r'\s+', ' ', """
             INSERT INTO raw_news(company_id, raw_xml, url_pattern)
             VALUES              (?         , ?      , ?          );
