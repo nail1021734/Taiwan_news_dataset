@@ -51,5 +51,5 @@ def test_parsing_result() -> None:
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1541545320
     assert parsed_news.reporter == '陳耿閔'
-    assert parsed_news.title == 'MLB》巨人挖角道奇總經理薩伊迪 成為新任棒球營運總裁'
+    assert parsed_news.title == '巨人挖角道奇總經理薩伊迪 成為新任棒球營運總裁'
     assert parsed_news.url_pattern == '604783'

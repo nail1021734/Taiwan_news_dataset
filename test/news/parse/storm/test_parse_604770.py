@@ -127,5 +127,5 @@ def test_parsing_result() -> None:
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1541545200
     assert parsed_news.reporter == '李佳穎'
-    assert parsed_news.title == '新新聞》菜販變空軍總司令,韓國瑜在台灣數位選戰史寫新頁'
+    assert parsed_news.title == '菜販變空軍總司令,韓國瑜在台灣數位選戰史寫新頁'
     assert parsed_news.url_pattern == '604770'

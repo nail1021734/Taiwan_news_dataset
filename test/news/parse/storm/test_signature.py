@@ -81,8 +81,9 @@ def test_module_attribute_signature() -> None:
         ),
         (
             re.compile(
-                r'(?:【前言】|原文、圖經授權轉載自BBC中文網|報名網址\s*?\(\S*?\)|' +
-                r'(?:文/\S*?|加入風運動|歡迎上官網|【立即購票】|本文經授權轉載自|[➤◎*]).*?$)'
+                r'(?:【前言】|-{4,}\s*|原文、圖經授權轉載自BBC中文網|報名網址\s*?\(\S*?\)|' +
+                r'(?:更多精彩內容|文/\S*?|加入風運動|歡迎上官網|【立即購票】|' +
+                r'本文經授權轉載自|[➤◎*]).*?$)'
             ),
             '',
         ),
@@ -90,11 +91,12 @@ def test_module_attribute_signature() -> None:
     assert hasattr(news.parse.storm, 'TITLE_SUB_PATTERNS')
     assert news.parse.storm.TITLE_SUB_PATTERNS == [
         (
-            re.compile(r'[\(【](?:\d*?分?之\d*?|上|下|腦力犯中|下班經濟學)[\)】]'),
+            re.compile(r'([\(【](?:\d*?分?之\d*?|上|下|腦力犯中|下班經濟學)[\)】]|' +
+                       r'選摘\s*?\(\d*\)|^[\S\s]{,5}》)'),
             '',
         ),
         (
-            re.compile(r'選摘\s*?\(\d*\)'),
-            '',
+            re.compile(r'\|'),
+            ' ',
         ),
     ]
