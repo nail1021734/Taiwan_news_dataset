@@ -66,20 +66,44 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # Remove the url. This observation is made with `url_pattern = 21336,
-    # 21747`.
+    # 21679, 21680, 21747`.
     (
         re.compile(
-            r'(?:研究報告|探險隊遠征直播)?(?:網址|網站)?[\s:]*?https?:\/\/[\da-z\.-_\/]+',
+            r'(?:《刺胳針》|研究|探險隊遠征)?(?:報告|直播)?(?:網址|網站)?[\s:]*?'
+            + r'https?:\/\/[\(\)%\da-z\.-_\/-]+'
+        ),
+        '',
+    ),
+    # Remove the reporter. This observation is made with `url_pattern = 21680`.
+    (
+        re.compile(r'\d*?年?\d*?月?\d*?日?\s*?\w*?/綜合報導'),
+        '',
+    ),
+    # Remove the extra information. This observation is made with
+    # `url_pattern = 22241, 600064, 604069, 601210, 601348, 601417, 604783,
+    # 604954, 612999, 620821`.
+    (
+        re.compile(
+            r'(?:【前言】|-{4,}\s*|原文、圖經授權轉載自BBC中文網|報名網址\s*?\(\S*?\)|' +
+            r'(?:更多精彩內容|文/\S*?|加入風運動|歡迎上官網|【立即購票】|' +
+            r'本文經授權轉載自|[➤◎*]).*?$)'
         ),
         '',
     ),
 ]
 TITLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Remove fraction information. This observation is made with `url_pattern
-    # = 26950`.
+    # = 22241, 26950, 600064, 603975, 612999, 629038, 629129`.
     (
-        re.compile(r'\(\d*?分?之\d*?\)'),
+        re.compile(r'([\(【](?:\d*?分?之\d*?|上|下|腦力犯中|下班經濟學)[\)】]|' +
+                   r'選摘\s*?\(\d*\)|^[\S\s]{,5}》)'),
         '',
+    ),
+    # Remove separation symbol. This observation is made with `url_pattern
+    # = 601417`.
+    (
+        re.compile(r'\|'),
+        ' ',
     ),
 ]
 
