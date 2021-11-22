@@ -245,7 +245,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 20-10-10-12466941.'
     (
         re.compile(r'接上文:(.*?)\(\d\)'),
-        r'\1',
+        r'',
     ),
     # This observation is made with `url_pattern = 13-2-23-3807193`.
     (
@@ -266,9 +266,9 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         '',
     ),
     # This observation is made with `url_pattern = 20-8-31-12371094
-    # 20-9-21-12420158`.
+    # 20-9-21-12420158, 19-12-27-1174817, 19-12-27-11749380`.
     (
-        re.compile(r'(【[^】]*?】)+'),
+        re.compile(r'(【[^】^語^(直播)]*?】)+'),
         '',
     ),
     # This observation is made with `url_pattern = 20-9-21-12420158`.
@@ -286,9 +286,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(r'\([大新][紀纪]元[週周]刊\d+期\)'),
         '',
     ),
-    # This observation is made with `url_pattern = 13-3-4-3814165`.
+    # This observation is made with `url_pattern = 13-3-4-3814165
+    # 19-12-5-11702167`.
     (
-        re.compile(r'\(?(https?)?://www\.dajiyuan\.com\)?'),
+        re.compile(r'\(?(https?)?:?(//)?www[\-\.\\a-z]*\)?'),
         '',
     ),
     # Email pattern was found in
@@ -364,7 +365,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 19-12-28-11751523, 19-12-18-11730757, 19-10-16-11592527`
     (
         re.compile(
-            r'(?:歡迎訂閱【三國英雄】|請看視頻(?:~|《以史為鑒》。))?\s*新唐人、' + r'大紀元《三國英雄》聯合製作組'
+            r'(?:歡迎訂閱(【三國英雄】)?|請看視頻(?:~|《以史為鑒》。))?\s*新唐人、' + r'大紀元《三國英雄》聯合製作組'
         ),
         '',
     ),
@@ -401,9 +402,9 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
             + r'\s*追查迫害法輪功國際組織\s*|下面是視頻直播。|如果您有相關問題|\s*[_'
             + r'=]{10,}|\(原文轉自美房置業網|[◊\s@]*選自《明慧針道|\(本系列完'
             + r'結\) 點閱|註:全文鏈接|事據《.*》(後集)?卷?\w?、?|[\w]*小檔案|\s*\(?[此'
-            + r'本]文(?:(此文)?發表|刊載)於[\w]*(?:新聞|教育|B4|論壇)版\)?'
-            + r'|(\(節錄完\))?\s*[—─]\s*[—─](?:節(?:錄|選)|摘)自|(陳彥玲博士)?【爸'
-            + r'媽必修課】|參考資料|【作者簡介】|要瞭解更多有關《.*》|▼|本文作者).*'
+            + r'本]文(?:(此文)?發表|刊載)於[\w\d]*(?:理財|新聞|教育|B4|論壇)版\)?'
+            + r'|(\(節錄完\))?\s*[—─]\s*[—─](?:節(?:錄|選)|摘)自|陳彥玲博士(【爸'
+            + r'媽必修課】)?|參考資料|【作者簡介】|要瞭解更多有關《.*》|▼|本文作者).*'
         ),
         '',
     ),
@@ -416,9 +417,10 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         ),
         '',
     ),
-    # This observation is made with `url_pattern = 19-12-30-11754591`
+    # This observation is made with `url_pattern = 19-12-30-11754591
+    # 19-12-17-11727172`
     (
-        re.compile(r'http://tuidang.epochtimes.com/index/showpost/id/(\d)*'),
+        re.compile(r'聲明人:(\s*\S+){,6}[\d\-:\s]+\S+\s*http\S+'),
         '',
     ),
     # This observation is made with `url_pattern = 19-12-23-11741126,
@@ -453,7 +455,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
         re.compile(
             r'(?:文章來源|大紀元新聞網|主辦單位|作者簡介|醫師小檔案|明慧學校夏'
             + r'令營時間|直播日期|有問題請聯繫|參考書目|【漣漪小語】|新唐人電視台官網'
-            + r'):.*'
+            + r'|徵簽網址):.*'
         ),
         '',
     ),
@@ -467,19 +469,25 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 19-12-20-11734996, 19-12-27-11748709, 19-8-14-11453112,
     # 19-12-1-11692633, 19-11-29-11688080, 19-11-13-11653910,
     # 19-11-13-11653876, 19-10-30-11623041, 19-10-28-11617434,
-    # 19-10-17-11595022`.
+    # 19-10-17-11595022, 19-4-23-11206723`.
     (
         re.compile(
-            r'\((?:澳洲墨爾本記者站採訪報導|本文歡迎轉載引用,註明出處'
-            + r'即可|簽[名字]|化名|轉改自美國之音|(?:未|本[章卷])完,(全文)?待續|網站專文|'
-            + r'特別銘謝:.*|《.*敬請關注.*|敬請繼續關注.*|全文完|接[下上]文|前言)\)'
+            r'\((?:澳洲墨爾本記者站採訪報導|本文歡迎轉載引用,註明出處即可|簽[名字]|'
+            + r'化名|轉改自美國之音|(?:未|本[章卷])完,(全文)?待續|網站專文|圖畫|圖片、圖畫'
+            + r'|特別銘謝:.*|《.*敬請關注.*|敬請繼續關注.*|全文完|接[下上]文|前言|圖片、'
+            + r'視頻|圖片\S*)\)'
         ),
         '',
     ),
     # This observation is made with `url_pattern = 19-12-20-11735692,
     # 19-12-15-11723411.`
     (
-        re.compile(r'(接上文:)?【(十字路口|美國思想領袖)\s?】[\w\d\s]*\([上中]\),?'),
+        re.compile(r'(接上文:)?【(十字路口|美國思想領袖)\s?】[\w\d]*\([上中]\),?'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-12-15-11723396`
+    (
+        re.compile(r'接上文:.*\([上中]\),?'),
         '',
     ),
     # This observation is made with `url_pattern = 19-12-15-11723411'`.
@@ -501,7 +509,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 19-12-20-11734499,
     # 19-10-23-11606025, 19-10-21-11602441`.
     (
-        re.compile(r'(?:\s|時間:.*)(?:地址|地點|電話):.*(?:電話|地址|郵箱):.*'),
+        re.compile(r'(?:\s|時間:\S+\s?)(?:(研討會)地址|地點|電話):.*(?:電話|地址|郵箱):.*'),
         '',
     ),
     # This observation is made with `url_pattern = 19-12-19-11732179`.
@@ -553,7 +561,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     ),
     # This observation is made with `url_pattern = 19-10-16-11591305`.
     (
-        re.compile(r'<本文摘自.*>'),
+        re.compile(r'<本文摘自[^>]*>'),
         '',
     ),
     # This observation is made with `url_pattern = 19-10-7-11574545`.
@@ -570,6 +578,44 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 20-10-15-12478440`.
     (
         re.compile(r'#$'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-12-11-11715330`.
+    (
+        re.compile(r'\(\d\)$'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-10-16-11591235`.
+    (
+        re.compile(r'\**'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-10-25-11611601
+    # 19-11-29-11688080`.
+    (
+        re.compile(r'[^的](?:來源|後記):\S+'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-10-25-11611601
+    # 19-12-16-11725356`.
+    (
+        re.compile(r'參註:\s*\S*'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-12-18-11730384
+    # 19-12-27-11748178, 19-12-27-11750092`.
+    (
+        re.compile(r'[^,^。\S]*請鎖定新聞直播間\S*'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-1-4-10954370`.
+    (
+        re.compile(r'\s‧\s'),
+        '',
+    ),
+    # This observation is made with `url_pattern = 19-1-4-10954370`.
+    (
+        re.compile(r'\(圖片、圖畫\)'),
         '',
     ),
 ]

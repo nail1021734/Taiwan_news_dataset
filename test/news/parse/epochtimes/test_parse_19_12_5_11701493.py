@@ -42,7 +42,7 @@ def test_parsing_result() -> None:
             坐在一起。他是國會美中經濟與安全審查委員會(Congressional US-
             China Economic and Security Review Commission)
             的創始成員,也是詹姆斯敦基金會(Jamestown Foundation)的董事會成員
-            。 ***** 楊傑凱(Jan Jekielek):亞瑟‧沃爾德倫,很高興你來到《美國思想領袖》節目
+            。 楊傑凱(Jan Jekielek):亞瑟‧沃爾德倫,很高興你來到《美國思想領袖》節目
             。 林蔚(Arthur Waldron):非常感謝。這是我的榮幸。 楊傑凱:亞瑟,你應該是已經做了
             40年的中國問題專家了,我覺得,關於現在在中國和香港所發生的一切,你都提供了非常、非常
             有趣的視角。事情是這樣的,美國參議院剛剛一致通過了《香港人權與民主法案》
