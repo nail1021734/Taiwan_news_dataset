@@ -100,6 +100,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '國際要聞'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1374336000
-    assert parsed_news.reporter == '海寧'
+    assert parsed_news.reporter == '海寧,華雲帆'
     assert parsed_news.title == '美國無人機部署全球 不僅只限於戰區'
     assert parsed_news.url_pattern == '13-7-21-3922412'

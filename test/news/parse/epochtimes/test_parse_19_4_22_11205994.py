@@ -74,6 +74,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '北美新聞,美國華人'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1555862400
-    assert parsed_news.reporter == 'Nathan,Su'
+    assert parsed_news.reporter == 'Nathan,Su採訪,吳英'
     assert parsed_news.title == '用鏡頭捕捉川普 華裔攝影師:總統善良親切'
     assert parsed_news.url_pattern == '19-4-22-11205994'
