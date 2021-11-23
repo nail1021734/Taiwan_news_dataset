@@ -189,7 +189,7 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # 13-6-22-3899772, 13-3-16-3823858`.
     (
         re.compile(
-            r'\((事?[據据]|[見见]|出自)([^(]*?\([^)]*?\))*?[^)]*?\)。*?',
+            r'\((事?[據据]|[見见]|出自)([^(]*?\([^)]*?\))*?[^)]*?\)',
         ),
         '',
     ),
@@ -740,10 +740,10 @@ def parser(raw_news: RawNews) -> ParsedNews:
             )
         # Reporters are comma seperated.
         reporter = ','.join(map(news.parse.util.normalize.NFKC, reporter_list))
-        # Some reporters are separated by whitespaces or '、'.
+        # Some reporters are separated by whitespaces, '/' or '、'.
         reporter = news.parse.util.normalize.NFKC(
             re.sub(
-                r'[\s、]+',
+                r'[\s、/]+',
                 ',',
                 reporter,
             )
