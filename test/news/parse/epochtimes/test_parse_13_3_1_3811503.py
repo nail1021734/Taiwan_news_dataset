@@ -143,6 +143,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '國際要聞'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1362067200
-    assert parsed_news.reporter == '林達丹麥哥本哈根'
+    assert parsed_news.reporter == '林達丹麥哥本哈根,魏敏'
     assert parsed_news.title == '丹麥國會舉行「共產中國司法狀況」答辯會'
     assert parsed_news.url_pattern == '13-3-1-3811503'

@@ -81,6 +81,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '國際要聞'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1386518400
-    assert parsed_news.reporter == '文龍/樸蓮韓國首爾'
+    assert parsed_news.reporter == '文龍,樸蓮韓國首爾,趙雲'
     assert parsed_news.title == '韓國38萬人聯署反中共活摘 證人出場'
     assert parsed_news.url_pattern == '13-12-9-4030334'
