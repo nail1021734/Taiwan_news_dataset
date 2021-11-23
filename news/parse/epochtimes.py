@@ -473,9 +473,9 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (
         re.compile(
             r'\((?:澳洲墨爾本記者站採訪報導|本文歡迎轉載引用,註明出處即可|簽[名字]|'
-            + r'化名|轉改自美國之音|(?:未|本[章卷])完,(全文)?待續|網站專文|圖畫|圖片、圖畫'
-            + r'|特別銘謝:.*|《.*敬請關注.*|敬請繼續關注.*|全文完|接[下上]文|前言|圖片、'
-            + r'視頻|圖片\S*)\)'
+            + r'化名|轉改自美國之音|(?:未|本[章卷])完,(全文)?待續|網站專文|(圖畫|圖片|視'
+            + r'頻|、|圖片\S*)*|特別銘謝:.*|《.*敬請關注.*|敬請繼續關注.*|全文完|接[下'
+            + r'上]文|前言)\)'
         ),
         '',
     ),
@@ -611,11 +611,6 @@ ARTICLE_SUB_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # This observation is made with `url_pattern = 19-1-4-10954370`.
     (
         re.compile(r'\s‧\s'),
-        '',
-    ),
-    # This observation is made with `url_pattern = 19-1-4-10954370`.
-    (
-        re.compile(r'\(圖片、圖畫\)'),
         '',
     ),
 ]
