@@ -59,10 +59,7 @@ def test_parsing_result() -> None:
             在過去的15年裡,為美泰兒工作的中國勞工的工作條件沒有得到任何改善。 「芭比女工」
             將走遍法國 除了巴黎,「人民團結」和「中國勞工觀察組織」還將在本週內,帶「芭比女工」
             到法國其它大城市如雷恩、里昂、馬賽、南錫等地展示抗議。 與此同時,他們還通過網絡
-            社區發起「解放芭比女工」徵簽活動,目前已有6萬1千網民簽名支持。徵簽網址:臉書
-            https://www.facebook.com/barbieouvriere、推特
-            https://twitter.com/barbie_ouvriere、博客
-            http://barbieouvriere.tumblr.com/。
+            社區發起「解放芭比女工」徵簽活動,目前已有6萬1千網民簽名支持。
             '''
         ),
     )
