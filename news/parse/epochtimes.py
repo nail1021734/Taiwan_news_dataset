@@ -78,7 +78,7 @@ REPORTER_PATTERNS: List[re.Pattern] = [
     # This observation is made with `url_pattern = 13-2-10-3798072,
     # 19-12-13-11720728`.
     re.compile(
-        r'[\(【\]大[紀纪]元?[\w]*[記记]者([\w、,/\s]*?)(?:美國.*?)?(?:採訪|編譯)?(?:報導)?[\)】]'
+        r'[\(【]大[紀纪]元?[\w]*[記记]者([\w、,/\s]*?)(?:美國.*?)?(?:採訪|編譯)?(?:報導)?[\)】]'
     ),
     # This observation is made with `url_pattern = 12-8-12-3657466,
     # 12-7-3-3626870`.
