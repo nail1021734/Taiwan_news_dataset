@@ -26,7 +26,7 @@ r"""創建資料表儲存爬蟲新聞內容處理結果.
 剩餘欄位為拆解其他欄位所得.
 - id 為流水號, 與 `news.crawlers.db.schema.RawNews` 中的 id 不同.
 - article 為新聞內文, 從 `news.crawlers.db.schema.RawNews` 中 raw_xml 的部份文字取得.
-- category 為新聞內文, 從 `news.crawlers.db.schema.RawNews` 中 raw_xml 或
+- category 為新聞類別, 從 `news.crawlers.db.schema.RawNews` 中 raw_xml 或
   url_pattern 的部份文字取得.  部份新聞並沒有類別.
 - company_id 代表新聞網站, 與 `news.crawlers.db.schema.RawNews` 中的
   company_id 相同.
