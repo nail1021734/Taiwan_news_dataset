@@ -23,14 +23,14 @@ python -m news.preprocess.main   \
 
 ## 特殊參數介紹
 
-- `function_flag`: 選擇要執行的前處理方法. 總共11種前處理方法分別對應到11個 bit 每個 bit 照順序代表的前處理方法如下
+- `function_flag`: 選擇要執行的前處理方法. 總共10種前處理方法分別對應到10個 bit 每個 bit 照順序代表的前處理方法如下
     1. `NFKC`: 對輸入資料集進行 NFKC 正規化.
     2. `url_filter`: 將輸入資料集的 url 過濾掉.
     3. `whitespace_filter`: 將多個空白換成一個.
     4. `parentheses_filter`: 將小括號, 中括號, 以及【】內的句子以及括號一起過濾掉.
     5. `not_CJK_filter`: 將中文, 英文, 數字以及特定標點符號(包含.~<、,。《?>*\-!》:」「+%/()\[\]【】)以外的符號過濾掉.
     6. `length_filter`: 將長度小於 `min_length` 或大於 `max_length` 的文章過濾掉, 預設為小於200或大於1000的文章會被過慮掉.
-    7. `ner_tag_subs_flag_version`: 將 NER 辨識出來的某個類別替換為 tag,需給定 `NER_flag` 以及 `NER_NeedID_flag` 參數, 並且預設會將日期類別中的數字替換為 `<num>`, 若不想將日期過濾掉可以設定 `filter_date` 參數為 `False`(預設為 `True`).
+    7. `ner_tag_subs_flag_version`: 將 NER 辨識出來的某個類別替換為 tag, 需給定 `NER_flag` 以及 `NER_NeedID_flag` 參數, 並且預設會將日期類別中的數字替換為 `<num>`, 若不想將日期過濾掉可以設定 `filter_date` 參數為 `False`(預設為 `True`).
     8. `english_to_tag`: 將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
     9. `guillemet_filter`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
     10. `number_filter`: 將阿拉伯數字換為 `<num>` tag.

@@ -6,7 +6,19 @@ from typing import List, Dict
 import re
 from ckip_transformers.nlp import CkipNerChunker
 import copy
-import inspect
+
+TAG_TABLE = {
+    'GPE': 'gpe',
+    'PERSON': 'per',
+    'ORG': 'org',
+    'NORP': 'nrp',
+    'LOC': 'loc',
+    'FAC': 'fac',
+    'PRODUCT': 'prdt',
+    'WORK_OF_ART': 'woa',
+    'EVENT': 'evt',
+    'LAW': 'law',
+}
 
 
 def NFKC(
@@ -19,12 +31,12 @@ def NFKC(
         i.title = unicodedata.normalize('NFKC', i.title)
         i.article = unicodedata.normalize('NFKC', i.article)
 
-        # Check if `i.category` is None.
+        # Check whether `i.category` is None.
         if i.category:
             # If `i.category` is not None than do NFKC normalize.
             i.category = unicodedata.normalize('NFKC', i.category)
 
-        # Check if `i.reporter` is None.
+        # Check whether `i.reporter` is None.
         if i.reporter:
             # If `i.reporter` is not None then do NFKC normalize.
             i.reporter = unicodedata.normalize('NFKC', i.reporter)
@@ -41,7 +53,7 @@ def length_filter(
     r"""Remove articles that are too long or too short.
     """
     result = []
-    for i in tqdm(dataset, desc='length_filter', disable=not debug):
+    for i in tqdm(dataset, desc='Length_filter', disable=not debug):
         if max_length > len(i.article) > min_length:
             result.append(i)
 
@@ -217,7 +229,7 @@ def NER_dataset(dataset: List[news.parse.db.schema.ParsedNews],) -> List[Dict]:
     return ner_result
 
 
-def ner_tag_subs(
+def _ner_tag_subs(
     dataset: List[news.parse.db.schema.ParsedNews],
     tag_dict: List[Dict],
     filter_date: bool = True,
@@ -375,11 +387,12 @@ def date_filter(
     return dataset
 
 
-def ner_tag_subs_flag_version(
+def ner_tag_subs(
     dataset: List[news.parse.db.schema.ParsedNews],
-    NER_flag: str,
-    NER_NeedID_flag: str,
+    NER_class: List[str],
+    NER_NeedID_class: List[str],
     filter_date: bool,
+    debug: bool,
 ):
     r"""使用 flag 指定要將 NER 結果的哪些類別替換成 tag.
 
@@ -387,121 +400,31 @@ def ner_tag_subs_flag_version(
     ==========
     `dataset`: List[news.parse.db.schema.ParsedNews]
         要處理的資料集.
-    `NER_flag`: str
-        10個 bit 的 flag 依照 `tag_list` 的順序指定是否將此 NER 類別替換成 tag.
+    `NER_class`: str
+        依照 `tag_list` 的表格指定是否將此 NER 類別替換成 tag.
     `NER_NeedID_flag`: str
         指定每個要替換成 tag 的 NER 類別是否使用特定 ID 表示一樣的token.
     `filter_date`: bool
         是否將日期中的數字替換成 `<num>`.
-
-    Example
-    =======
-    當 `NER_flag == 1010000000` 且 `NER_NeedID_flag == 1000000000`
-    表示 GPE 類別以及 ORG 類別分別要換成 `<gpe1>` 和 `<org>` 兩種 token.
-    (注意，gpe 的每個不同 token 會有各自的 ID.)
     """
-    # 建立 `tag_list` 照順序分別代表 flag 中的每個 bit.
-    tag_list = [
-        {
-            'tag_name': 'GPE',
-            'sub_tag': 'gpe'
-        },
-        {
-            'tag_name': 'PERSON',
-            'sub_tag': 'per'
-        },
-        {
-            'tag_name': 'ORG',
-            'sub_tag': 'org'
-        },
-        {
-            'tag_name': 'NORP',
-            'sub_tag': 'nrp'
-        },
-        {
-            'tag_name': 'LOC',
-            'sub_tag': 'loc'
-        },
-        {
-            'tag_name': 'FAC',
-            'sub_tag': 'fac'
-        },
-        {
-            'tag_name': 'PRODUCT',
-            'sub_tag': 'prdt'
-        },
-        {
-            'tag_name': 'WORK_OF_ART',
-            'sub_tag': 'woa'
-        },
-        {
-            'tag_name': 'EVENT',
-            'sub_tag': 'evt'
-        },
-        {
-            'tag_name': 'LAW',
-            'sub_tag': 'law'
-        },
-    ]
-
     # 建立 `tag_dict`.
     tag_dict = []
-    for tag_flag, ID_flag, tag_info in zip(NER_flag, NER_NeedID_flag, tag_list):
-        if int(tag_flag):
+    if NER_class:
+        # 如果有指定要替換成 tag 的 NER 類別則建立 `tag_dict`.
+        for tag in NER_class:
             tag_dict.append(
                 {
-                    'type': [tag_info['tag_name']],
-                    'tag': tag_info['sub_tag'],
-                    'NeedID': bool(int(ID_flag)),
+                    'type': [tag],
+                    'tag': TAG_TABLE[tag],
+                    'NeedID': tag in NER_NeedID_class
                 }
             )
 
     # Run `ner_tag_subs`.
-    dataset = ner_tag_subs(
+    dataset = _ner_tag_subs(
         dataset=dataset,
         tag_dict=tag_dict,
         filter_date=filter_date,
+        debug=debug,
     )
-    return dataset
-
-
-def preprocess_by_flag(
-    function_flag: str,
-    **kwargs,
-):
-    r"""根據 flag 決定哪些 preprocess function 要執行.
-
-    Parameters
-    ==========
-    `flag`: str
-        11個 bit 組成的字串,每個 bit 照順序各自代表 `preprocess_order` 內的每個
-        function 若對應 bit 為1代表要執行,對應 bit 為0則不執行.
-    """
-    # Set preprocess order to ensure run preprocess in the correct sequence.
-    preprocess_order = [
-        NFKC,
-        url_filter,
-        whitespace_filter,
-        parentheses_filter,
-        emoji_filter,
-        not_CJK_filter,
-        length_filter,
-        ner_tag_subs_flag_version,
-        english_to_tag,
-        guillemet_filter,
-        number_filter,
-    ]
-
-    # Run preprocess in specified order.
-    for flag_value, func in zip(function_flag, preprocess_order):
-        # If `flag == 1` then run the preprocess function.
-        if int(flag_value):
-            # Get function parameters.
-            func_parameter = dict(
-                (p_name, kwargs[p_name])
-                for p_name in inspect.signature(func).parameters
-            )
-
-        # Run preprocess function.
-        dataset = func(**func_parameter)
     return dataset

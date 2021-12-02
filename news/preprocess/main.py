@@ -4,6 +4,7 @@ import sys
 import textwrap
 from typing import Callable, Dict, List
 
+import inspect
 from tqdm import trange
 
 import news.parse.db.read
@@ -16,7 +17,35 @@ import news.db
 import news.path
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
-from news.preprocess.preprocess import preprocess_by_flag
+from news.preprocess.preprocess import (
+    TAG_TABLE,
+    NFKC,
+    url_filter,
+    whitespace_filter,
+    parentheses_filter,
+    emoji_filter,
+    not_CJK_filter,
+    length_filter,
+    ner_tag_subs,
+    english_to_tag,
+    guillemet_filter,
+    number_filter,
+)
+
+# Set preprocess order to ensure run preprocess in the correct sequence.
+PREPROCESS_ORDER = [
+    NFKC,
+    url_filter,
+    whitespace_filter,
+    parentheses_filter,
+    emoji_filter,
+    not_CJK_filter,
+    length_filter,
+    ner_tag_subs,
+    english_to_tag,
+    guillemet_filter,
+    number_filter,
+]
 
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
@@ -24,20 +53,29 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
     Example
     =======
-    python -m news.preprocess.main   \
-        --batch_size 1000            \
-        --db_name rel/my.db          \
-        --db_name /abs/my.db         \
-        --db_dir rel_dir             \
-        --db_dir /abs_dir            \
-        --save_db_name out.db        \
-        --debug                      \
-        --function_flag 11111111111  \
-        --NER_flag 0110100000        \
-        --NER_NeedID_flag 0110100000 \
-        --filter_date                \
-        --min_length 200             \
-        --max_length 1000
+    python -m news.preprocess.main            \
+        --batch_size 1000                     \
+        --db_name rel/my.db                   \
+        --db_name /abs/my.db                  \
+        --db_dir rel_dir                      \
+        --db_dir /abs_dir                     \
+        --save_db_name out.db                 \
+        --debug                               \
+        --NFKC                                \
+        --url_filter                          \
+        --whitespace_filter                   \
+        --parentheses_filter                  \
+        --not_CJK_filter                      \
+        --length_filter                       \
+            --min_length 200                  \
+            --max_length 1000                 \
+        --ner_tag_subs                        \
+            --NER_class ORG PERSON LOC        \
+            --NER_NeedID_class ORG PERSON LOC \
+            --filter_date                     \
+        --english_to_tag                      \
+        --guillemet_filter                    \
+        --number_filter
     """
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
@@ -211,78 +249,58 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--function_flag',
-        type=str,
-        required=True,
-        help=textwrap.dedent(
-            f"""\
-            選擇要執行的前處理方法. 總共11種前處理方法分別對應到11個 bit
-            每個 bit 照順序代表的前處理方法如下
-            1. `NFKC`: 對輸入資料集進行 NFKC 正規化.
-            2. `url_filter`: 將輸入資料集的 url 過濾掉.
-            3. `whitespace_filter`: 將多個空白換成一個.
-            4. `parentheses_filter`: 將小括號, 中括號, 以及【】內的句子以及括號一起過濾掉.
-            5. `not_CJK_filter`: 將中文, 英文, 數字以及特定標點符號
-            (包含.~<、,。《?>*\-!》:」「+%/()\[\]【】)以外的符號過濾掉.
-            6. `length_filter`: 將長度小於 `min_length` 或大於 `max_length` 的文章過濾
-            掉, 預設為小於200或大於1000的文章會被過慮掉.
-            7. `ner_tag_subs_flag_version`: 將 NER 辨識出來的某個類別替換為 tag,
-            需給定 `NER_flag` 以及 `NER_NeedID_flag` 參數, 並且預設會將日期類別中的數字
-            替換為 `<num>`, 若不想將日期過濾掉可以設定 `filter_date` 參數為 `False`(
-            預設為 `True`).
-            8. `english_to_tag`: 將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
-            9. `guillemet_filter`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
-            10. `number_filter`: 將阿拉伯數字換為 `<num>` tag.
-            """
-        ),
+        '--NFKC',
+        action='store_true',
+        help=textwrap
+        .dedent("""\
+            對輸入資料集進行 NFKC 正規化.
+            """),
     )
     parser.add_argument(
-        '--NER_flag',
-        type=str,
-        required=False,
-        help=textwrap.dedent(
-            f"""\
-            選擇哪些 NER 類別要被替換為 tag, 每個 bit 對應到的類別順序如下
-            1. GPE 替換為 `<gpe>`.
-            2. PERSON 替換為 `<per>`.
-            3. ORG 替換為 `<org>`.
-            4. NORP 替換為 `<nrp>`.
-            5. LOC 替換為 `<loc>`.
-            6. FAC 替換為 `<fac>`.
-            7. PRODUCT 替換為 `<prdt>`.
-            8. WORK_OF_ART 替換為 `<woa>`.
-            9. EVENT 替換為 `<evt>`.
-            10. LAW 替換為 `<law>`.
-            """
-        ),
+        '--url_filter',
+        action='store_true',
+        help=textwrap.dedent("""\
+            將輸入資料集的 url 過濾掉.
+            """),
     )
     parser.add_argument(
-        '--NER_NeedID_flag',
-        type=str,
-        required=False,
-        help=textwrap.dedent(
-            f"""\
-            選擇要被替換為 tag 的 NER 類別, 相同的詞是否要有相同 id 來表示
-            每個 bit 對應到的類別順序如下.
-            1. `<gpe>` 後加上 id, 例如： `<gpe1>`.
-            2. `<per>` 後加上 id, 例如： `<per1>`.
-            3. `<org>` 後加上 id, 例如： `<org1>`.
-            4. `<nrp>` 後加上 id, 例如： `<nrp1>`.
-            5. `<loc>` 後加上 id, 例如： `<loc1>`.
-            6. `<fac>` 後加上 id, 例如： `<fac1>`.
-            7. `<prdt>` 後加上 id, 例如： `<prdt1>`.
-            8. `<woa>` 後加上 id, 例如： `<woa1>`.
-            9. `<evt>` 後加上 id, 例如： `<evt1>`.
-            10. `<law>` 後加上 id, 例如：`<law1>` .
-            """
-        ),
+        '--whitespace_filter',
+        action='store_true',
+        help=textwrap.dedent("""\
+            將多個空白換成一個.
+            """),
     )
     parser.add_argument(
-        '--filter_date',
+        '--parentheses_filter',
+        action='store_true',
+        help=textwrap
+        .dedent("""\
+            將小括號, 中括號, 以及【】內的句子以及括號一起過濾掉.
+            """),
+    )
+    parser.add_argument(
+        '--emoji_filter',
+        action='store_true',
+        help=textwrap.dedent("""\
+            過濾 emoji.
+            """),
+    )
+    parser.add_argument(
+        '--not_CJK_filter',
         action='store_true',
         help=textwrap.dedent(
-            f"""\
-            當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
+            """\
+            將中文, 英文, 數字以及特定標點符號
+            (包含`.~<、,。《?>*\-!》:」「+%/()\[\]【】`)以外的符號過濾掉.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--length_filter',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將長度小於 `min_length` 或大於 `max_length` 的文章過濾
             """
         ),
     )
@@ -306,7 +324,117 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
             """
         ),
     )
+    parser.add_argument(
+        '--ner_tag_subs',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將 NER 辨識出來的某個類別替換為 tag,
+            需給定 `NER_flag` 以及 `NER_NeedID_flag` 參數, 並且預設會將日期類別中的數字
+            替換為 `<num>`, 若不想將日期過濾掉可以設定 `filter_date` 參數為 `False`(
+            預設為 `True`).
+            """
+        ),
+    )
+    parser.add_argument(
+        '--NER_class',
+        type=str,
+        nargs='*',
+        choices=TAG_TABLE.keys(),
+        required=False,
+        help=textwrap.dedent(
+            f"""\
+            選擇哪些 NER 類別要被替換為 tag. 總共10種類別
+            例如: `--NER_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
+            1. GPE 替換為 `<gpe>`.
+            2. PERSON 替換為 `<per>`.
+            3. ORG 替換為 `<org>`.
+            4. NORP 替換為 `<nrp>`.
+            5. LOC 替換為 `<loc>`.
+            6. FAC 替換為 `<fac>`.
+            7. PRODUCT 替換為 `<prdt>`.
+            8. WORK_OF_ART 替換為 `<woa>`.
+            9. EVENT 替換為 `<evt>`.
+            10. LAW 替換為 `<law>`.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--NER_NeedID_class',
+        type=str,
+        nargs='*',
+        choices=TAG_TABLE.keys(),
+        required=False,
+        help=textwrap.dedent(
+            f"""\
+            選擇要被替換為 tag 的 NER 類別相同的詞是否要用相同 id 來表示.
+            例如: `--NER_NeedID_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
+            1. `<gpe>` 後加上 id, 例如： `<gpe1>`.
+            2. `<per>` 後加上 id, 例如： `<per1>`.
+            3. `<org>` 後加上 id, 例如： `<org1>`.
+            4. `<nrp>` 後加上 id, 例如： `<nrp1>`.
+            5. `<loc>` 後加上 id, 例如： `<loc1>`.
+            6. `<fac>` 後加上 id, 例如： `<fac1>`.
+            7. `<prdt>` 後加上 id, 例如： `<prdt1>`.
+            8. `<woa>` 後加上 id, 例如： `<woa1>`.
+            9. `<evt>` 後加上 id, 例如： `<evt1>`.
+            10. `<law>` 後加上 id, 例如：`<law1>` .
+            """
+        ),
+    )
+    parser.add_argument(
+        '--filter_date',
+        action='store_true',
+        help=textwrap.dedent(
+            f"""\
+            當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--english_to_tag',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--guillemet_filter',
+        action='store_true',
+        help=textwrap
+        .dedent("""\
+            將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
+            """),
+    )
+    parser.add_argument(
+        '--number_filter',
+        action='store_true',
+        help=textwrap
+        .dedent("""\
+            將阿拉伯數字換為 `<num>` tag.
+            """),
+    )
+
     return parser.parse_args(argv)
+
+
+def preprocess(**kwargs,):
+    # Run preprocess in specified order.
+    for func in PREPROCESS_ORDER:
+        # Check whether `kwargs[func.__name__]` is true to determine if
+        # this preprocess function need to be execute.
+        if kwargs[func.__name__]:
+            # Get function parameters.
+            func_parameter = dict(
+                (p_name, kwargs[p_name])
+                for p_name in inspect.signature(func).parameters
+            )
+
+        # Run preprocess function.
+        dataset = func(**func_parameter)
+    return dataset
 
 
 def main(argv: List[str]) -> None:
@@ -360,7 +488,7 @@ def main(argv: List[str]) -> None:
                     offset=offset,
                     limit=args.batch_size,
                 )
-                preprocessed_news = preprocess_by_flag(
+                preprocessed_news = preprocess(
                     dataset=parsed_news_list, **args.__dict__
                 )
                 news.parse.db.write.write_new_records(
@@ -373,7 +501,6 @@ def main(argv: List[str]) -> None:
                 # Avoid using too many memories.
                 gc.collect()
             except Exception as err:
-                print(err.args)
                 print(f'Failed to write records at id {offset} of {db_path}.')
 
     save_conn.close()
