@@ -5,36 +5,50 @@
 ## 執行範例 Example
 
 ```sh
-python -m news.preprocess.main   \
-    --batch_size 1000            \
-    --db_name rel/my.db          \
-    --db_name /abs/my.db         \
-    --db_dir rel_dir             \
-    --db_dir /abs_dir            \
-    --save_db_name out.db        \
-    --debug                      \
-    --function_flag 11111111111  \
-    --NER_flag 0110100000        \
-    --NER_NeedID_flag 0110100000 \
-    --filter_date                \
-    --min_length 200             \
-    --max_length 1000
+python -m news.preprocess.main          \
+  --batch_size 1000                     \
+  --db_name rel/my.db                   \
+  --db_name /abs/my.db                  \
+  --db_dir rel_dir                      \
+  --db_dir /abs_dir                     \
+  --save_db_name out.db                 \
+  --debug                               \
+  --NFKC                                \
+  --url_filter                          \
+  --whitespace_filter                   \
+  --parentheses_filter                  \
+  --not_CJK_filter                      \
+  --length_filter                       \
+      --min_length 200                  \
+      --max_length 1000                 \
+  --ner_tag_subs                        \
+      --NER_class ORG PERSON LOC        \
+      --NER_NeedID_class ORG PERSON LOC \
+      --filter_date                     \
+  --english_to_tag                      \
+  --guillemet_filter                    \
+  --number_filter
 ```
 
 ## 特殊參數介紹
 
-- `function_flag`: 選擇要執行的前處理方法. 總共10種前處理方法分別對應到10個 bit 每個 bit 照順序代表的前處理方法如下
-    1. `NFKC`: 對輸入資料集進行 NFKC 正規化.
-    2. `url_filter`: 將輸入資料集的 url 過濾掉.
-    3. `whitespace_filter`: 將多個空白換成一個.
-    4. `parentheses_filter`: 將小括號, 中括號, 以及【】內的句子以及括號一起過濾掉.
-    5. `not_CJK_filter`: 將中文, 英文, 數字以及特定標點符號(包含.~<、,。《?>*\-!》:」「+%/()\[\]【】)以外的符號過濾掉.
-    6. `length_filter`: 將長度小於 `min_length` 或大於 `max_length` 的文章過濾掉, 預設為小於200或大於1000的文章會被過慮掉.
-    7. `ner_tag_subs_flag_version`: 將 NER 辨識出來的某個類別替換為 tag, 需給定 `NER_flag` 以及 `NER_NeedID_flag` 參數, 並且預設會將日期類別中的數字替換為 `<num>`, 若不想將日期過濾掉可以設定 `filter_date` 參數為 `False`(預設為 `True`).
-    8. `english_to_tag`: 將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
-    9. `guillemet_filter`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
-    10. `number_filter`: 將阿拉伯數字換為 `<num>` tag.
-- `NER_flag`: 選擇哪些 NER 類別要被替換為 tag, 每個 bit 對應到的類別順序如下
+11 種前處理方法
+
+1. `NFKC`: 對輸入資料集進行 NFKC 正規化.
+2. `url_filter`: 將輸入資料集的 url 過濾掉.
+3. `whitespace_filter`: 將多個空白換成一個.
+4. `parentheses_filter`: 將小括號, 中括號, 以及【】內的句子以及括號一起過濾掉.
+5. `not_CJK_filter`: 將中文, 英文, 數字以及特定標點符號(包含.~<、,。《?>*\-!》:」「+%/()\[\]【】)以外的符號過濾掉.
+6. `emoji_filter`: 過濾掉 emoji 符號.
+7. `length_filter`: 將長度小於 `min_length` 或大於 `max_length` 的文章過濾掉, 預設為小於200或大於1000的文章會被過慮掉.
+8. `ner_tag_subs`: 將 NER 辨識出來的某個類別替換為 tag, 需給定 `NER_class` 以及 `NER_NeedID_class` 參數, 並且可以用 `filter_date` 參數決定是否將 DATE 類別中的數字替換成 `<num>`.
+9. `english_to_tag`: 將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
+10. `guillemet_filter`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
+11. `number_filter`: 將阿拉伯數字換為 `<num>` tag.
+
+### ner_tag_subs 額外參數
+
+- `NER_class`: 選擇哪些 NER 類別要被替換為 tag, 目前總共10種類別可以選擇(可多選)
     1. GPE 替換為 `<gpe>`.
     2. PERSON 替換為 `<per>`.
     3. ORG 替換為 `<org>`.
@@ -45,7 +59,8 @@ python -m news.preprocess.main   \
     8. WORK_OF_ART 替換為 `<woa>`.
     9. EVENT 替換為 `<evt>`.
     10. LAW 替換為 `<law>`.
-- `NER_NeedID_flag`: 選擇要被替換為 tag 的 NER 類別, 相同的詞是否要有相同 id 來表示, 每個 bit 對應到的類別順序如下.
+
+- `NER_NeedID_class`: 選擇要被替換為 tag 的 NER 類別相同的詞是否要有相同 id 來表示(可多選)
     1. `<gpe>` 後加上 id, 例如： `<gpe1>`.
     2. `<per>` 後加上 id, 例如： `<per1>`.
     3. `<org>` 後加上 id, 例如： `<org1>`.
@@ -57,6 +72,9 @@ python -m news.preprocess.main   \
     9. `<evt>` 後加上 id, 例如： `<evt1>`.
     10. `<law>` 後加上 id, 例如：`<law1>` .
 - `filter_date`: 當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
+
+### length filter 額外參數
+
 - `min_length`: 執行 `length_filter` 時, 要保留的文章最短長度.
 - `max_length`: 執行 `length_filter` 時, 要保留的文章最長長度.
 
