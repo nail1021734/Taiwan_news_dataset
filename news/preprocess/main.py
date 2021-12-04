@@ -12,6 +12,7 @@ import news.parse.db.util
 import news.preprocess.db.util
 import news.parse.db.write
 import news.preprocess.db.create
+from functools import partial
 
 import news.db
 import news.path
@@ -20,32 +21,20 @@ from news.parse.db.schema import ParsedNews
 from news.preprocess.preprocess import (
     TAG_TABLE,
     NFKC,
-    url_filter,
     whitespace_filter,
+    url_filter,
     parentheses_filter,
+    brackets_filter,
+    lenticular_brackets_filter,
+    curly_brackets_filter,
     emoji_filter,
-    not_CJK_filter,
+    not_cjk_filter,
     length_filter,
-    ner_tag_subs,
-    english_to_tag,
-    guillemet_filter,
-    number_filter,
+    ner_entity_replacer,
+    english_replacer,
+    guillemet_replacer,
+    number_replacer,
 )
-
-# Set preprocess order to ensure run preprocess in the correct sequence.
-PREPROCESS_ORDER = [
-    NFKC,
-    url_filter,
-    whitespace_filter,
-    parentheses_filter,
-    emoji_filter,
-    not_CJK_filter,
-    length_filter,
-    ner_tag_subs,
-    english_to_tag,
-    guillemet_filter,
-    number_filter,
-]
 
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
@@ -53,29 +42,29 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
     Example
     =======
-    python -m news.preprocess.main            \
-        --batch_size 1000                     \
-        --db_name rel/my.db                   \
-        --db_name /abs/my.db                  \
-        --db_dir rel_dir                      \
-        --db_dir /abs_dir                     \
-        --save_db_name out.db                 \
-        --debug                               \
-        --NFKC                                \
-        --url_filter                          \
-        --whitespace_filter                   \
-        --parentheses_filter                  \
-        --not_CJK_filter                      \
-        --length_filter                       \
-            --min_length 200                  \
-            --max_length 1000                 \
-        --ner_tag_subs                        \
-            --NER_class ORG PERSON LOC        \
-            --NER_NeedID_class ORG PERSON LOC \
-            --filter_date                     \
-        --english_to_tag                      \
-        --guillemet_filter                    \
-        --number_filter
+    python -m news.preprocess.main         \
+        --batch_size 1000                  \
+        --db_name rel/my.db                \
+        --db_name /abs/my.db               \
+        --db_dir rel_dir                   \
+        --db_dir /abs_dir                  \
+        --save_db_name out.db              \
+        --debug                            \
+        --min_length 200                   \
+        --max_length 1000                  \
+        --use_url_filter                   \
+        --use_parentheses_filter           \
+        --use_brackets_filter              \
+        --use_curly_brackets_filter        \
+        --use_lenticular_brackets_filter   \
+        --use_not_cjk_filter               \
+        --use_emoji_filter                 \
+        --ner_class ORG PERSON LOC         \
+        --ner_need_id_class ORG PERSON LOC \
+        --use_date_replacer                \
+        --use_english_replacer             \
+        --use_guillemet_replacer           \
+        --use_number_replacer
     """
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
@@ -249,44 +238,53 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--NFKC',
-        action='store_true',
-        help=textwrap
-        .dedent("""\
-            對輸入資料集進行 NFKC 正規化.
-            """),
-    )
-    parser.add_argument(
-        '--url_filter',
+        '--use_url_filter',
         action='store_true',
         help=textwrap.dedent("""\
             將輸入資料集的 url 過濾掉.
             """),
     )
     parser.add_argument(
-        '--whitespace_filter',
-        action='store_true',
-        help=textwrap.dedent("""\
-            將多個空白換成一個.
-            """),
-    )
-    parser.add_argument(
-        '--parentheses_filter',
+        '--use_parentheses_filter',
         action='store_true',
         help=textwrap
         .dedent("""\
-            將小括號, 中括號, 以及【】內的句子以及括號一起過濾掉.
+            將小括號內的句子以及括號一起過濾掉.
             """),
     )
     parser.add_argument(
-        '--emoji_filter',
+        '--use_brackets_filter',
+        action='store_true',
+        help=textwrap
+        .dedent("""\
+            將中括號內的句子以及括號一起過濾掉.
+            """),
+    )
+    parser.add_argument(
+        '--use_curly_brackets_filter',
+        action='store_true',
+        help=textwrap
+        .dedent("""\
+            將大括號內的句子以及括號一起過濾掉.
+            """),
+    )
+    parser.add_argument(
+        '--use_lenticular_brackets_filter',
+        action='store_true',
+        help=textwrap
+        .dedent("""\
+            將透鏡狀括號(【】)內的句子以及括號一起過濾掉.
+            """),
+    )
+    parser.add_argument(
+        '--use_emoji_filter',
         action='store_true',
         help=textwrap.dedent("""\
             過濾 emoji.
             """),
     )
     parser.add_argument(
-        '--not_CJK_filter',
+        '--use_not_cjk_filter',
         action='store_true',
         help=textwrap.dedent(
             """\
@@ -296,48 +294,23 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--length_filter',
-        action='store_true',
-        help=textwrap.dedent(
-            """\
-            將長度小於 `min_length` 或大於 `max_length` 的文章過濾
-            """
-        ),
-    )
-    parser.add_argument(
         '--min_length',
         type=int,
-        required=False,
-        help=textwrap.dedent(
-            f"""\
-            執行 `length_filter` 時, 要保留的文章最短長度.
-            """
-        ),
+        help=textwrap
+        .dedent("""\
+            將長度小於 `min_length` 的文章過濾.
+            """),
     )
     parser.add_argument(
         '--max_length',
         type=int,
-        required=False,
-        help=textwrap.dedent(
-            f"""\
-            執行 `length_filter` 時, 要保留的文章最長長度.
-            """
-        ),
+        help=textwrap
+        .dedent("""\
+            將長度大於 `max_length` 的文章過濾.
+            """),
     )
     parser.add_argument(
-        '--ner_tag_subs',
-        action='store_true',
-        help=textwrap.dedent(
-            """\
-            將 NER 辨識出來的某個類別替換為 tag,
-            需給定 `NER_flag` 以及 `NER_NeedID_flag` 參數, 並且預設會將日期類別中的數字
-            替換為 `<num>`, 若不想將日期過濾掉可以設定 `filter_date` 參數為 `False`(
-            預設為 `True`).
-            """
-        ),
-    )
-    parser.add_argument(
-        '--NER_class',
+        '--ner_class',
         type=str,
         nargs='*',
         choices=TAG_TABLE.keys(),
@@ -345,7 +318,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         help=textwrap.dedent(
             f"""\
             選擇哪些 NER 類別要被替換為 tag. 總共10種類別
-            例如: `--NER_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
+            例如: `--ner_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
             1. GPE 替換為 `<gpe>`.
             2. PERSON 替換為 `<per>`.
             3. ORG 替換為 `<org>`.
@@ -360,7 +333,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--NER_NeedID_class',
+        '--ner_need_id_class',
         type=str,
         nargs='*',
         choices=TAG_TABLE.keys(),
@@ -368,7 +341,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         help=textwrap.dedent(
             f"""\
             選擇要被替換為 tag 的 NER 類別相同的詞是否要用相同 id 來表示.
-            例如: `--NER_NeedID_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
+            例如: `--ner_need_id_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
             1. `<gpe>` 後加上 id, 例如： `<gpe1>`.
             2. `<per>` 後加上 id, 例如： `<per1>`.
             3. `<org>` 後加上 id, 例如： `<org1>`.
@@ -383,7 +356,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--filter_date',
+        '--use_date_replacer',
         action='store_true',
         help=textwrap.dedent(
             f"""\
@@ -392,7 +365,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--english_to_tag',
+        '--use_english_replacer',
         action='store_true',
         help=textwrap.dedent(
             """\
@@ -401,7 +374,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--guillemet_filter',
+        '--use_guillemet_replacer',
         action='store_true',
         help=textwrap
         .dedent("""\
@@ -409,7 +382,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
             """),
     )
     parser.add_argument(
-        '--number_filter',
+        '--use_number_replacer',
         action='store_true',
         help=textwrap
         .dedent("""\
@@ -420,20 +393,60 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def preprocess(**kwargs,):
-    # Run preprocess in specified order.
-    for func in PREPROCESS_ORDER:
-        # Check whether `kwargs[func.__name__]` is true to determine if
-        # this preprocess function need to be execute.
-        if kwargs[func.__name__]:
-            # Get function parameters.
-            func_parameter = dict(
-                (p_name, kwargs[p_name])
-                for p_name in inspect.signature(func).parameters
-            )
+def get_func_list(args,):
+    # 為了和 parsing 結果統一格式 `NFKC` 和 `whitespace_filter` 一定需要使用
+    # 所以先放在 `func_list` 內.
+    func_list = [NFKC, whitespace_filter]
 
+    # 以下前處理方法不會將文字替換成 tag, 因此先進行處理.
+    if args['use_url_filter']:
+        func_list.append(url_filter)
+    if args['use_parentheses_filter']:
+        func_list.append(parentheses_filter)
+    if args['use_brackets_filter']:
+        func_list.append(brackets_filter)
+    if args['use_curly_brackets_filter']:
+        func_list.append(curly_brackets_filter)
+    if args['use_lenticular_brackets_filter']:
+        func_list.append(lenticular_brackets_filter)
+    if args['use_emoji_filter']:
+        func_list.append(emoji_filter)
+    if args['use_not_cjk_filter']:
+        func_list.append(not_cjk_filter)
+    if 'min_length' in args.keys() or 'max_length' in args.keys():
+        func_list.append(length_filter)
+
+    # 以下前處理方法會將部份文字替換成 tag.
+    if 'ner_class' in args.keys() or args['use_date_replacer']:
+        func_list.append(ner_entity_replacer)
+    if args['use_english_replacer']:
+        func_list.append(english_replacer)
+    if args['use_guillemet_replacer']:
+        func_list.append(guillemet_replacer)
+    if args['use_number_replacer']:
+        func_list.append(number_replacer)
+
+    return func_list
+
+
+def preprocess(
+    dataset: List[news.parse.db.schema.ParsedNews],
+    func_list: List[Callable],
+    **kwargs,
+) -> List[news.parse.db.schema.ParsedNews]:
+
+    # Run preprocess in specified order.
+    for func in func_list:
+        # Get function parameters.
+        func_parameters = dict(
+            (p_name, kwargs[p_name])
+            for p_name in inspect.signature(func).parameters
+            if p_name != 'dataset'
+        )
+        # Put `dataset` in function parameters.
+        func_parameters['dataset'] = dataset
         # Run preprocess function.
-        dataset = func(**func_parameter)
+        dataset = func(**func_parameters)
     return dataset
 
 
@@ -462,6 +475,9 @@ def main(argv: List[str]) -> None:
     save_cur = save_conn.cursor()
     news.parse.db.create.create_table(cur=save_cur)
 
+    # Get sorted preprocess function list.
+    func_list = get_func_list(args.__dict__)
+
     for db_path in db_paths:
         try:
             # Must use absolute path `db_path` since some absolute paths is not
@@ -489,7 +505,9 @@ def main(argv: List[str]) -> None:
                     limit=args.batch_size,
                 )
                 preprocessed_news = preprocess(
-                    dataset=parsed_news_list, **args.__dict__
+                    dataset=parsed_news_list,
+                    func_list=func_list,
+                    **args.__dict__
                 )
                 news.parse.db.write.write_new_records(
                     cur=save_cur,
@@ -501,6 +519,7 @@ def main(argv: List[str]) -> None:
                 # Avoid using too many memories.
                 gc.collect()
             except Exception as err:
+                print(err.args)
                 print(f'Failed to write records at id {offset} of {db_path}.')
 
     save_conn.close()

@@ -5,78 +5,63 @@
 ## 執行範例 Example
 
 ```sh
-python -m news.preprocess.main          \
-  --batch_size 1000                     \
-  --db_name rel/my.db                   \
-  --db_name /abs/my.db                  \
-  --db_dir rel_dir                      \
-  --db_dir /abs_dir                     \
-  --save_db_name out.db                 \
-  --debug                               \
-  --NFKC                                \
-  --url_filter                          \
-  --whitespace_filter                   \
-  --parentheses_filter                  \
-  --not_CJK_filter                      \
-  --length_filter                       \
-      --min_length 200                  \
-      --max_length 1000                 \
-  --ner_tag_subs                        \
-      --NER_class ORG PERSON LOC        \
-      --NER_NeedID_class ORG PERSON LOC \
-      --filter_date                     \
-  --english_to_tag                      \
-  --guillemet_filter                    \
-  --number_filter
+python -m news.preprocess.main       \
+  --batch_size 1000                  \
+  --db_name rel/my.db                \
+  --db_name /abs/my.db               \
+  --db_dir rel_dir                   \
+  --db_dir /abs_dir                  \
+  --save_db_name out.db              \
+  --debug                            \
+  --min_length 200                   \
+  --max_length 1000                  \
+  --use_url_filter                   \
+  --use_parentheses_filter           \
+  --use_brackets_filter              \
+  --use_curly_brackets_filter        \
+  --use_lenticular_brackets_filter   \
+  --use_not_cjk_filter               \
+  --use_emoji_filter                 \
+  --ner_class ORG PERSON LOC         \
+  --ner_need_id_class ORG PERSON LOC \
+  --use_date_replacer                \
+  --use_english_replacer             \
+  --use_guillemet_replacer           \
+  --use_number_replacer
 ```
 
 ## 特殊參數介紹
 
-11 種前處理方法
+輸入時只要有輸入前處理方法的名字就會執行此前處理方法, 並且不需要照順序輸入, 程式會自動將輸入的前處理方法照正確的順序執行, 另外在執行預處理時會先進行 NFKC 正規化以及將多個空白合成一個空白的步驟.
 
-1. `NFKC`: 對輸入資料集進行 NFKC 正規化.
-2. `url_filter`: 將輸入資料集的 url 過濾掉.
-3. `whitespace_filter`: 將多個空白換成一個.
-4. `parentheses_filter`: 將小括號, 中括號, 以及【】內的句子以及括號一起過濾掉.
-5. `not_CJK_filter`: 將中文, 英文, 數字以及特定標點符號(包含.~<、,。《?>*\-!》:」「+%/()\[\]【】)以外的符號過濾掉.
-6. `emoji_filter`: 過濾掉 emoji 符號.
-7. `length_filter`: 將長度小於 `min_length` 或大於 `max_length` 的文章過濾掉, 預設為小於200或大於1000的文章會被過慮掉.
-8. `ner_tag_subs`: 將 NER 辨識出來的某個類別替換為 tag, 需給定 `NER_class` 以及 `NER_NeedID_class` 參數, 並且可以用 `filter_date` 參數決定是否將 DATE 類別中的數字替換成 `<num>`.
-9. `english_to_tag`: 將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
-10. `guillemet_filter`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
-11. `number_filter`: 將阿拉伯數字換為 `<num>` tag.
+- `min_length`: 要保留的文章最短長度.
+- `max_length`: 要保留的文章最長長度.
+- `use_url_filter`: 是否將 url 過濾掉.
+- `use_parentheses_filter`: 將小括號內的句子以及括號一起過濾掉.
+- `use_brackets_filter`: 將中括號內的句子以及括號一起過濾掉.
+- `use_curly_brackets_filter`: 將大括號內的句子以及括號一起過濾掉.
+- `use_lenticular_brackets_filter`: 將透鏡狀括號(例如: 】)內的句子以及括號一起過濾掉.
+- `use_not_cjk_filter`: 將中文, 英文, 數字以及特定標點符號(包含.~<、,。《?>*\-!》:」「+%/()\[\]【】)以外的符號過濾掉.
+- `use_emoji_filter`: 過濾掉 emoji 符號.
+- `ner_class ORG PERSON LOC`: 選擇哪些 NER 類別要被替換為 tag, 目前總共10種類別可以選擇(可多選), 可選的類別請見 **NER 類別**區塊
+- `ner_need_id_class ORG PERSON LOC`: 選擇要被替換為 tag 的 NER 類別相同的詞是否要有相同 id 來表示(可多選)
+- `use_date_replacer`: 當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
+- `use_english_replacer`: 將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
+- `use_guillemet_replacer`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
+- `use_number_replacer`: 將阿拉伯數字換為 `<num>` tag.
 
-### ner_tag_subs 額外參數
+### NER 類別
 
-- `NER_class`: 選擇哪些 NER 類別要被替換為 tag, 目前總共10種類別可以選擇(可多選)
-    1. GPE 替換為 `<gpe>`.
-    2. PERSON 替換為 `<per>`.
-    3. ORG 替換為 `<org>`.
-    4. NORP 替換為 `<nrp>`.
-    5. LOC 替換為 `<loc>`.
-    6. FAC 替換為 `<fac>`.
-    7. PRODUCT 替換為 `<prdt>`.
-    8. WORK_OF_ART 替換為 `<woa>`.
-    9. EVENT 替換為 `<evt>`.
-    10. LAW 替換為 `<law>`.
-
-- `NER_NeedID_class`: 選擇要被替換為 tag 的 NER 類別相同的詞是否要有相同 id 來表示(可多選)
-    1. `<gpe>` 後加上 id, 例如： `<gpe1>`.
-    2. `<per>` 後加上 id, 例如： `<per1>`.
-    3. `<org>` 後加上 id, 例如： `<org1>`.
-    4. `<nrp>` 後加上 id, 例如： `<nrp1>`.
-    5. `<loc>` 後加上 id, 例如： `<loc1>`.
-    6. `<fac>` 後加上 id, 例如： `<fac1>`.
-    7. `<prdt>` 後加上 id, 例如： `<prdt1>`.
-    8. `<woa>` 後加上 id, 例如： `<woa1>`.
-    9. `<evt>` 後加上 id, 例如： `<evt1>`.
-    10. `<law>` 後加上 id, 例如：`<law1>` .
-- `filter_date`: 當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
-
-### length filter 額外參數
-
-- `min_length`: 執行 `length_filter` 時, 要保留的文章最短長度.
-- `max_length`: 執行 `length_filter` 時, 要保留的文章最長長度.
+1. 若選擇 GPE 會將此類別的 entity 替換為 `<gpe>`.
+2. 若選擇 PERSON 會將此類別的 entity 替換為 `<per>`.
+3. 若選擇 ORG 會將此類別的 entity 替換為 `<org>`.
+4. 若選擇 NORP 會將此類別的 entity 替換為 `<nrp>`.
+5. 若選擇 LOC 會將此類別的 entity 替換為 `<loc>`.
+6. 若選擇 FAC 會將此類別的 entity 替換為 `<fac>`.
+7. 若選擇 PRODUCT 會將此類別的 entity 替換為 `<prdt>`.
+8. 若選擇 WORK_OF_ART 會將此類別的 entity 替換為 `<woa>`.
+9. 若選擇 EVENT 會將此類別的 entity 替換為 `<evt>`.
+10. 若選擇 LAW 會將此類別的 entity 替換為 `<law>`.
 
 ## 資料格式
 
