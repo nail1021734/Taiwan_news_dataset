@@ -1,10 +1,13 @@
-import unicodedata
-from tqdm import tqdm
-import news.parse.db.schema
-import news.parse.db.read
-from typing import List, Dict
+import argparse
 import re
+import unicodedata
+from typing import Dict, List
+
 from ckip_transformers.nlp import CkipNerChunker
+from tqdm import tqdm
+
+import news.parse.db.read
+import news.parse.db.schema
 
 TAG_TABLE = {
     'GPE': 'gpe',
@@ -13,7 +16,7 @@ TAG_TABLE = {
     'NORP': 'nrp',
     'LOC': 'loc',
     'FAC': 'fac',
-    'PRODUCT': 'prdt',
+    'PRODUCT': 'prod',
     'WORK_OF_ART': 'woa',
     'EVENT': 'evt',
     'LAW': 'law',
@@ -22,10 +25,13 @@ TAG_TABLE = {
 
 def NFKC(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Use NFKC normalize `title`, `article`, `category` and `reporter`.
     """
+    # Get function arguments.
+    debug = args.debug
+
     for i in tqdm(dataset, desc='NFKC', disable=not debug):
         i.title = unicodedata.normalize('NFKC', i.title)
         i.article = unicodedata.normalize('NFKC', i.article)
@@ -45,20 +51,22 @@ def NFKC(
 
 def length_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    min_length: int,
-    max_length: int,
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Remove articles that are too long or too short.
     """
+    # Get function arguments.
+    min_length = args.min_length
+    max_length = args.max_length
+    debug = args.debug
+
     result = []
     for i in tqdm(dataset, desc='Length_filter', disable=not debug):
-        if max_length:
+        if max_length != -1:
             if max_length < len(i.article):
                 continue
-        if min_length:
-            if min_length > len(i.article):
-                continue
+        if min_length > len(i.article):
+            continue
         result.append(i)
 
     return result
@@ -66,8 +74,11 @@ def length_filter(
 
 def url_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
+    # Get function arguments.
+    debug = args.debug
+
     url_pattern = re.compile(r'https?://[a-zA-Z0-9/\?\=\-\.]+')
     for i in tqdm(dataset, desc='Url_filter', disable=not debug):
         i.title = url_pattern.sub('', i.title)
@@ -77,22 +88,28 @@ def url_filter(
 
 def whitespace_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Use single space to replace continuously space.
     """
+    # Get function arguments.
+    debug = args.debug
+
     for i in tqdm(dataset, desc='Whitespace_filter', disable=not debug):
-        i.title = re.sub('\s+', ' ', i.title)
-        i.article = re.sub('\s+', ' ', i.article)
+        i.title = re.sub(r'\s+', ' ', i.title)
+        i.article = re.sub(r'\s+', ' ', i.article)
     return dataset
 
 
 def parentheses_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Remove parentheses and words in parentheses.
     """
+    # Get function arguments.
+    debug = args.debug
+
     parentheses_pattern = re.compile(r'.([^(]*\))')
     for i in tqdm(dataset, desc='Parentheses_filter', disable=not debug):
         i.title = parentheses_pattern.sub('', i.title)
@@ -102,10 +119,13 @@ def parentheses_filter(
 
 def brackets_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Remove brackets and words in brackets.
     """
+    # Get function arguments.
+    debug = args.debug
+
     parentheses_pattern = re.compile(r'.([^[]*\])')
     for i in tqdm(dataset, desc='Brackets_filter', disable=not debug):
         i.title = parentheses_pattern.sub('', i.title)
@@ -115,10 +135,13 @@ def brackets_filter(
 
 def lenticular_brackets_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Remove lenticular brackets and words in lenticular brackets.
     """
+    # Get function arguments.
+    debug = args.debug
+
     lenticular_brackets_pattern = re.compile(r'.([^【]*】)')
     for i in tqdm(dataset, desc='Lenticular_brackets_filter',
                   disable=not debug):
@@ -129,10 +152,13 @@ def lenticular_brackets_filter(
 
 def curly_brackets_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Remove curly brackets and words in curly brackets.
     """
+    # Get function arguments.
+    debug = args.debug
+
     curly_bracket_pattern = re.compile(r'.([^{]*\})')
     for i in tqdm(dataset, desc='Curly_brackets_filter', disable=not debug):
         i.title = curly_bracket_pattern.sub('', i.title)
@@ -142,10 +168,13 @@ def curly_brackets_filter(
 
 def number_replacer(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Replace Arabic numerals with `<num>`.
     """
+    # Get function arguments.
+    debug = args.debug
+
     number_pattern = re.compile(r'\d+(?![^<]*>)')
     for i in tqdm(dataset, desc='Number_filter', disable=not debug):
         i.title = number_pattern.sub('<num>', i.title)
@@ -155,11 +184,14 @@ def number_replacer(
 
 def guillemet_replacer(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Replace guillemet text with `<unk>`.
     Example: 《香港國安法》->《<unk>》
     """
+    # Get function arguments.
+    debug = args.debug
+
     guillemet_pattern = re.compile('(?<=《)(.*?)(?=》)')
     for i in tqdm(dataset, desc='Guillemet_filter', disable=not debug):
         i.title = guillemet_pattern.sub('<unk>', i.title)
@@ -169,10 +201,13 @@ def guillemet_replacer(
 
 def emoji_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Remove emoji in dataset.
     """
+    # Get function arguments.
+    debug = args.debug
+
     emoji_pattern = re.compile(
         pattern="["
         u"\U0001F600-\U0001F64F"  # emoticons
@@ -190,13 +225,16 @@ def emoji_filter(
 
 def not_cjk_filter(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Remove text other than Chinese and English.
 
     Remove too special punctuation and keep only punctuation below.
     `[.~<、,。《?>*-!》:」「+%/]`
     """
+    # Get function arguments.
+    debug = args.debug
+
     remove_char_pattern = re.compile(
         r'[^\u4e00-\u9fff.~<、,。《?>*\-!》:」「+%/a-zA-Z\d()\[\]【】]'
     )
@@ -209,10 +247,13 @@ def not_cjk_filter(
 
 def english_replacer(
     dataset: List[news.parse.db.schema.ParsedNews],
-    debug: bool = False,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Convert English to `<en>` tag.
     """
+    # Get function arguments.
+    debug = args.debug
+
     english_pattern = re.compile(r'[a-zA-z][a-zA-z\s\d]+(?![^<]*>)')
     for i in tqdm(dataset, desc='English_to_tag', disable=not debug):
         i.title = english_pattern.sub('<en>', i.title)
@@ -240,12 +281,8 @@ def ner_dataset(dataset: List[news.parse.db.schema.ParsedNews],) -> List[Dict]:
     for d, title_ner, article_ner in zip(data, titles_ner, articles_ner):
         ner_result.append(
             {
-                'id':
+                'idx':
                     d[0],
-                'title':
-                    d[1],
-                'article':
-                    d[2],
                 'title_NER':
                     [
                         {
@@ -273,7 +310,8 @@ def _ner_tag_subs(
     use_date_replacer: bool,
     debug: bool = False,
 ) -> List[news.parse.db.schema.ParsedNews]:
-    r"""Replace the names of people, places, and organizations based on NER results.
+    r"""Replace the names of people, places, and organizations based on NER
+    results.
 
     Parameters
     ==========
@@ -294,10 +332,11 @@ def _ner_tag_subs(
     # 取得 NER 分析結果
     ner_result = ner_dataset(dataset)
     for data in tqdm(dataset, desc='Ner_tag_subs', disable=not debug):
-        index = data.idx
-
         # Find data that have same id.
-        ner_data = next(i for i in ner_result if i['id'] == index)
+        ner_data = ner_result[dataset.index(data)]
+
+        # Make sure `ner_data` and `data` have same id.
+        assert ner_data['idx'] == data.idx
 
         # 得到 article 的 ner 結果.
         a_ner = ner_data['article_NER']
@@ -342,8 +381,8 @@ def _ner_tag_subs(
                             word['word']] = f'<{tag_str}>'
 
         # Get origin title and article.
-        ori_title = ner_data['title']
-        ori_article = ner_data['article']
+        ori_title = data.title
+        ori_article = data.article
         rp_title = ""
         rp_article = ""
 
@@ -380,7 +419,7 @@ def _ner_tag_subs(
         data.title = rp_title
         data.article = rp_article
 
-    # If `use_date_replacer` is True then replace number in date with `<num>`.
+    # If `use_date_replacer` is true then replace number in date with `<num>`.
     if use_date_replacer:
         dataset = date_replacer(dataset=dataset, ner_result=ner_result)
 
@@ -404,9 +443,11 @@ def date_replacer(
             return False
 
     for data in tqdm(dataset, desc='Date_filter', disable=not debug):
-        index = data.idx
         # Find data that have same id.
-        ner_data = next(i for i in ner_result if i['id'] == index)
+        ner_data = ner_result[dataset.index(data)]
+
+        # Make sure `ner_data` and `data` have same id.
+        assert ner_data['idx'] == data.idx
 
         data_ner_result = ner_data['article_NER'] + ner_data['title_NER']
 
@@ -426,11 +467,8 @@ def date_replacer(
 
 def ner_entity_replacer(
     dataset: List[news.parse.db.schema.ParsedNews],
-    ner_class: List[str],
-    ner_need_id_class: List[str],
-    use_date_replacer: bool,
-    debug: bool,
-):
+    args: argparse.Namespace,
+) -> List[news.parse.db.schema.ParsedNews]:
     r"""使用 flag 指定要將 NER 結果的哪些類別替換成 tag.
 
     Parameters
@@ -444,6 +482,12 @@ def ner_entity_replacer(
     `use_date_replacer`: bool
         是否將日期中的數字替換成 `<num>`.
     """
+    # Get function arguments.
+    ner_class = args.ner_class if 'ner_class' in args else None
+    ner_need_id_class = args.ner_need_id_class
+    use_date_replacer = args.use_date_replacer
+    debug = args.debug
+
     # 建立 `tag_dict`.
     tag_dict = []
     if ner_class:

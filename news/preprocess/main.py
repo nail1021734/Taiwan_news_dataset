@@ -2,38 +2,22 @@ import argparse
 import gc
 import sys
 import textwrap
-from typing import Callable, Dict, List
+from typing import Callable, List
 
-import inspect
 from tqdm import trange
 
+import news.db
 import news.parse.db.read
 import news.parse.db.util
-import news.preprocess.db.util
 import news.parse.db.write
-import news.preprocess.db.create
-from functools import partial
-
-import news.db
 import news.path
-from news.crawlers.db.schema import RawNews
-from news.parse.db.schema import ParsedNews
+import news.preprocess.db.create
+import news.preprocess.db.util
 from news.preprocess.preprocess import (
-    TAG_TABLE,
-    NFKC,
-    whitespace_filter,
-    url_filter,
-    parentheses_filter,
-    brackets_filter,
-    lenticular_brackets_filter,
-    curly_brackets_filter,
-    emoji_filter,
-    not_cjk_filter,
-    length_filter,
-    ner_entity_replacer,
-    english_replacer,
-    guillemet_replacer,
-    number_replacer,
+    NFKC, TAG_TABLE, brackets_filter, curly_brackets_filter, emoji_filter,
+    english_replacer, guillemet_replacer, length_filter,
+    lenticular_brackets_filter, ner_entity_replacer, not_cjk_filter,
+    number_replacer, parentheses_filter, url_filter, whitespace_filter
 )
 
 
@@ -75,7 +59,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         default=1000,
         help=textwrap.dedent(
             """\
-            Preprocess batch size. Controll batch size to avoid excess memories.
+            Preprocess batch size. Controll batch size to avoid excess
+            memories.
             """
         ),
     )
@@ -85,9 +70,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         type=str,
         help=textwrap.dedent(
             f"""\
-            SQLite database file name wanted to preprocess.  If absolute path is
-            given, then treat the given path as database file and read records
-            directly from the given path.
+            SQLite database file name wanted to preprocess.  If absolute path
+            is given, then treat the given path as database file and read
+            records directly from the given path.
 
             For example, excuting
 
@@ -201,8 +186,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         help=textwrap.dedent(
             f"""\
             Name of the database to save preprocessed results.  Create file if
-            given path does not exist (along with non-existed directories in the
-            path).  If absolute path is given, then treat the given path as
+            given path does not exist (along with non-existed directories in
+            the path).  If absolute path is given, then treat the given path as
             SQLite database file.
 
             For example, executing
@@ -287,27 +272,33 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         '--use_not_cjk_filter',
         action='store_true',
         help=textwrap.dedent(
-            """\
+            r"""\
             將中文, 英文, 數字以及特定標點符號
-            (包含`.~<、,。《?>*\-!》:」「+%/()\[\]【】`)以外的符號過濾掉.
+            (包含 `.~<、,。《?>*\-!》:」「+%/()\[\]【】`)以外的符號過濾掉.
             """
         ),
     )
     parser.add_argument(
         '--min_length',
         type=int,
-        help=textwrap
-        .dedent("""\
-            將長度小於 `min_length` 的文章過濾.
-            """),
+        default=0,
+        required=False,
+        help=textwrap.dedent(
+            """\
+            將長度小於 `min_length` 的文章過濾, 預設為 0.
+            """
+        ),
     )
     parser.add_argument(
         '--max_length',
         type=int,
-        help=textwrap
-        .dedent("""\
-            將長度大於 `max_length` 的文章過濾.
-            """),
+        default=-1,
+        required=False,
+        help=textwrap.dedent(
+            """\
+            將長度大於 `max_length` 的文章過濾, -1 表示不限制文章長度, 預設為 -1.
+            """
+        ),
     )
     parser.add_argument(
         '--ner_class',
@@ -316,19 +307,19 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         choices=TAG_TABLE.keys(),
         required=False,
         help=textwrap.dedent(
-            f"""\
-            選擇哪些 NER 類別要被替換為 tag. 總共10種類別
+            """\
+            選擇哪些 NER 類別要被替換為 tag. 總共 10 種類別
             例如: `--ner_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
-            1. GPE 替換為 `<gpe>`.
-            2. PERSON 替換為 `<per>`.
-            3. ORG 替換為 `<org>`.
-            4. NORP 替換為 `<nrp>`.
-            5. LOC 替換為 `<loc>`.
-            6. FAC 替換為 `<fac>`.
-            7. PRODUCT 替換為 `<prdt>`.
-            8. WORK_OF_ART 替換為 `<woa>`.
-            9. EVENT 替換為 `<evt>`.
-            10. LAW 替換為 `<law>`.
+            - GPE 替換為 `<gpe>`.
+            - PERSON 替換為 `<per>`.
+            - ORG 替換為 `<org>`.
+            - NORP 替換為 `<nrp>`.
+            - LOC 替換為 `<loc>`.
+            - FAC 替換為 `<fac>`.
+            - PRODUCT 替換為 `<prod>`.
+            - WORK_OF_ART 替換為 `<woa>`.
+            - EVENT 替換為 `<evt>`.
+            - LAW 替換為 `<law>`.
             """
         ),
     )
@@ -339,19 +330,11 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         choices=TAG_TABLE.keys(),
         required=False,
         help=textwrap.dedent(
-            f"""\
+            """\
             選擇要被替換為 tag 的 NER 類別相同的詞是否要用相同 id 來表示.
             例如: `--ner_need_id_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
-            1. `<gpe>` 後加上 id, 例如： `<gpe1>`.
-            2. `<per>` 後加上 id, 例如： `<per1>`.
-            3. `<org>` 後加上 id, 例如： `<org1>`.
-            4. `<nrp>` 後加上 id, 例如： `<nrp1>`.
-            5. `<loc>` 後加上 id, 例如： `<loc1>`.
-            6. `<fac>` 後加上 id, 例如： `<fac1>`.
-            7. `<prdt>` 後加上 id, 例如： `<prdt1>`.
-            8. `<woa>` 後加上 id, 例如： `<woa1>`.
-            9. `<evt>` 後加上 id, 例如： `<evt1>`.
-            10. `<law>` 後加上 id, 例如：`<law1>` .
+            同個文章內同為 GPE 類別的 "台北" 會變成 `<gpe0>` , 而 "台中" 為 `<gpe1>`
+            (不同詞之間用不同 id 表示).
             """
         ),
     )
@@ -359,7 +342,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         '--use_date_replacer',
         action='store_true',
         help=textwrap.dedent(
-            f"""\
+            """\
             當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
             """
         ),
@@ -393,37 +376,37 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def get_func_list(args,):
+def get_func_list(args: argparse.Namespace,) -> List[Callable]:
     # 為了和 parsing 結果統一格式 `NFKC` 和 `whitespace_filter` 一定需要使用
     # 所以先放在 `func_list` 內.
     func_list = [NFKC, whitespace_filter]
 
     # 以下前處理方法不會將文字替換成 tag, 因此先進行處理.
-    if args['use_url_filter']:
+    if args.use_url_filter:
         func_list.append(url_filter)
-    if args['use_parentheses_filter']:
+    if args.use_parentheses_filter:
         func_list.append(parentheses_filter)
-    if args['use_brackets_filter']:
+    if args.use_brackets_filter:
         func_list.append(brackets_filter)
-    if args['use_curly_brackets_filter']:
+    if args.use_curly_brackets_filter:
         func_list.append(curly_brackets_filter)
-    if args['use_lenticular_brackets_filter']:
+    if args.use_lenticular_brackets_filter:
         func_list.append(lenticular_brackets_filter)
-    if args['use_emoji_filter']:
+    if args.use_emoji_filter:
         func_list.append(emoji_filter)
-    if args['use_not_cjk_filter']:
+    if args.use_not_cjk_filter:
         func_list.append(not_cjk_filter)
-    if 'min_length' in args.keys() or 'max_length' in args.keys():
+    if not (args.min_length == 0 and args.max_length == -1):
         func_list.append(length_filter)
 
     # 以下前處理方法會將部份文字替換成 tag.
-    if 'ner_class' in args.keys() or args['use_date_replacer']:
+    if 'ner_class' in args or args.use_date_replacer:
         func_list.append(ner_entity_replacer)
-    if args['use_english_replacer']:
+    if args.use_english_replacer:
         func_list.append(english_replacer)
-    if args['use_guillemet_replacer']:
+    if args.use_guillemet_replacer:
         func_list.append(guillemet_replacer)
-    if args['use_number_replacer']:
+    if args.use_number_replacer:
         func_list.append(number_replacer)
 
     return func_list
@@ -432,21 +415,14 @@ def get_func_list(args,):
 def preprocess(
     dataset: List[news.parse.db.schema.ParsedNews],
     func_list: List[Callable],
-    **kwargs,
+    args: argparse.Namespace,
 ) -> List[news.parse.db.schema.ParsedNews]:
 
     # Run preprocess in specified order.
     for func in func_list:
-        # Get function parameters.
-        func_parameters = dict(
-            (p_name, kwargs[p_name])
-            for p_name in inspect.signature(func).parameters
-            if p_name != 'dataset'
-        )
-        # Put `dataset` in function parameters.
-        func_parameters['dataset'] = dataset
         # Run preprocess function.
-        dataset = func(**func_parameters)
+        dataset = func(dataset=dataset, args=args)
+
     return dataset
 
 
@@ -476,7 +452,7 @@ def main(argv: List[str]) -> None:
     news.parse.db.create.create_table(cur=save_cur)
 
     # Get sorted preprocess function list.
-    func_list = get_func_list(args.__dict__)
+    func_list = get_func_list(args)
 
     for db_path in db_paths:
         try:
@@ -507,7 +483,7 @@ def main(argv: List[str]) -> None:
                 preprocessed_news = preprocess(
                     dataset=parsed_news_list,
                     func_list=func_list,
-                    **args.__dict__
+                    args=args,
                 )
                 news.parse.db.write.write_new_records(
                     cur=save_cur,
@@ -518,8 +494,7 @@ def main(argv: List[str]) -> None:
 
                 # Avoid using too many memories.
                 gc.collect()
-            except Exception as err:
-                print(err.args)
+            except Exception:
                 print(f'Failed to write records at id {offset} of {db_path}.')
 
     save_conn.close()

@@ -34,8 +34,8 @@ python -m news.preprocess.main       \
 
 輸入時只要有輸入前處理方法的名字就會執行此前處理方法, 並且不需要照順序輸入, 程式會自動將輸入的前處理方法照正確的順序執行, 另外在執行預處理時會先進行 NFKC 正規化以及將多個空白合成一個空白的步驟.
 
-- `min_length`: 要保留的文章最短長度.
-- `max_length`: 要保留的文章最長長度.
+- `min_length`: 要保留的文章最短長度, 預設為 0.
+- `max_length`: 要保留的文章最長長度, 預設為 -1 表示不限制文章最長長度.
 - `use_url_filter`: 是否將 url 過濾掉.
 - `use_parentheses_filter`: 將小括號內的句子以及括號一起過濾掉.
 - `use_brackets_filter`: 將中括號內的句子以及括號一起過濾掉.
@@ -43,8 +43,8 @@ python -m news.preprocess.main       \
 - `use_lenticular_brackets_filter`: 將透鏡狀括號(例如: 】)內的句子以及括號一起過濾掉.
 - `use_not_cjk_filter`: 將中文, 英文, 數字以及特定標點符號(包含.~<、,。《?>*\-!》:」「+%/()\[\]【】)以外的符號過濾掉.
 - `use_emoji_filter`: 過濾掉 emoji 符號.
-- `ner_class ORG PERSON LOC`: 選擇哪些 NER 類別要被替換為 tag, 目前總共10種類別可以選擇(可多選), 可選的類別請見 **NER 類別**區塊
-- `ner_need_id_class ORG PERSON LOC`: 選擇要被替換為 tag 的 NER 類別相同的詞是否要有相同 id 來表示(可多選)
+- `ner_class ORG PERSON LOC`: 選擇哪些 NER 類別要被替換為 tag, 目前總共 10 種類別可以選擇(可多選), 可選的類別請見 **NER 類別**區塊
+- `ner_need_id_class ORG PERSON LOC`: 選擇要被替換為 tag 的 NER 類別相同的詞是否要有相同 id 來表示(可多選).
 - `use_date_replacer`: 當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
 - `use_english_replacer`: 將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
 - `use_guillemet_replacer`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
@@ -52,16 +52,16 @@ python -m news.preprocess.main       \
 
 ### NER 類別
 
-1. 若選擇 GPE 會將此類別的 entity 替換為 `<gpe>`.
-2. 若選擇 PERSON 會將此類別的 entity 替換為 `<per>`.
-3. 若選擇 ORG 會將此類別的 entity 替換為 `<org>`.
-4. 若選擇 NORP 會將此類別的 entity 替換為 `<nrp>`.
-5. 若選擇 LOC 會將此類別的 entity 替換為 `<loc>`.
-6. 若選擇 FAC 會將此類別的 entity 替換為 `<fac>`.
-7. 若選擇 PRODUCT 會將此類別的 entity 替換為 `<prdt>`.
-8. 若選擇 WORK_OF_ART 會將此類別的 entity 替換為 `<woa>`.
-9. 若選擇 EVENT 會將此類別的 entity 替換為 `<evt>`.
-10. 若選擇 LAW 會將此類別的 entity 替換為 `<law>`.
+- 若選擇 GPE 會將此類別的 entity 替換為 `<gpe>`.
+- 若選擇 PERSON 會將此類別的 entity 替換為 `<per>`.
+- 若選擇 ORG 會將此類別的 entity 替換為 `<org>`.
+- 若選擇 NORP 會將此類別的 entity 替換為 `<nrp>`.
+- 若選擇 LOC 會將此類別的 entity 替換為 `<loc>`.
+- 若選擇 FAC 會將此類別的 entity 替換為 `<fac>`.
+- 若選擇 PRODUCT 會將此類別的 entity 替換為 `<prod>`.
+- 若選擇 WORK_OF_ART 會將此類別的 entity 替換為 `<woa>`.
+- 若選擇 EVENT 會將此類別的 entity 替換為 `<evt>`.
+- 若選擇 LAW 會將此類別的 entity 替換為 `<law>`.
 
 ## 資料格式
 
