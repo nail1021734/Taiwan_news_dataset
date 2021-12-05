@@ -17,7 +17,7 @@ from news.preprocess.preprocess import (
     NFKC, TAG_TABLE, brackets_filter, curly_brackets_filter, emoji_filter,
     english_replacer, guillemet_replacer, length_filter,
     lenticular_brackets_filter, ner_entity_replacer, not_cjk_filter,
-    number_replacer, parentheses_filter, url_filter, whitespace_filter
+    number_replacer, parentheses_filter, url_filter
 )
 
 
@@ -34,8 +34,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         --db_dir /abs_dir                  \
         --save_db_name out.db              \
         --debug                            \
-        --min_length 200                   \
-        --max_length 1000                  \
+        --use_min_length_filter 200        \
+        --use_max_length_filter 1000       \
         --use_url_filter                   \
         --use_parentheses_filter           \
         --use_brackets_filter              \
@@ -225,48 +225,56 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument(
         '--use_url_filter',
         action='store_true',
-        help=textwrap.dedent("""\
+        help=textwrap.dedent(
+            """\
             將輸入資料集的 url 過濾掉.
-            """),
+            """,
+        ),
     )
     parser.add_argument(
         '--use_parentheses_filter',
         action='store_true',
-        help=textwrap
-        .dedent("""\
+        help=textwrap.dedent(
+            """\
             將小括號內的句子以及括號一起過濾掉.
-            """),
+            """,
+        ),
     )
     parser.add_argument(
         '--use_brackets_filter',
         action='store_true',
-        help=textwrap
-        .dedent("""\
+        help=textwrap.dedent(
+            """\
             將中括號內的句子以及括號一起過濾掉.
-            """),
+            """,
+        ),
     )
     parser.add_argument(
         '--use_curly_brackets_filter',
         action='store_true',
-        help=textwrap
-        .dedent("""\
+        help=textwrap.dedent(
+            """\
             將大括號內的句子以及括號一起過濾掉.
-            """),
+            """,
+        ),
     )
     parser.add_argument(
         '--use_lenticular_brackets_filter',
         action='store_true',
-        help=textwrap
-        .dedent("""\
+        help=textwrap.dedent(
+            """\
             將透鏡狀括號(【】)內的句子以及括號一起過濾掉.
-            """),
+            """,
+        ),
     )
     parser.add_argument(
         '--use_emoji_filter',
         action='store_true',
-        help=textwrap.dedent("""\
+        help=textwrap.dedent(
+            """\
             過濾 emoji.
-            """),
+            """,
+        ),
     )
     parser.add_argument(
         '--use_not_cjk_filter',
@@ -279,7 +287,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--min_length',
+        '--use_min_length_filter',
         type=int,
         default=0,
         required=False,
@@ -290,7 +298,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--max_length',
+        '--use_max_length_filter',
         type=int,
         default=-1,
         required=False,
@@ -359,27 +367,28 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument(
         '--use_guillemet_replacer',
         action='store_true',
-        help=textwrap
-        .dedent("""\
+        help=textwrap.dedent(
+            """\
             將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
-            """),
+            """,
+        ),
     )
     parser.add_argument(
         '--use_number_replacer',
         action='store_true',
-        help=textwrap
-        .dedent("""\
+        help=textwrap.dedent(
+            """\
             將阿拉伯數字換為 `<num>` tag.
-            """),
+            """,
+        ),
     )
 
     return parser.parse_args(argv)
 
 
 def get_func_list(args: argparse.Namespace,) -> List[Callable]:
-    # 為了和 parsing 結果統一格式 `NFKC` 和 `whitespace_filter` 一定需要使用
-    # 所以先放在 `func_list` 內.
-    func_list = [NFKC, whitespace_filter]
+    # 為了和 parsing 結果統一格式會先對資料進行 NFKC 以及將多個空白合成一個空白的動作.
+    func_list = [NFKC]
 
     # 以下前處理方法不會將文字替換成 tag, 因此先進行處理.
     if args.use_url_filter:
@@ -396,7 +405,8 @@ def get_func_list(args: argparse.Namespace,) -> List[Callable]:
         func_list.append(emoji_filter)
     if args.use_not_cjk_filter:
         func_list.append(not_cjk_filter)
-    if not (args.min_length == 0 and args.max_length == -1):
+    if not (args.use_min_length_filter == 0
+            and args.use_max_length_filter == -1):
         func_list.append(length_filter)
 
     # 以下前處理方法會將部份文字替換成 tag.
@@ -493,6 +503,8 @@ def main(argv: List[str]) -> None:
                 save_conn.commit()
 
                 # Avoid using too many memories.
+                del parsed_news_list
+                del preprocessed_news
                 gc.collect()
             except Exception:
                 print(f'Failed to write records at id {offset} of {db_path}.')

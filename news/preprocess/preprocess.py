@@ -1,6 +1,5 @@
 import argparse
 import re
-import unicodedata
 from typing import Dict, List
 
 from ckip_transformers.nlp import CkipNerChunker
@@ -8,6 +7,7 @@ from tqdm import tqdm
 
 import news.parse.db.read
 import news.parse.db.schema
+import news.parse.util.normalize
 
 TAG_TABLE = {
     'GPE': 'gpe',
@@ -22,6 +22,90 @@ TAG_TABLE = {
     'LAW': 'law',
 }
 
+URL_PATTERN = re.compile(r'https?://[a-zA-Z0-9/\?\=\-\.]+')
+NUMBER_PATTERN = re.compile(r'\d+(?![^<]*>)')
+EMOJI_PATTERN = re.compile(
+    pattern="["
+    u"\U0001F600-\U0001F64F"  # emoticons
+    u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+    u"\U0001F680-\U0001F6FF"  # transport & map symbols
+    u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    "]+",
+    flags=re.UNICODE
+)
+REMOVE_CHAR_PATTERN = re.compile(
+    r'[^\u4e00-\u9fff.~<、,。《?>*\-!》:」「+%/a-zA-Z\d()\[\]【】]'
+)
+ENGLISH_PATTERN = re.compile(r'[a-zA-z][a-zA-z\s\d]+(?![^<]*>)')
+
+
+def find_pair(
+    article: str,
+    left_char: str,
+    right_char: str,
+    replace_str: str = '',
+    include: bool = True,
+) -> str:
+    r"""將 `article` 內 `left_char` 和 `right_char` 之間的字串替換為 `replace_str`.
+
+    Parameters
+    ==========
+    `article`: str
+        要處理的文章.
+    `left_char`: str
+        `left_char` 與 `right_char` 內的字串會被替換為 `replace_str`.
+    `right_char`: str
+        `left_char` 與 `right_char` 內的字串會被替換為 `replace_str`.
+    `replace_str`: str
+        選擇要替換的字串.
+    `include`: bool
+        若為 True 則會將 `left_char` 與 `right_char` 一起替換掉, 為 False 則會將
+        `left_char` 與 `right_char` 保留下來.
+    """
+    # A stack to count `left_char` hit amount.
+    count_stack = []
+
+    # `rp_article` 為最後回傳的文章.
+    rp_article = ''
+    last_index = 0
+    for i, char in enumerate(article):
+        if char == left_char:
+            if len(count_stack) == 0:
+                # 若 `len(count_stack) == 0` 表示遇到開頭的 `left_char`.
+                # 若不等於 0 表示先前已經遇過還沒匹配到 `right_char` 的 `left_char`.
+                if include:
+                    # 將 `left_char` 之前的文章片段加到 `rp_article` 之中.
+                    rp_article += article[last_index:i]
+                else:
+                    # 將 `left_char` 之前的文章片段加到 `rp_article` 之中.
+                    # 保留 `left_char`.
+                    rp_article += article[last_index:i + 1]
+            count_stack.append(i)
+
+        if char == right_char:
+            if len(count_stack) > 0:
+                # 若 `len(count_stack) > 0` 則 pop 一個元素.
+                count_stack.pop()
+            else:
+                # 若 `len(count_stack) == 0` 則直接跳過後續處理(表示沒有匹配的
+                # `left_char` 丟棄此 `right_char`).
+                continue
+            if len(count_stack) == 0:
+                # 若 pop 一個元素後 `len(count_stack) == 0` 表示此 `right_char`
+                # 有匹配的 `left_char` 並且是最外層的 `left_char`.
+                if include:
+                    # 使用 `replace_str` 代替先前的文章片段.
+                    rp_article += replace_str
+                else:
+                    # 使用 `replace_str` 代替先前的文章片段.
+                    # 保留 `right_char`.
+                    rp_article += replace_str + char
+                # 更新 `last_index` 到 `right_char` 的下一個索引.
+                last_index = i + 1
+    # 將 `last_index` 之後的文章, 加到 `rp_article` 之後.
+    rp_article += article[last_index:]
+    return rp_article
+
 
 def NFKC(
     dataset: List[news.parse.db.schema.ParsedNews],
@@ -32,19 +116,23 @@ def NFKC(
     # Get function arguments.
     debug = args.debug
 
-    for i in tqdm(dataset, desc='NFKC', disable=not debug):
-        i.title = unicodedata.normalize('NFKC', i.title)
-        i.article = unicodedata.normalize('NFKC', i.article)
+    for record in tqdm(dataset, desc='NFKC', disable=not debug):
+        record.title = news.parse.util.normalize.NFKC(text=record.title)
+        record.article = news.parse.util.normalize.NFKC(text=record.article)
 
-        # Check whether `i.category` is None.
-        if i.category:
-            # If `i.category` is not None than do NFKC normalize.
-            i.category = unicodedata.normalize('NFKC', i.category)
+        # Check whether `record.category` is None.
+        if record.category:
+            # If `record.category` is not None than do NFKC normalize.
+            record.category = news.parse.util.normalize.NFKC(
+                text=record.category
+            )
 
-        # Check whether `i.reporter` is None.
-        if i.reporter:
-            # If `i.reporter` is not None then do NFKC normalize.
-            i.reporter = unicodedata.normalize('NFKC', i.reporter)
+        # Check whether `record.reporter` is None.
+        if record.reporter:
+            # If `record.reporter` is not None then do NFKC normalize.
+            record.reporter = news.parse.util.normalize.NFKC(
+                text=record.reporter
+            )
 
     return dataset
 
@@ -56,8 +144,8 @@ def length_filter(
     r"""Remove articles that are too long or too short.
     """
     # Get function arguments.
-    min_length = args.min_length
-    max_length = args.max_length
+    min_length = args.use_min_length_filter
+    max_length = args.use_max_length_filter
     debug = args.debug
 
     result = []
@@ -79,25 +167,9 @@ def url_filter(
     # Get function arguments.
     debug = args.debug
 
-    url_pattern = re.compile(r'https?://[a-zA-Z0-9/\?\=\-\.]+')
     for i in tqdm(dataset, desc='Url_filter', disable=not debug):
-        i.title = url_pattern.sub('', i.title)
-        i.article = url_pattern.sub('', i.article)
-    return dataset
-
-
-def whitespace_filter(
-    dataset: List[news.parse.db.schema.ParsedNews],
-    args: argparse.Namespace,
-) -> List[news.parse.db.schema.ParsedNews]:
-    r"""Use single space to replace continuously space.
-    """
-    # Get function arguments.
-    debug = args.debug
-
-    for i in tqdm(dataset, desc='Whitespace_filter', disable=not debug):
-        i.title = re.sub(r'\s+', ' ', i.title)
-        i.article = re.sub(r'\s+', ' ', i.article)
+        i.title = URL_PATTERN.sub('', i.title)
+        i.article = URL_PATTERN.sub('', i.article)
     return dataset
 
 
@@ -109,11 +181,13 @@ def parentheses_filter(
     """
     # Get function arguments.
     debug = args.debug
-
-    parentheses_pattern = re.compile(r'.([^(]*\))')
-    for i in tqdm(dataset, desc='Parentheses_filter', disable=not debug):
-        i.title = parentheses_pattern.sub('', i.title)
-        i.article = parentheses_pattern.sub('', i.article)
+    for record in tqdm(dataset, desc='Parentheses_filter', disable=not debug):
+        record.title = find_pair(
+            article=record.title, left_char='(', right_char=')'
+        )
+        record.article = find_pair(
+            article=record.article, left_char='(', right_char=')'
+        )
     return dataset
 
 
@@ -126,10 +200,13 @@ def brackets_filter(
     # Get function arguments.
     debug = args.debug
 
-    parentheses_pattern = re.compile(r'.([^[]*\])')
-    for i in tqdm(dataset, desc='Brackets_filter', disable=not debug):
-        i.title = parentheses_pattern.sub('', i.title)
-        i.article = parentheses_pattern.sub('', i.article)
+    for record in tqdm(dataset, desc='Brackets_filter', disable=not debug):
+        record.title = find_pair(
+            article=record.title, left_char='[', right_char=']'
+        )
+        record.article = find_pair(
+            article=record.article, left_char='[', right_char=']'
+        )
     return dataset
 
 
@@ -141,12 +218,14 @@ def lenticular_brackets_filter(
     """
     # Get function arguments.
     debug = args.debug
-
-    lenticular_brackets_pattern = re.compile(r'.([^【]*】)')
-    for i in tqdm(dataset, desc='Lenticular_brackets_filter',
-                  disable=not debug):
-        i.title = lenticular_brackets_pattern.sub('', i.title)
-        i.article = lenticular_brackets_pattern.sub('', i.article)
+    for record in tqdm(dataset, desc='Lenticular_brackets_filter',
+                       disable=not debug):
+        record.title = find_pair(
+            article=record.title, left_char='【', right_char='】'
+        )
+        record.article = find_pair(
+            article=record.article, left_char='【', right_char='】'
+        )
     return dataset
 
 
@@ -158,11 +237,14 @@ def curly_brackets_filter(
     """
     # Get function arguments.
     debug = args.debug
-
-    curly_bracket_pattern = re.compile(r'.([^{]*\})')
-    for i in tqdm(dataset, desc='Curly_brackets_filter', disable=not debug):
-        i.title = curly_bracket_pattern.sub('', i.title)
-        i.article = curly_bracket_pattern.sub('', i.article)
+    for record in tqdm(dataset, desc='Curly_brackets_filter',
+                       disable=not debug):
+        record.title = find_pair(
+            article=record.title, left_char='{', right_char='}'
+        )
+        record.article = find_pair(
+            article=record.article, left_char='{', right_char='}'
+        )
     return dataset
 
 
@@ -175,10 +257,9 @@ def number_replacer(
     # Get function arguments.
     debug = args.debug
 
-    number_pattern = re.compile(r'\d+(?![^<]*>)')
-    for i in tqdm(dataset, desc='Number_filter', disable=not debug):
-        i.title = number_pattern.sub('<num>', i.title)
-        i.article = number_pattern.sub('<num>', i.article)
+    for record in tqdm(dataset, desc='Number_filter', disable=not debug):
+        record.title = NUMBER_PATTERN.sub('<num>', record.title)
+        record.article = NUMBER_PATTERN.sub('<num>', record.article)
     return dataset
 
 
@@ -192,10 +273,21 @@ def guillemet_replacer(
     # Get function arguments.
     debug = args.debug
 
-    guillemet_pattern = re.compile('(?<=《)(.*?)(?=》)')
-    for i in tqdm(dataset, desc='Guillemet_filter', disable=not debug):
-        i.title = guillemet_pattern.sub('<unk>', i.title)
-        i.article = guillemet_pattern.sub('<unk>', i.article)
+    for record in tqdm(dataset, desc='Guillemet_filter', disable=not debug):
+        record.title = find_pair(
+            article=record.title,
+            left_char='《',
+            right_char='》',
+            replace_str='<unk>',
+            include=False
+        )
+        record.article = find_pair(
+            article=record.article,
+            left_char='《',
+            right_char='》',
+            replace_str='<unk>',
+            include=False
+        )
     return dataset
 
 
@@ -208,18 +300,9 @@ def emoji_filter(
     # Get function arguments.
     debug = args.debug
 
-    emoji_pattern = re.compile(
-        pattern="["
-        u"\U0001F600-\U0001F64F"  # emoticons
-        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-        u"\U0001F680-\U0001F6FF"  # transport & map symbols
-        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        "]+",
-        flags=re.UNICODE
-    )
-    for data in tqdm(dataset, desc='Emoji_filter', disable=not debug):
-        data.title = emoji_pattern.sub('', data.title)
-        data.article = emoji_pattern.sub('', data.article)
+    for record in tqdm(dataset, desc='Emoji_filter', disable=not debug):
+        record.title = EMOJI_PATTERN.sub('', record.title)
+        record.article = EMOJI_PATTERN.sub('', record.article)
     return dataset
 
 
@@ -235,12 +318,9 @@ def not_cjk_filter(
     # Get function arguments.
     debug = args.debug
 
-    remove_char_pattern = re.compile(
-        r'[^\u4e00-\u9fff.~<、,。《?>*\-!》:」「+%/a-zA-Z\d()\[\]【】]'
-    )
-    for i in tqdm(dataset, desc='Not_cjk_filter', disable=not debug):
-        i.title = remove_char_pattern.sub('', i.title)
-        i.article = remove_char_pattern.sub('', i.article)
+    for record in tqdm(dataset, desc='Not_cjk_filter', disable=not debug):
+        record.title = REMOVE_CHAR_PATTERN.sub('', record.title)
+        record.article = REMOVE_CHAR_PATTERN.sub('', record.article)
 
     return dataset
 
@@ -254,10 +334,9 @@ def english_replacer(
     # Get function arguments.
     debug = args.debug
 
-    english_pattern = re.compile(r'[a-zA-z][a-zA-z\s\d]+(?![^<]*>)')
-    for i in tqdm(dataset, desc='English_to_tag', disable=not debug):
-        i.title = english_pattern.sub('<en>', i.title)
-        i.article = english_pattern.sub('<en>', i.article)
+    for record in tqdm(dataset, desc='English_to_tag', disable=not debug):
+        record.title = ENGLISH_PATTERN.sub('<en>', record.title)
+        record.article = ENGLISH_PATTERN.sub('<en>', record.article)
     return dataset
 
 
@@ -331,12 +410,12 @@ def _ner_tag_subs(
 
     # 取得 NER 分析結果
     ner_result = ner_dataset(dataset)
-    for data in tqdm(dataset, desc='Ner_tag_subs', disable=not debug):
+    for record in tqdm(dataset, desc='Ner_tag_subs', disable=not debug):
         # Find data that have same id.
-        ner_data = ner_result[dataset.index(data)]
+        ner_data = ner_result[dataset.index(record)]
 
         # Make sure `ner_data` and `data` have same id.
-        assert ner_data['idx'] == data.idx
+        assert ner_data['idx'] == record.idx
 
         # 得到 article 的 ner 結果.
         a_ner = ner_data['article_NER']
@@ -381,8 +460,8 @@ def _ner_tag_subs(
                             word['word']] = f'<{tag_str}>'
 
         # Get origin title and article.
-        ori_title = data.title
-        ori_article = data.article
+        ori_title = record.title
+        ori_article = record.article
         rp_title = ""
         rp_article = ""
 
@@ -416,8 +495,8 @@ def _ner_tag_subs(
                 rp_title = rp_title.replace(k, v)
                 rp_article = rp_article.replace(k, v)
 
-        data.title = rp_title
-        data.article = rp_article
+        record.title = rp_title
+        record.article = rp_article
 
     # If `use_date_replacer` is true then replace number in date with `<num>`.
     if use_date_replacer:
@@ -442,25 +521,25 @@ def date_replacer(
         else:
             return False
 
-    for data in tqdm(dataset, desc='Date_filter', disable=not debug):
+    for record in tqdm(dataset, desc='Date_filter', disable=not debug):
         # Find data that have same id.
-        ner_data = ner_result[dataset.index(data)]
+        ner_data = ner_result[dataset.index(record)]
 
         # Make sure `ner_data` and `data` have same id.
-        assert ner_data['idx'] == data.idx
+        assert ner_data['idx'] == record.idx
 
         data_ner_result = ner_data['article_NER'] + ner_data['title_NER']
 
-        rp_title = data.title
-        rp_article = data.article
+        rp_title = record.title
+        rp_article = record.article
         for word in data_ner_result:
             if word['ner'] == 'DATE':
                 sub = date_preprocess(word['word'])
                 if sub:
                     rp_article = rp_article.replace(word['word'], sub)
                     rp_title = rp_title.replace(word['word'], sub)
-        data.title = rp_title
-        data.article = rp_article
+        record.title = rp_title
+        record.article = rp_article
 
     return dataset
 

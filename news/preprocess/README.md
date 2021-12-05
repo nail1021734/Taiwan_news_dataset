@@ -13,8 +13,8 @@ python -m news.preprocess.main       \
   --db_dir /abs_dir                  \
   --save_db_name out.db              \
   --debug                            \
-  --min_length 200                   \
-  --max_length 1000                  \
+  --use_min_length_filter 200        \
+  --use_max_length_filter 1000       \
   --use_url_filter                   \
   --use_parentheses_filter           \
   --use_brackets_filter              \
@@ -34,8 +34,8 @@ python -m news.preprocess.main       \
 
 輸入時只要有輸入前處理方法的名字就會執行此前處理方法, 並且不需要照順序輸入, 程式會自動將輸入的前處理方法照正確的順序執行, 另外在執行預處理時會先進行 NFKC 正規化以及將多個空白合成一個空白的步驟.
 
-- `min_length`: 要保留的文章最短長度, 預設為 0.
-- `max_length`: 要保留的文章最長長度, 預設為 -1 表示不限制文章最長長度.
+- `use_min_length_filter`: 要保留的文章最短長度, 預設為 0.
+- `use_max_length_filter`: 要保留的文章最長長度, 預設為 -1 表示不限制文章最長長度.
 - `use_url_filter`: 是否將 url 過濾掉.
 - `use_parentheses_filter`: 將小括號內的句子以及括號一起過濾掉.
 - `use_brackets_filter`: 將中括號內的句子以及括號一起過濾掉.
