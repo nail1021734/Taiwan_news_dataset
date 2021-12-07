@@ -57,7 +57,7 @@ REPORTER_PATTERNS = [
         r'(?:民\s?視(?:/?新聞?網?報?|記者|異言堂)+|快新聞)\s?'+
 
         # it might have separator and one leading typo or none
-        r'(?:.?/)?\s?' +
+        r'(?:.?/)?\s?(?:記者)?' +
 
         # reporter, non greedy modifier is required for clean result
         # the reporter could be empty which have location only
@@ -182,7 +182,7 @@ BAD_ARTICLE_PATTERNS = [
     re.compile(r'【看更多】.{,200}$'),
     re.compile(r' 詳細講述影片:.{,80}$'),
     re.compile(
-        r'(?:(?:《民視新聞網》|請撥打113、110|有話想說嗎\?歡迎來信投稿:|名嘴有說出你的心聲嗎\? 歡迎來信投稿\(全民筆讚\)發表!)\s*)+'
+        r'(?:(?:《民視新聞網》|請撥打113、110|有話想說嗎\?歡迎來信投稿:|名嘴有說出你的心聲嗎\?\s?歡迎來信投稿\(全民筆讚\)發表!)\s*)+'
     ),
 ]
 

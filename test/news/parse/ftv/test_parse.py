@@ -13,7 +13,9 @@ import news.crawlers.util.request_url
 import news.parse.ftv
 from news.crawlers.db.schema import RawNews
 from news.parse.db.schema import ParsedNews
-from news.utils.dataclass_serialize import dataclass_from_dict
+from news.utils.dataclass_serialize import (
+    dataclass_from_dict, dataclass_to_json
+)
 
 
 def xml_from_web(url_pattern):
@@ -37,6 +39,13 @@ def get_xml(request):
     return xml_from_web if len(local) == 0 else partial(xml_from_local, local)
 
 
+def serialize_tests_to_json(tests: List[RawNews]) -> str:
+    """
+    Serialize list of RarsedNews to json format
+    """
+    return dataclass_to_json(tests)
+
+
 def get_tests_from_json(testname: str) -> List[ParsedNews]:
     """
     Read expected answer from json which contains list of serialized RarsedNews
@@ -57,7 +66,14 @@ def test_pattern(get_xml, testname) -> None:
             url_pattern=expected.url_pattern
         )
         parsed_news = news.parse.ftv.parser(raw_news=raw_news)
-        assert parsed_news == expected
+
+        assert parsed_news.article == expected.article
+        assert parsed_news.category == expected.category
+        assert parsed_news.company_id == expected.company_id
+        assert parsed_news.reporter == expected.reporter
+        assert parsed_news.timestamp == expected.timestamp
+        assert parsed_news.title == expected.title
+        assert parsed_news.url_pattern == expected.url_pattern
 
 
 def pytest_generate_tests(metafunc):
