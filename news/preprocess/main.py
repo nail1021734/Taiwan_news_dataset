@@ -13,11 +13,13 @@ import news.parse.db.write
 import news.path
 import news.preprocess.db.create
 import news.preprocess.db.util
-from news.preprocess.preprocess import (
-    NFKC, TAG_TABLE, brackets_filter, curly_brackets_filter, emoji_filter,
-    english_replacer, guillemet_replacer, length_filter,
-    lenticular_brackets_filter, ner_entity_replacer, not_cjk_filter,
-    number_replacer, parentheses_filter, url_filter
+from news.preprocess.filters import (
+    NFKC, brackets_filter, curly_brackets_filter, emoji_filter, length_filter,
+    lenticular_brackets_filter, non_CJK_filter, parentheses_filter, url_filter
+)
+from news.preprocess.ner_preprocessor import TAG_TABLE, ner_entity_replacer
+from news.preprocess.replacer import (
+    english_replacer, guillemet_replacer, number_replacer
 )
 
 
@@ -404,7 +406,7 @@ def get_func_list(args: argparse.Namespace,) -> List[Callable]:
     if args.use_emoji_filter:
         func_list.append(emoji_filter)
     if args.use_not_cjk_filter:
-        func_list.append(not_cjk_filter)
+        func_list.append(non_CJK_filter)
     if not (args.use_min_length_filter == 0
             and args.use_max_length_filter == -1):
         func_list.append(length_filter)
