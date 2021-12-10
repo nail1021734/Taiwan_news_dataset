@@ -142,8 +142,8 @@ def pattern_filter_factory(pattern: re.Pattern,) -> Callable:
         debug = args.debug
 
         for record in tqdm(dataset, disable=not debug):
-            record.title = re_pattern.sub('', record.title)
-            record.article = re_pattern.sub('', record.article)
+            record.title = pattern.sub('', record.title)
+            record.article = pattern.sub('', record.article)
         return dataset
 
     return func

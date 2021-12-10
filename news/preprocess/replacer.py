@@ -28,7 +28,7 @@ def number_replacer(
     # Create tag table.
     tag_table = tuple(TAG_TABLE.values())
 
-    def replace_number(text: str):
+    def replace_number_with_text(text: str):
         rp_text = ''
         last_index = 0
         for match in NUMBER_PATTERN.finditer(text):
@@ -41,9 +41,9 @@ def number_replacer(
 
     for record in tqdm(dataset, disable=not debug):
         # Replace numbers in titles.
-        record.title = replace_number(text=record.title)
+        record.title = replace_number_with_text(text=record.title)
         # Replace numbers in articles.
-        record.article = replace_number(text=record.article)
+        record.article = replace_number_with_text(text=record.article)
 
     return dataset
 
@@ -60,18 +60,16 @@ def english_replacer(
     # Get function arguments.
     debug = args.debug
 
-    def replace_en(text: str):
+    def replace_en_with_text(text: str):
         rp_text = ''
         last_index = 0
         for match in ENGLISH_PATTERN.finditer(text):
             # 檢查 match 到的前一個 index 是否小於 0, 以及後一個 index 是否大於
             # `len(text)` 避免超出範圍.
-            if match.start() - 1 > -1 and match.end() < len(text):
-                # 檢查前一個字元是否為 `<` 以及後一個字元是否為 `>`.
-                if (text[match.start() - 1] == '<'
-                        and text[match.end()] == '>'):
-                    # 如果是就不替換成 `<en>`
-                    continue
+            if (match.start() - 1 >= 0 and text[match.start() - 1] == '<'
+                    and match.end() < len(text) and text[match.end()] == '>'):
+                # 如果是就不替換成 `<en>`
+                continue
             rp_text += text[last_index:match.start()] + '<en>'
             last_index = match.end()
         rp_text += text[last_index:]
@@ -79,9 +77,9 @@ def english_replacer(
 
     for record in tqdm(dataset, disable=not debug):
         # Replace english in titles.
-        record.title = replace_en(text=record.title)
+        record.title = replace_en_with_text(text=record.title)
         # Replace english in articles.
-        record.article = replace_en(text=record.article)
+        record.article = replace_en_with_text(text=record.article)
 
     return dataset
 

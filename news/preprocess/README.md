@@ -45,6 +45,7 @@ python -m news.preprocess.main       \
 - `use_emoji_filter`: 過濾掉 emoji 符號.
 - `ner_class ORG PERSON LOC`: 選擇哪些 NER 類別要被替換為 tag, 目前總共 10 種類別可以選擇(可多選), 可選的類別請見 **NER 類別**區塊
 - `ner_need_id_class ORG PERSON LOC`: 選擇要被替換為 tag 的 NER 類別相同的詞是否要有相同 id 來表示(可多選).
+- `ner_device`: 選擇 NER 時使用的設備, 0 代表 cuda:0, -1 表示使用 cpu, 預設為 0.
 - `use_date_replacer`: 當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
 - `use_english_replacer`: 將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
 - `use_guillemet_replacer`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.

@@ -384,6 +384,17 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
             """,
         ),
     )
+    parser.add_argument(
+        '--ner_device',
+        type=int,
+        required=False,
+        default=0,
+        help=textwrap.dedent(
+            """\
+            指定 NER 時要使用的設備, 0 表示使用 cuda:0, -1 表示使用 GPU, 預設是 0.
+            """,
+        ),
+    )
 
     return parser.parse_args(argv)
 

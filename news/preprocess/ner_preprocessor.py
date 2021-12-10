@@ -1,7 +1,9 @@
 import argparse
+import gc
 import re
 from typing import Dict, List
 
+import torch
 from ckip_transformers.nlp import CkipNerChunker
 from tqdm import tqdm
 
@@ -23,50 +25,53 @@ TAG_TABLE = {
 }
 
 
-def ner_dataset(dataset: List[news.parse.db.schema.ParsedNews],) -> List[Dict]:
+def ner_dataset(
+    dataset: List[news.parse.db.schema.ParsedNews],
+    ner_device: int = 0,
+) -> List[Dict]:
     r"""對資料集做 NER 分析取出 entity 並回傳分析結果.
     """
     # Initial NER model.
-    ner_driver = CkipNerChunker(level=3, device=0)
+    ner_model = CkipNerChunker(level=3, device=ner_device)
     # Get id, article and title.
-    data = [[i.idx, i.title, i.article] for i in dataset]
+    id_list = []
+    title_list = []
+    article_list = []
+    for record in dataset:
+        id_list.append(record.idx)
+        title_list.append(record.title)
+        article_list.append(record.article)
+
     # NER titles.
-    titles_ner = ner_driver(
-        list(zip(*data))[1],
+    title_ner_list = ner_model(
+        title_list,
         batch_size=8,
         show_progress=False,
     )
     # NER article.
-    articles_ner = ner_driver(
-        list(zip(*data))[2],
+    article_ner_list = ner_model(
+        article_list,
         batch_size=8,
         show_progress=False,
     )
 
     ner_result = []
-    for d, title_ner, article_ner in zip(data, titles_ner, articles_ner):
+    for idx, title_ner, article_ner in zip(
+            id_list,
+            title_ner_list,
+            article_ner_list,
+    ):
         ner_result.append(
             {
-                'idx':
-                    d[0],
-                'title_NER':
-                    [
-                        {
-                            'word': e.word,
-                            'ner': e.ner,
-                            'idx': e.idx
-                        } for e in title_ner
-                    ],
-                'article_NER':
-                    [
-                        {
-                            'word': e.word,
-                            'ner': e.ner,
-                            'idx': e.idx
-                        } for e in article_ner
-                    ]
+                'idx': idx,
+                'title_NER': title_ner,
+                'article_NER': article_ner,
             }
         )
+
+    del ner_model
+    gc.collect()
+    torch.cuda.empty_cache()
     return ner_result
 
 
@@ -75,6 +80,7 @@ def _ner_tag_subs(
     tag_dict: List[Dict],
     use_date_replacer: bool,
     debug: bool = False,
+    ner_device: int = 0,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Replace the names of people, places, and organizations based on NER
     results.
@@ -96,20 +102,14 @@ def _ner_tag_subs(
     """
 
     # 取得 NER 分析結果
-    ner_result = ner_dataset(dataset)
-    for record in tqdm(dataset, desc='Ner_tag_subs', disable=not debug):
-        # Find data that have same id.
-        ner_data = ner_result[dataset.index(record)]
-
-        # Make sure `ner_data` and `data` have same id.
-        assert ner_data['idx'] == record.idx
-
+    ner_result = ner_dataset(dataset=dataset, ner_device=ner_device)
+    for ner_data, record in tqdm(zip(ner_result, dataset), disable=not debug):
         # 得到 article 的 ner 結果.
         a_ner = ner_data['article_NER']
         # 得到 title 的 ner 結果.
         t_ner = ner_data['title_NER']
         # 將兩個 NER 結果合併成同一個表.
-        tot_ner = ner_data['article_NER'] + ner_data['title_NER']
+        tot_ner = a_ner + t_ner
 
         # Build type table.
         # 建立一個 key 為 NER 類別名稱(例如:org, per) value 為一個紀錄此 NER 類別
@@ -130,46 +130,50 @@ def _ner_tag_subs(
         # 建立一個表紀錄每個被 NER 標記出來的 token 對應到的 tag.
         # 建立這個表方便我們直接使用 token 查詢對應的 tag.
         word2tag_dict = [{} for i in range(len(tag_dict))]
-        for word in tot_ner:
-            if word['ner'] in type_table.keys():
-                if word['word'] not in word2tag_dict[type_table[word['ner']]
-                                                     ['id']].keys():
-                    if type_table[word['ner']]['NeedID']:
+        for ner_token in tot_ner:
+            if ner_token.ner in type_table.keys():
+                if ner_token.word not in word2tag_dict[type_table[ner_token.ner]
+                                                       ['id']].keys():
+                    if type_table[ner_token.ner]['NeedID']:
                         tag_id = len(
-                            word2tag_dict[type_table[word['ner']]['id']]
+                            word2tag_dict[type_table[ner_token.ner]['id']]
                         )
-                        tag_str = type_table[word['ner']]['tag']
-                        word2tag_dict[type_table[word['ner']]['id']][
-                            word['word']] = f'<{tag_str}{tag_id}>'
+                        tag_str = type_table[ner_token.ner]['tag']
+                        word2tag_dict[type_table[ner_token.ner]['id']][
+                            ner_token.word] = f'<{tag_str}{tag_id}>'
                     else:
-                        tag_str = type_table[word['ner']]['tag']
-                        word2tag_dict[type_table[word['ner']]['id']][
-                            word['word']] = f'<{tag_str}>'
+                        tag_str = type_table[ner_token.ner]['tag']
+                        word2tag_dict[type_table[ner_token.ner]['id']][
+                            ner_token.word] = f'<{tag_str}>'
 
         # Get origin title and article.
         ori_title = record.title
         ori_article = record.article
-        rp_title = ""
-        rp_article = ""
+        rp_title = ''
+        rp_article = ''
 
         # Substitute title.
         last_len = 0
-        for word in t_ner:
-            if word['ner'] in type_table.keys():
-                rp_title = rp_title + \
-                    ori_title[last_len: word['idx'][0]] + \
-                    word2tag_dict[type_table[word['ner']]['id']][word['word']]
-                last_len = word['idx'][1]
+        for ner_token in t_ner:
+            if ner_token.ner in type_table.keys():
+                rp_title = (
+                    rp_title + ori_title[last_len:ner_token.idx[0]]
+                    + word2tag_dict[type_table[ner_token.ner]['id']][
+                        ner_token.word]
+                )
+                last_len = ner_token.idx[1]
         rp_title = rp_title + ori_title[last_len:]
 
         # Substitute article.
         last_len = 0
-        for word in a_ner:
-            if word['ner'] in type_table.keys():
-                rp_article = rp_article + \
-                    ori_article[last_len: word['idx'][0]] + \
-                    word2tag_dict[type_table[word['ner']]['id']][word['word']]
-                last_len = word['idx'][1]
+        for ner_token in a_ner:
+            if ner_token.ner in type_table.keys():
+                rp_article = (
+                    rp_article + ori_article[last_len:ner_token.idx[0]]
+                    + word2tag_dict[type_table[ner_token.ner]['id']][
+                        ner_token.word]
+                )
+                last_len = ner_token.idx[1]
         rp_article = rp_article + ori_article[last_len:]
 
         # Replace some words that NER didn’t catch index but in dictionary.
@@ -208,23 +212,17 @@ def date_replacer(
         else:
             return False
 
-    for record in tqdm(dataset, desc='Date_filter', disable=not debug):
-        # Find data that have same id.
-        ner_data = ner_result[dataset.index(record)]
-
-        # Make sure `ner_data` and `data` have same id.
-        assert ner_data['idx'] == record.idx
-
+    for ner_data, record in tqdm(ner_result, dataset, disable=not debug):
         data_ner_result = ner_data['article_NER'] + ner_data['title_NER']
 
         rp_title = record.title
         rp_article = record.article
-        for word in data_ner_result:
-            if word['ner'] == 'DATE':
-                sub = date_preprocess(word['word'])
+        for ner_token in data_ner_result:
+            if ner_token.ner == 'DATE':
+                sub = date_preprocess(ner_token.word)
                 if sub:
-                    rp_article = rp_article.replace(word['word'], sub)
-                    rp_title = rp_title.replace(word['word'], sub)
+                    rp_article = rp_article.replace(ner_token.word, sub)
+                    rp_title = rp_title.replace(ner_token.word, sub)
         record.title = rp_title
         record.article = rp_article
 
@@ -254,6 +252,7 @@ def ner_entity_replacer(
     if 'ner_need_id_class' in args:
         ner_need_id_class = args.ner_need_id_class
     use_date_replacer = args.use_date_replacer
+    ner_device = args.ner_device
     debug = args.debug
 
     # 建立 `tag_dict`.
@@ -273,6 +272,7 @@ def ner_entity_replacer(
         dataset=dataset,
         tag_dict=tag_dict,
         use_date_replacer=use_date_replacer,
+        ner_device=ner_device,
         debug=debug,
     )
     return dataset
