@@ -250,7 +250,9 @@ def ner_entity_replacer(
     """
     # Get function arguments.
     ner_class = args.ner_class if 'ner_class' in args else None
-    ner_need_id_class = args.ner_need_id_class
+    ner_need_id_class = []
+    if 'ner_need_id_class' in args:
+        ner_need_id_class = args.ner_need_id_class
     use_date_replacer = args.use_date_replacer
     debug = args.debug
 

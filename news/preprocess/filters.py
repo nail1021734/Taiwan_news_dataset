@@ -8,20 +8,6 @@ import news.parse.db.read
 import news.parse.db.schema
 import news.parse.util.normalize
 
-URL_PATTERN = re.compile(r'https?://[A-Za-z0-9\-._~:/?#\[\]@!$&\'()*+,;%=]+\s*')
-EMOJI_PATTERN = re.compile(
-    pattern="["
-    u"\U0001F600-\U0001F64F"  # emoticons
-    u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-    u"\U0001F680-\U0001F6FF"  # transport & map symbols
-    u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-    "]+",
-    flags=re.UNICODE
-)
-REMOVE_CHAR_PATTERN = re.compile(
-    r'[^\u4e00-\u9fff.~<、,。《?>*\-!》:」「+%/a-zA-Z\d()\[\]【】]'
-)
-
 
 def NFKC(
     dataset: List[news.parse.db.schema.ParsedNews],
@@ -65,13 +51,13 @@ def length_filter(
     debug = args.debug
 
     result = []
-    for i in tqdm(dataset, desc='Length_filter', disable=not debug):
+    for record in tqdm(dataset, desc='Length_filter', disable=not debug):
         if max_length != -1:
-            if max_length < len(i.article):
+            if max_length < len(record.article):
                 continue
-        if min_length > len(i.article):
+        if min_length > len(record.article):
             continue
-        result.append(i)
+        result.append(record)
 
     return result
 
@@ -105,14 +91,14 @@ def find_delimiter(
     # `rp_article` 為最後回傳的文章.
     rp_article = ''
     last_index = 0
-    for i, char in enumerate(article):
+    for index, char in enumerate(article):
         if char == left_delimiter:
             if count_stack == 0:
                 # 若 `count_stack == 0` 表示遇到開頭的 `left_delimiter`.
                 # 若不等於 0 表示先前已經遇過還沒匹配到 `right_delimiter` 的 `left_delimiter`.
 
                 # 將 `left_delimiter` 之前的文章片段加到 `rp_article` 之中.
-                rp_article += article[last_index:i]
+                rp_article += article[last_index:index]
                 if not drop_delimiter:
                     # 將 `left_delimiter` 加到 `rp_article` 之中.
                     rp_article += left_delimiter
@@ -137,15 +123,15 @@ def find_delimiter(
                     rp_article += right_delimiter
 
                 # 更新 `last_index` 到 `right_delimiter` 的下一個索引.
-                last_index = i + 1
+                last_index = index + 1
 
     # 將 `last_index` 之後的文章, 加到 `rp_article` 之後.
     rp_article += article[last_index:]
     return rp_article
 
 
-def filter_factory(re_pattern: str,) -> Callable:
-    r"""生成一般的 filter function.
+def pattern_filter_factory(pattern: re.Pattern,) -> Callable:
+    r"""生成 pattern 的 filter function.
     """
 
     def func(
@@ -199,35 +185,48 @@ def delimiter_filter_factory(
 
 
 # Remove url in articles.
-url_filter = filter_factory(re_pattern=URL_PATTERN)
+URL_PATTERN = re.compile(r'https?://[A-Za-z0-9\-._~:/?#\[\]@!$&\'()*+,;%=]+\s*')
+url_filter = pattern_filter_factory(pattern=URL_PATTERN)
 
 # Remove emoji in articles.
-emoji_filter = filter_factory(re_pattern=EMOJI_PATTERN)
+EMOJI_PATTERN = re.compile(
+    pattern="["
+    "\U0001F600-\U0001F64F"  # emoticons
+    "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "\U0001F680-\U0001F6FF"  # transport & map symbols
+    "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    "]+",
+    flags=re.UNICODE
+)
+emoji_filter = pattern_filter_factory(pattern=EMOJI_PATTERN)
 
 # Remove text other than Chinese and English.
 # Remove too special punctuation and keep only punctuation below.
 # `[.~<、,。《?>*-!》:」「+%/]`
-non_CJK_filter = filter_factory(re_pattern=REMOVE_CHAR_PATTERN)
+REMOVE_CHAR_PATTERN = re.compile(
+    r'[^\u4e00-\u9fff.~<、,。《?>*\-!》:」「+%/a-zA-Z\d()\[\]【】]'
+)
+non_CJK_filter = pattern_filter_factory(pattern=REMOVE_CHAR_PATTERN)
 
-# Remove parentheses and words in parentheses.
+# Remove parentheses and words within parentheses.
 parentheses_filter = delimiter_filter_factory(
     left_delimiter='(',
     right_delimiter=')',
 )
 
-# Remove brackets and words in brackets.
+# Remove brackets and words within brackets.
 brackets_filter = delimiter_filter_factory(
     left_delimiter='[',
     right_delimiter=']',
 )
 
-# Remove lenticular brackets and words in lenticular brackets.
+# Remove lenticular brackets and words within lenticular brackets.
 lenticular_brackets_filter = delimiter_filter_factory(
     left_delimiter='【',
     right_delimiter='】',
 )
 
-# Remove curly brackets and words in curly brackets.
+# Remove curly brackets and words within curly brackets.
 curly_brackets_filter = delimiter_filter_factory(
     left_delimiter='{',
     right_delimiter='}',
