@@ -2,7 +2,7 @@ import argparse
 import gc
 import sys
 import textwrap
-from typing import Callable, List
+from typing import Callable, Dict, List
 
 from tqdm import trange
 
@@ -13,11 +13,11 @@ import news.parse.db.write
 import news.path
 import news.preprocess.db.create
 import news.preprocess.db.util
-from news.preprocess.filters import (
+from news.preprocess.filter import (
     NFKC, brackets_filter, curly_brackets_filter, emoji_filter, length_filter,
     lenticular_brackets_filter, non_CJK_filter, parentheses_filter, url_filter
 )
-from news.preprocess.ner_preprocessor import TAG_TABLE, ner_entity_replacer
+from news.preprocess.ner_preprocessor import NER_CLASSES, ner_entity_replacer
 from news.preprocess.replacer import (
     english_replacer, guillemet_replacer, number_replacer
 )
@@ -311,44 +311,6 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--ner_class',
-        type=str,
-        nargs='*',
-        choices=TAG_TABLE.keys(),
-        required=False,
-        help=textwrap.dedent(
-            """\
-            選擇哪些 NER 類別要被替換為 tag. 總共 10 種類別
-            例如: `--ner_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
-            - GPE 替換為 `<gpe>`.
-            - PERSON 替換為 `<per>`.
-            - ORG 替換為 `<org>`.
-            - NORP 替換為 `<nrp>`.
-            - LOC 替換為 `<loc>`.
-            - FAC 替換為 `<fac>`.
-            - PRODUCT 替換為 `<prod>`.
-            - WORK_OF_ART 替換為 `<woa>`.
-            - EVENT 替換為 `<evt>`.
-            - LAW 替換為 `<law>`.
-            """
-        ),
-    )
-    parser.add_argument(
-        '--ner_need_id_class',
-        type=str,
-        nargs='*',
-        choices=TAG_TABLE.keys(),
-        required=False,
-        help=textwrap.dedent(
-            """\
-            選擇要被替換為 tag 的 NER 類別相同的詞是否要用相同 id 來表示.
-            例如: `--ner_need_id_class GPE PERSON`, 表示要將 GPE 和 PERSON 替換成 tag.
-            同個文章內同為 GPE 類別的 "台北" 會變成 `<gpe0>` , 而 "台中" 為 `<gpe1>`
-            (不同詞之間用不同 id 表示).
-            """
-        ),
-    )
-    parser.add_argument(
         '--use_date_replacer',
         action='store_true',
         help=textwrap.dedent(
@@ -385,16 +347,54 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        '--ner_device',
+        '--device',
         type=int,
-        required=False,
         default=0,
+        required=False,
         help=textwrap.dedent(
             """\
-            指定 NER 時要使用的設備, 0 表示使用 cuda:0, -1 表示使用 GPU, 預設是 0.
+            指定執行需要使用GPU處理的前處理步驟時要使用的設備,
+            0 表示使用 cuda:0, -1 表示使用 GPU, 預設是 0.
             """,
         ),
     )
+    parser.add_argument(
+        '--ner_batch_size',
+        type=int,
+        required=False,
+        default=1,
+        help=textwrap.dedent(
+            """\
+            指定執行 NER 處理時要使用的 batch size.
+            """,
+        ),
+    )
+    # 為每一種 NER 類別建立輸入的參數.
+    for ner_class in NER_CLASSES:
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument(
+            f'--use_{ner_class}',
+            type=str,
+            default=None,
+            required=False,
+            help=textwrap.dedent(
+                f"""\
+                設定要用來替換此 NER 類別({ner_class})的 tag.
+                (若 tag 後要包含 id 請使用 `--use_{ner_class}_with_id` 替代.)
+                """,
+            )
+        )
+        group.add_argument(
+            f'--use_{ner_class}_with_id',
+            type=str,
+            default=None,
+            required=False,
+            help=textwrap.dedent(
+                f"""\
+                設定要用來替換此 NER 類別({ner_class})的 tag. 並且相同的 token 會有相同的id.
+                """,
+            )
+        )
 
     return parser.parse_args(argv)
 
@@ -423,7 +423,7 @@ def get_func_list(args: argparse.Namespace,) -> List[Callable]:
         func_list.append(length_filter)
 
     # 以下前處理方法會將部份文字替換成 tag.
-    if 'ner_class' in args or args.use_date_replacer:
+    if args.use_date_replacer and args.tag_option:
         func_list.append(ner_entity_replacer)
     if args.use_english_replacer:
         func_list.append(english_replacer)
@@ -433,6 +433,47 @@ def get_func_list(args: argparse.Namespace,) -> List[Callable]:
         func_list.append(number_replacer)
 
     return func_list
+
+
+def build_tag_attr_table(args: argparse.Namespace,) -> Dict:
+    args = args.__dict__
+    # 建立 `tag_table`, `tag_table` 是一個字典, key 為 tag 樣式, value 為此 tag
+    # 對應到的 NER 類別名稱(tag 可以一次對應多個 NER 類別), 以及此 tag 需不需要 id.
+    tag_attr_table = {}
+    for ner_class in NER_CLASSES:
+        use_ner_class = args[f'use_{ner_class}'] or args[
+            f'use_{ner_class}_with_id']
+        need_id = bool(args[f'use_{ner_class}_with_id'])
+        # 若 `args[f'use_{ner_class}']` 以及 `args[f'use_{ner_class}_with_id']`
+        # 皆為 None 則直接跳過後續處理.
+        if not use_ner_class:
+            continue
+        # 初始化此 `use_ner_class` tag 的保存欄位.
+        if use_ner_class not in tag_attr_table:
+            tag_attr_table[use_ner_class] = {
+                'NER_class': [],
+                'need_id': need_id
+            }
+        # 將此 NER 類別加入此 tag 的 `NER_class` 欄位中.
+        tag_attr_table[use_ner_class]['NER_class'].append(ner_class)
+
+        # 檢查 `need_id` 是否有衝突(例如: 相同 tag 其中一類需要 id 另外一類不用).
+        if tag_attr_table[use_ner_class]['need_id'] != need_id:
+            raise ValueError(f'<{use_ner_class}> tag id conflict.')
+
+    return tag_attr_table
+
+
+def build_tag_option(tag_attr_table: Dict,) -> List[Dict]:
+    # 建立 `tag_option`.
+    tag_option = [
+        {
+            'ner_classes': tag_attr['NER_class'],
+            'tag': tag,
+            'need_id': tag_attr['need_id'],
+        } for tag, tag_attr in tag_attr_table.items()
+    ]
+    return tag_option
 
 
 def preprocess(
@@ -456,6 +497,15 @@ def main(argv: List[str]) -> None:
         args.db_name = []
     if args.db_dir is None:
         args.db_dir = []
+
+    # 建立 `tag_attr_table` 以及 `tag_option`, 並加入到 `args` 中.
+    tag_attr_table = build_tag_attr_table(args=args)
+    tag_option = build_tag_option(tag_attr_table=tag_attr_table)
+    args = argparse.Namespace(
+        **args.__dict__,
+        tag_attr_table=tag_attr_table,
+        tag_option=tag_option,
+    )
 
     # Map relative paths to absolute paths under `PROJECT_ROOT/data/parse`.
     db_paths = news.db.get_db_paths(

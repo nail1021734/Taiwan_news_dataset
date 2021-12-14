@@ -11,76 +11,74 @@ import news.parse.db.read
 import news.parse.db.schema
 import news.parse.util.normalize
 
-TAG_TABLE = {
-    'GPE': 'gpe',
-    'PERSON': 'per',
-    'ORG': 'org',
-    'NORP': 'nrp',
-    'LOC': 'loc',
-    'FAC': 'fac',
-    'PRODUCT': 'prod',
-    'WORK_OF_ART': 'woa',
-    'EVENT': 'evt',
-    'LAW': 'law',
-}
+NER_CLASSES = [
+    'GPE',
+    'PERSON',
+    'ORG',
+    'NORP',
+    'LOC',
+    'FAC',
+    'PRODUCT',
+    'WORK_OF_ART',
+    'EVENT',
+    'LAW',
+]
 
 
 def ner_dataset(
     dataset: List[news.parse.db.schema.ParsedNews],
-    ner_device: int = 0,
+    device: int = 0,
+    batch_size: int = 8,
 ) -> List[Dict]:
     r"""對資料集做 NER 分析取出 entity 並回傳分析結果.
     """
     # Initial NER model.
-    ner_model = CkipNerChunker(level=3, device=ner_device)
+    ner_model = CkipNerChunker(level=3, device=device)
     # Get id, article and title.
-    id_list = []
     title_list = []
     article_list = []
     for record in dataset:
-        id_list.append(record.idx)
         title_list.append(record.title)
         article_list.append(record.article)
 
     # NER titles.
     title_ner_list = ner_model(
         title_list,
-        batch_size=8,
+        batch_size=batch_size,
         show_progress=False,
     )
     # NER article.
     article_ner_list = ner_model(
         article_list,
-        batch_size=8,
+        batch_size=batch_size,
         show_progress=False,
     )
 
     ner_result = []
-    for idx, title_ner, article_ner in zip(
-            id_list,
+    for title_ner, article_ner in zip(
             title_ner_list,
             article_ner_list,
     ):
         ner_result.append(
             {
-                'idx': idx,
                 'title_NER': title_ner,
                 'article_NER': article_ner,
             }
         )
 
     del ner_model
-    gc.collect()
     torch.cuda.empty_cache()
+    gc.collect()
     return ner_result
 
 
 def _ner_tag_subs(
     dataset: List[news.parse.db.schema.ParsedNews],
-    tag_dict: List[Dict],
+    tag_option: List[Dict],
     use_date_replacer: bool,
     debug: bool = False,
-    ner_device: int = 0,
+    device: int = 0,
+    batch_size: int = 8,
 ) -> List[news.parse.db.schema.ParsedNews]:
     r"""Replace the names of people, places, and organizations based on NER
     results.
@@ -89,11 +87,11 @@ def _ner_tag_subs(
     ==========
     `dataset`: List[news.parse.db.schema.ParsedNews]
         要處理的資料集.
-    `tag_dict`: List[Dict]
+    `tag_option`: List[Dict]
         用來指定需要用 tag 替換的 NER entity 以及 tag 的名稱，範例如下
-        `tag_dict` = [
-            {'type': ['ORG'], 'tag': 'org', 'NeedID': False},
-            {'type': ['LOC', 'GPE'], 'tag': 'loc', 'NeedID': True}
+        `tag_option` = [
+            {'ner_classes': ['ORG'], 'tag': 'org', 'need_id': False},
+            {'ner_classes': ['LOC', 'GPE'], 'tag': 'loc', 'need_id': True}
         ]
         表示所有 ORG 的 entity 要被換為 `<org>` 這個 tag ，
         以及 LOC 和 GPE 都被換為 `<loc1>` 這種格式的 tag.( ID 會根據名稱不同改變.)
@@ -102,39 +100,45 @@ def _ner_tag_subs(
     """
 
     # 取得 NER 分析結果
-    ner_result = ner_dataset(dataset=dataset, ner_device=ner_device)
+    ner_result = ner_dataset(
+        dataset=dataset,
+        device=device,
+        batch_size=batch_size,
+    )
     for ner_data, record in tqdm(zip(ner_result, dataset), disable=not debug):
         # 得到 article 的 ner 結果.
-        a_ner = ner_data['article_NER']
+        article_ner = ner_data['article_NER']
         # 得到 title 的 ner 結果.
-        t_ner = ner_data['title_NER']
+        title_ner = ner_data['title_NER']
         # 將兩個 NER 結果合併成同一個表.
-        tot_ner = a_ner + t_ner
+        total_ner = article_ner + title_ner
 
         # Build type table.
         # 建立一個 key 為 NER 類別名稱(例如:org, per) value 為一個紀錄此 NER 類別
-        # 的資訊的字典(`id` 紀錄此 NER 類別對應到 `tag_dict` 的哪個元素, `NeedID`: 紀錄
+        # 的資訊的字典(`id` 紀錄此 NER 類別對應到 `tag_option` 的哪個元素, `need_id`: 紀錄
         # 需不需要給每個不同的 token 一個獨立的id, `tag`: 紀錄此 NER 類別需被替換成的 tag
         # ), 建立這個表方便我們後續可以直接用 NER 類別名稱得到 value 中的資訊.
         type_table = dict(
             (
                 k, {
                     'id': idx,
-                    'NeedID': tag_dict[idx]['NeedID'],
-                    'tag': tag_dict[idx]['tag']
+                    'need_id': tag_option[idx]['need_id'],
+                    'tag': tag_option[idx]['tag']
                 }
-            ) for idx in range(len(tag_dict)) for k in tag_dict[idx]['type']
+            )
+            for idx in range(len(tag_option))
+            for k in tag_option[idx]['ner_classes']
         )
 
         # Build word to tag table.
         # 建立一個表紀錄每個被 NER 標記出來的 token 對應到的 tag.
         # 建立這個表方便我們直接使用 token 查詢對應的 tag.
-        word2tag_dict = [{} for i in range(len(tag_dict))]
-        for ner_token in tot_ner:
-            if ner_token.ner in type_table.keys():
+        word2tag_dict = [{} for i in range(len(tag_option))]
+        for ner_token in total_ner:
+            if ner_token.ner in type_table:
                 if ner_token.word not in word2tag_dict[type_table[ner_token.ner]
-                                                       ['id']].keys():
-                    if type_table[ner_token.ner]['NeedID']:
+                                                       ['id']]:
+                    if type_table[ner_token.ner]['need_id']:
                         tag_id = len(
                             word2tag_dict[type_table[ner_token.ner]['id']]
                         )
@@ -154,8 +158,8 @@ def _ner_tag_subs(
 
         # Substitute title.
         last_len = 0
-        for ner_token in t_ner:
-            if ner_token.ner in type_table.keys():
+        for ner_token in title_ner:
+            if ner_token.ner in type_table:
                 rp_title = (
                     rp_title + ori_title[last_len:ner_token.idx[0]]
                     + word2tag_dict[type_table[ner_token.ner]['id']][
@@ -166,8 +170,8 @@ def _ner_tag_subs(
 
         # Substitute article.
         last_len = 0
-        for ner_token in a_ner:
-            if ner_token.ner in type_table.keys():
+        for ner_token in article_ner:
+            if ner_token.ner in type_table:
                 rp_article = (
                     rp_article + ori_article[last_len:ner_token.idx[0]]
                     + word2tag_dict[type_table[ner_token.ner]['id']][
@@ -205,14 +209,14 @@ def date_replacer(
     """
 
     def date_preprocess(date):
-        if re.match('.*年.*月.*日', date):
+        if re.match('.*?年.*?月.*?日', date):
             return r'<num>年<num>月<num>日'
-        elif re.match('.*月.*日', date):
+        elif re.match('.*?月.*?日', date):
             return r'<num>月<num>日'
         else:
             return False
 
-    for ner_data, record in tqdm(ner_result, dataset, disable=not debug):
+    for ner_data, record in tqdm(zip(ner_result, dataset), disable=not debug):
         data_ner_result = ner_data['article_NER'] + ner_data['title_NER']
 
         rp_title = record.title
@@ -247,32 +251,18 @@ def ner_entity_replacer(
         是否將日期中的數字替換成 `<num>`.
     """
     # Get function arguments.
-    ner_class = args.ner_class if 'ner_class' in args else None
-    ner_need_id_class = []
-    if 'ner_need_id_class' in args:
-        ner_need_id_class = args.ner_need_id_class
-    use_date_replacer = args.use_date_replacer
-    ner_device = args.ner_device
+    batch_size = args.ner_batch_size
     debug = args.debug
-
-    # 建立 `tag_dict`.
-    tag_dict = []
-    if ner_class:
-        # 如果有指定要替換成 tag 的 NER 類別則建立 `tag_dict`.
-        for tag in ner_class:
-            tag_dict.append(
-                {
-                    'type': [tag],
-                    'tag': TAG_TABLE[tag],
-                    'NeedID': tag in ner_need_id_class,
-                }
-            )
+    device = args.device
+    use_date_replacer = args.use_date_replacer
+    tag_option = args.tag_option
 
     dataset = _ner_tag_subs(
         dataset=dataset,
-        tag_dict=tag_dict,
+        tag_option=tag_option,
         use_date_replacer=use_date_replacer,
-        ner_device=ner_device,
+        device=device,
+        batch_size=batch_size,
         debug=debug,
     )
     return dataset

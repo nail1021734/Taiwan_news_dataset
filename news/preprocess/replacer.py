@@ -10,8 +10,7 @@ from tqdm import tqdm
 import news.parse.db.read
 import news.parse.db.schema
 import news.parse.util.normalize
-from news.preprocess.filters import delimiter_filter_factory
-from news.preprocess.ner_preprocessor import TAG_TABLE
+from news.preprocess.factory import delimiter_filter_factory
 
 NUMBER_PATTERN = re.compile(r'\d+')
 
@@ -24,9 +23,10 @@ def number_replacer(
     """
     # Get function arguments.
     debug = args.debug
+    tag_attr_table = args.tag_attr_table
 
     # Create tag table.
-    tag_table = tuple(TAG_TABLE.values())
+    tag_table = tuple(tag_attr_table.keys())
 
     def replace_number_with_text(text: str):
         rp_text = ''
