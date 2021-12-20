@@ -74,7 +74,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         --debug               \
         --save_db_name out.db
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument(
         '--batch_size',
         type=int,
@@ -93,9 +95,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         type=str,
         help=textwrap.dedent(
             f"""\
-            sqlite database file name wanted to parse.  If absolute path is
-            given, then use the given path as database file and read records
-            from the given path.
+            SQLite database file name wanted to parse.  If absolute path is
+            given, then treat the given path as database file and read records
+            directly from the given path.
 
             For example, excuting
 
@@ -138,7 +140,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         type=str,
         help=textwrap.dedent(
             f"""\
-            Directory contains sqlite database files.  If absolute path is
+            Directory contains SQLite database files.  If absolute path is
             given, then recursively search the directory to find all sqlite
             database files.
 
@@ -221,7 +223,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
             Name of the database to save parsing results.  Create file if given
             path does not exist (along with non-existed directories in the
             path).  If absolute path is given, then treat the given path as
-            sqlite database file.
+            SQLite database file.
 
             For example, executing
 

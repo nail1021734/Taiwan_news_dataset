@@ -2,7 +2,6 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
-import requests
 from tqdm import trange
 
 import news.crawlers.db.create
@@ -82,43 +81,50 @@ def get_news_list(
         # correct `category_idx` which the `news_idx` belongs to.  If no
         # `category_idx` match, then `news_idx` does not exist.
         for category_idx in CATEGORY_ID_LOOKUP_TABLE.values():
-            url = f'{COMPANY_URL}{datetime_str}{news_idx:06d}-{category_idx}'
-            response = None
-            try:
-                response = news.crawlers.util.request_url.get(url=url)
+            # 觀察到 chinatimes 有兩種 URL 路徑都有新聞,由於 'newspapers' 的
+            # hit rate 比較高因此排在前面先搜尋
+            for domain_path in ['newspapers', 'realtimenews']:
+                url = f'{COMPANY_URL}{domain_path}/{datetime_str}' + \
+                    f'{news_idx:06d}-{category_idx}'
+                response = None
+                try:
+                    response = news.crawlers.util.request_url.get(url=url)
 
-                # Raise exception if status code is not 200.
-                news.crawlers.util.status_code.check_status_code(
-                    company_id=COMPANY_ID,
-                    status_code=response.status_code,
-                    url=url,
-                )
-                news_list.append(
-                    RawNews(
+                    # Raise exception if status code is not 200.
+                    news.crawlers.util.status_code.check_status_code(
                         company_id=COMPANY_ID,
-                        raw_xml=news.crawlers.util.normalize.compress_raw_xml(
-                            raw_xml=response.text,
-                        ),
-                        url_pattern=news.crawlers.util.normalize.compress_url(
-                            company_id=COMPANY_ID,
-                            url=url,
-                        ),
+                        status_code=response.status_code,
+                        url=url,
                     )
-                )
+                    news_list.append(
+                        RawNews(
+                            company_id=COMPANY_ID,
+                            raw_xml=news.crawlers.util.normalize
+                            .compress_raw_xml(raw_xml=response.text,),
+                            url_pattern=news.crawlers.util.normalize
+                            .compress_url(
+                                company_id=COMPANY_ID,
+                                url=url,
+                            ),
+                        )
+                    )
 
-                # Reset `fail_count` if no error occurred.
-                fail_count = 0
-                break
-            except Exception as err:
-                if err.args \
-                        and isinstance(response, requests.Response) \
-                        and response.status_code != 404:
-                    fail_count += 1
-                    logger.update([err.args[0]])
+                    # Reset `fail_count` if no error occurred.
+                    fail_count = 0
                     break
+                except Exception as err:
+                    if err.args \
+                            and response is not None \
+                            and response.status_code != 404:
+                        fail_count += 1
+                        logger.update([err.args[0]])
+                        break
+            # If hit then break category loop.
+            if response is not None and response.status_code == 200:
+                break
 
         # Request timeout.
-        if not isinstance(response, requests.Response):
+        if response is None:
             fail_count += 1
             logger.update(['Request timeout.'])
         # `news_idx` does not exist.

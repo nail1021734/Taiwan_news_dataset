@@ -65,6 +65,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '科技新聞,IT 動向'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1359043200
-    assert parsed_news.reporter == '高科'
+    assert parsed_news.reporter == '高科,姜斌'
     assert parsed_news.title == '諾基亞停止開發塞班手機 宣告塞班系統死亡'
     assert parsed_news.url_pattern == '13-1-25-3785356'

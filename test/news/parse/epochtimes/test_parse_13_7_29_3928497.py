@@ -85,6 +85,6 @@ def test_parsing_result() -> None:
     assert parsed_news.category == '國際要聞'
     assert parsed_news.company_id == company_id
     assert parsed_news.timestamp == 1375027200
-    assert parsed_news.reporter == '黃捷瑄,馬穎慧'
+    assert parsed_news.reporter == '黃捷瑄,馬穎慧,畢儒宗'
     assert parsed_news.title == '停滯近三年 以巴在美國重啟談判'
     assert parsed_news.url_pattern == '13-7-29-3928497'

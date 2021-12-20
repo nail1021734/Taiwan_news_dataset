@@ -45,7 +45,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         --debug True                       \
         --past_datetime 2010-01-01+0000
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument(
         '--crawler_name',
         choices=CRAWLER_SCRIPT_LOOKUP_TABLE.keys(),
@@ -67,7 +69,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
             Name of the database to save crawled news.  Create file if given
             path does not exist (along with non-existed directories in the
             path).  If absolute path is given, then treat the given path as
-            sqlite database file.
+            SQLite database file.
 
             For example, executing
 

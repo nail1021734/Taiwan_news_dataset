@@ -43,14 +43,15 @@ import sqlite3
 
 SQL: str = """
     CREATE TABLE IF NOT EXISTS parsed_news (
-        id          INTEGER  PRIMARY KEY AUTOINCREMENT,
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
         article     TEXT        NOT NULL,
         category    TEXT    DEFAULT NULL,
         company_id  INTEGER     NOT NULL,
         reporter    TEXT    DEFAULT NULL,
         timestamp   INTEGER     NOT NULL,
         title       TEXT        NOT NULL,
-        url_pattern TEXT        NOT NULL
+        url_pattern TEXT        NOT NULL,
+        UNIQUE(company_id, url_pattern) ON CONFLICT IGNORE
     );
 """
 
