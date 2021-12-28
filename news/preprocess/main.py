@@ -1,228 +1,539 @@
 import argparse
-import json
-import os
-import pickle
+import gc
+import sys
+import textwrap
+from typing import Callable, List
 
-import news.parse.db
-import news.preprocess.db
-from news.parse.db.schema import ParsedNews
-from news.preprocess.preprocess import *
+from tqdm import trange
 
-PREPROCESS_FUNCTION = {
-    'NFKC': NFKC,
-    'length_filter': length_filter,
-    'url_filter': url_filter,
-    'whitespace_filter': whitespace_filter,
-    'parentheses_filter': parentheses_filter,
-    'number_filter': number_filter,
-    'guillemet_filter': guillemet_filter,
-    'language_filter': language_filter,
-    'emoji_filter': emoji_filter,
-    'not_CJK_filter': not_CJK_filter,
-    'NER_dataset': NER_dataset,
-    'ner_tag_subs': ner_tag_subs,
-    'date_filter': date_filter,
-    'base_preprocess': base_preprocess,
-}
+import news.db
+import news.parse.db.read
+import news.parse.db.util
+import news.parse.db.write
+import news.path
+import news.preprocess.db.create
+import news.preprocess.db.util
+from news.preprocess.filter import (
+    NFKC, brackets_filter, curly_brackets_filter, emoji_filter, length_filter,
+    lenticular_brackets_filter, non_CJK_filter, parentheses_filter, url_filter
+)
+from news.preprocess.ner_preprocessor import (
+    NER_CLASSES, ner_arg_post_process, ner_entity_replacer
+)
+from news.preprocess.replacer import (
+    english_replacer, guillemet_replacer, number_replacer
+)
 
 
-def parse_argument():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--function',
-        choices=PREPROCESS_FUNCTION.keys(),
-        type=str,
-        help='Select preprocess function.',
+def parse_args(argv: List[str]) -> argparse.Namespace:
+    r"""Preprocess command line arguments.
+
+    Example
+    =======
+    python -m news.preprocess.main         \
+        --batch_size 1000                  \
+        --db_name rel/my.db                \
+        --db_name /abs/my.db               \
+        --db_dir rel_dir                   \
+        --db_dir /abs_dir                  \
+        --save_db_name out.db              \
+        --debug                            \
+        --use_min_length_filter 200        \
+        --use_max_length_filter 1000       \
+        --use_url_filter                   \
+        --use_parentheses_filter           \
+        --use_brackets_filter              \
+        --use_curly_brackets_filter        \
+        --use_lenticular_brackets_filter   \
+        --use_not_cjk_filter               \
+        --use_emoji_filter                 \
+        --use_ORG_with_id org              \
+        --use_PERSON_with_id per           \
+        --use_LOC_with_id loc              \
+        --use_GPE_with_id loc              \
+        --use_date_replacer                \
+        --use_english_replacer             \
+        --use_guillemet_replacer           \
+        --use_number_replacer
+    """
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
-        '--source',
-        type=str,
-        help='Specify database or dir to perform preprocess.',
-    )
-    parser.add_argument(
-        '--save_path',
-        type=str,
-        help='Specify save path.',
-    )
-    parser.add_argument(
-        '--min_length',
+        '--batch_size',
         type=int,
-        default=None,
-        help='Specify min article length when use length filter.',
+        default=1000,
+        help=textwrap.dedent(
+            """\
+            Preprocess batch size. Controll batch size to avoid excess
+            memories.
+            """
+        ),
     )
     parser.add_argument(
-        '--max_length',
-        type=int,
-        default=None,
-        help='Specify max article length when use length filter.',
-    )
-    parser.add_argument(
-        '--NER_format',
-        type=json.loads,
-        default=None,
-        help='Specify replace format when use `ner_tag_subs` method.'
-    )
-    parser.add_argument(
-        '--NER_result',
+        '--db_name',
+        action='append',
         type=str,
-        default=None,
-        help=
-        'Specify NER_result path when use `ner_tag_subs` or `date_filter` method.'
-    )
+        help=textwrap.dedent(
+            f"""\
+            SQLite database file name wanted to preprocess.  If absolute path
+            is given, then treat the given path as database file and read
+            records directly from the given path.
 
-    args = parser.parse_args()
-    return args
+            For example, excuting
+
+                --db_name /abs/my.db
+
+            will collect the file
+
+                /abs/my.db
+
+            If relative path is given, then we assume the given path is under
+            the path `PROJECT_ROOT/data/preprocessed`.
+            Currently project root is set to {news.path.PROJECT_ROOT}.
+
+            For example, executing
+
+                --db_name rel/my.db
+
+            will collect the file
+
+                PROJECT_ROOT/data/preprocessed/rel/my.db
+
+            One can specify multiple database files at the same time using
+            multiple `--db_name`.
+
+            For example, executing
+
+                --db_name rel/a.db --db_name rel/b.db --db_name /abs/c.db
+
+            will collect all the following files
+
+                PROJECT_ROOT/data/preprocessed/rel/a.db
+                PROJECT_ROOT/data/preprocessed/rel/b.db
+                /abs/c.db
+            """
+        ),
+    )
+    parser.add_argument(
+        '--db_dir',
+        action='append',
+        type=str,
+        help=textwrap.dedent(
+            f"""\
+            Directory contains SQLite database files.  If absolute path is
+            given, then recursively search the directory to find all sqlite
+            database files.
+
+            For example, if `/abs/dir` contains
+
+                a.db
+                b.db
+                subdir/c.db
+                subdir/d.db
+
+            then executing
+
+                --db_dir /abs/dir
+
+            will collect all the following files
+
+                /abs/dir/a.db
+                /abs/dir/b.db
+                /abs/dir/subdir/c.db
+                /abs/dir/subdir/d.db
+
+            If relative path is given, then we assume the given directory is
+            under the path `PROJECT_ROOT/data/parsed`.  Currently project root
+            is set to {news.path.PROJECT_ROOT}.
+
+            For example, if `PROJECT_ROOT/data/parsed/rel/dir` contains
+
+                a.db
+                b.db
+                subdir/c.db
+                subdir/d.db
+
+            then executing
+
+                --db_dir rel/dir
+
+            will collect all the following files
+
+                PROJECT_ROOT/data/parsed/rel/dir/a.db
+                PROJECT_ROOT/data/parsed/rel/dir/b.db
+                PROJECT_ROOT/data/parsed/rel/dir/subdir/c.db
+                PROJECT_ROOT/data/parsed/rel/dir/subdir/d.db
+
+            One can specify multiple directory at the same time using multiple
+            `--db_dir`.
+
+            Continue from previouse example, excuting
+
+                --db_dir rel/dir --db_dir /abs/dir
+
+            will collect all the following files
+
+                /abs/dir/a.db
+                /abs/dir/b.db
+                /abs/dir/subdir/c.db
+                /abs/dir/subdir/d.db
+                PROJECT_ROOT/data/parsed/rel/dir/a.db
+                PROJECT_ROOT/data/parsed/rel/dir/b.db
+                PROJECT_ROOT/data/parsed/rel/dir/subdir/c.db
+                PROJECT_ROOT/data/parsed/rel/dir/subdir/d.db
+            """
+        ),
+    )
+    parser.add_argument(
+        '--save_db_name',
+        type=str,
+        required=True,
+        help=textwrap.dedent(
+            f"""\
+            Name of the database to save preprocessed results.  Create file if
+            given path does not exist (along with non-existed directories in
+            the path).  If absolute path is given, then treat the given path as
+            SQLite database file.
+
+            For example, executing
+
+                --save_db_name /abs/my.db
+
+            will output preprocessed news to the file
+
+                /abs/my.db
+
+            If relative path is given, then we assume the given path is under
+            the path `PROJECT_ROOT/data/preprocessed`.
+            Currently project root is set to {news.path.PROJECT_ROOT}.
+
+            For example, executing
+
+                --save_db_name rel/my.db
+
+            will output preprocessed news to the file
+
+                PROJECT_ROOT/data/preprocessed/rel/my.db
+            """
+        ),
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            Select whether to use debug mode.  In debug mode it outputs
+            progress bar to stderr and error messages to stdout.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--use_url_filter',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將輸入資料集的 url 過濾掉.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--use_parentheses_filter',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將小括號內的句子以及括號一起過濾掉.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--use_brackets_filter',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將中括號內的句子以及括號一起過濾掉.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--use_curly_brackets_filter',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將大括號內的句子以及括號一起過濾掉.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--use_lenticular_brackets_filter',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將透鏡狀括號(【】)內的句子以及括號一起過濾掉.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--use_emoji_filter',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            過濾 emoji.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--use_not_cjk_filter',
+        action='store_true',
+        help=textwrap.dedent(
+            r"""\
+            將中文, 英文, 數字以及特定標點符號
+            (包含 `.~<、,。《?>*\-!》:」「+%/()\[\]【】`)以外的符號過濾掉.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--use_min_length_filter',
+        type=int,
+        default=0,
+        required=False,
+        help=textwrap.dedent(
+            """\
+            將長度小於 `min_length` 的文章過濾, 預設為 0.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--use_max_length_filter',
+        type=int,
+        default=-1,
+        required=False,
+        help=textwrap.dedent(
+            """\
+            將長度大於 `max_length` 的文章過濾, -1 表示不限制文章長度, 預設為 -1.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--use_date_replacer',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            當對資料集進行 NER 類別的替換時, 是否將 DATE 類別中的數字轉換為 `<num>`.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--use_english_replacer',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將英文開頭的連續英文, 數字或空白換成 `<en>` tag.
+            """
+        ),
+    )
+    parser.add_argument(
+        '--use_guillemet_replacer',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--use_number_replacer',
+        action='store_true',
+        help=textwrap.dedent(
+            """\
+            將阿拉伯數字換為 `<num>` tag.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--device',
+        type=int,
+        default=0,
+        required=False,
+        help=textwrap.dedent(
+            """\
+            指定執行需要使用GPU處理的前處理步驟時要使用的設備,
+            0 表示使用 cuda:0, -1 表示使用 GPU, 預設是 0.
+            """,
+        ),
+    )
+    parser.add_argument(
+        '--ner_batch_size',
+        type=int,
+        required=False,
+        default=1,
+        help=textwrap.dedent(
+            """\
+            指定執行 NER 處理時要使用的 batch size.
+            """,
+        ),
+    )
+    # 為每一種 NER 類別建立輸入的參數.
+    for ner_class in NER_CLASSES:
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument(
+            f'--use_{ner_class}',
+            type=str,
+            default=None,
+            required=False,
+            help=textwrap.dedent(
+                f"""\
+                設定要用來替換此 NER 類別({ner_class})的 tag.
+                (若 tag 後要包含 id 請使用 `--use_{ner_class}_with_id` 替代.)
+                """,
+            )
+        )
+        group.add_argument(
+            f'--use_{ner_class}_with_id',
+            type=str,
+            default=None,
+            required=False,
+            help=textwrap.dedent(
+                f"""\
+                設定要用來替換此 NER 類別({ner_class})的 tag. 並且相同的 token 會有相同的id.
+                """,
+            )
+        )
+
+    return parser.parse_args(argv)
+
+
+def get_func_list(args: argparse.Namespace,) -> List[Callable]:
+    # 為了和 parsing 結果統一格式會先對資料進行 NFKC 以及將多個空白合成一個空白的動作.
+    func_list = [NFKC]
+
+    # 以下前處理方法不會將文字替換成 tag, 因此先進行處理.
+    if args.use_url_filter:
+        func_list.append(url_filter)
+    if args.use_parentheses_filter:
+        func_list.append(parentheses_filter)
+    if args.use_brackets_filter:
+        func_list.append(brackets_filter)
+    if args.use_curly_brackets_filter:
+        func_list.append(curly_brackets_filter)
+    if args.use_lenticular_brackets_filter:
+        func_list.append(lenticular_brackets_filter)
+    if args.use_emoji_filter:
+        func_list.append(emoji_filter)
+    if args.use_not_cjk_filter:
+        func_list.append(non_CJK_filter)
+    if not (args.use_min_length_filter == 0
+            and args.use_max_length_filter == -1):
+        func_list.append(length_filter)
+
+    # 以下前處理方法會將部份文字替換成 tag.
+    if args.use_date_replacer or args.ner_tag_lookup_table:
+        func_list.append(ner_entity_replacer)
+    if args.use_english_replacer:
+        func_list.append(english_replacer)
+    if args.use_guillemet_replacer:
+        func_list.append(guillemet_replacer)
+    if args.use_number_replacer:
+        func_list.append(number_replacer)
+
+    return func_list
 
 
 def preprocess(
-    dataset: ParsedNews,
+    dataset: List[news.parse.db.schema.ParsedNews],
+    func_list: List[Callable],
     args: argparse.Namespace,
-):
-    # 根據使用者選擇的function改變輸入的參數
-    if args.function == 'length_filter' or args.function == 'base_preprocess':
-        # 如果輸入的function包含`length_filter`，則需要輸入min_length和max_length
-        result = PREPROCESS_FUNCTION[args.function](
-            dataset=dataset,
-            min_length=args.min_length,
-            max_length=args.max_length
-        )
-    elif args.function == 'date_filter':
-        # `date_filter`需要讀取NER的資訊，因此要判斷輸入的source是資料夾還是db檔
-        if args.source.split('.')[-1] == 'db':
-            # 若是db檔則直接讀取`args.NER_result`路徑，取得NER分析的結果
-            result_file_path = os.path.join('data', args.NER_result)
-            result = PREPROCESS_FUNCTION[args.function](
-                dataset=dataset, result_path=result_file_path
+) -> List[news.parse.db.schema.ParsedNews]:
+
+    # Run preprocess in specified order.
+    for func in func_list:
+        # Run preprocess function.
+        dataset = func(dataset=dataset, args=args)
+
+    return dataset
+
+
+def main(argv: List[str]) -> None:
+    args = parse_args(argv=argv)
+
+    if args.db_name is None:
+        args.db_name = []
+    if args.db_dir is None:
+        args.db_dir = []
+
+    # 建立 `ner_tag_lookup_table` 並加入到 `args` 中.
+    args = argparse.Namespace(
+        **args.__dict__,
+        ner_tag_lookup_table=ner_arg_post_process(args=args),
+    )
+
+    # Map relative paths to absolute paths under `PROJECT_ROOT/data/parse`.
+    db_paths = news.db.get_db_paths(
+        file_paths=list(
+            map(
+                news.parse.db.util.get_db_path,
+                args.db_name + args.db_dir,
             )
-        else:
-            # 若是資料夾則取出`args.NER_result`路徑下和`args.source`名稱相同的
-            # NER分析結果
-            result_file_name = args.filename.split('.')[0] + '.pickle'
-            result_file_path = os.path.join(
-                'data', args.NER_result, result_file_name
+        ),
+    )
+
+    save_db_path = news.preprocess.db.util.get_db_path(
+        db_name=args.save_db_name
+    )
+    save_conn = news.db.get_conn(db_path=save_db_path)
+    save_cur = save_conn.cursor()
+    news.parse.db.create.create_table(cur=save_cur)
+
+    # Get sorted preprocess function list.
+    func_list = get_func_list(args)
+
+    for db_path in db_paths:
+        try:
+            # Must use absolute path `db_path` since some absolute paths is not
+            # in default locations (which is `PROJECT_ROOT/data/parsed`). This
+            # is fine since `get_num_of_records` use `get_db_path` internally.
+            # Note that this statement usually take a long times.
+            num_of_records = news.parse.db.read.get_num_of_records(
+                db_name=db_path,
             )
-            result = PREPROCESS_FUNCTION[args.function](
-                dataset=dataset, result_path=result_file_path
-            )
-    elif args.function == 'ner_tag_subs':
-        # `ner_tag_subs`需要讀取NER的資訊，因此要判斷輸入的source是資料夾還是db檔
-        if args.source.split('.')[-1] == 'db':
-            # 若是db檔則直接讀取`args.NER_result`路徑，取得NER分析的結果
-            result_file_path = os.path.join('data', args.NER_result)
-            result = PREPROCESS_FUNCTION[args.function](
-                dataset=dataset,
-                tag_dict=args.NER_format,
-                result_path=result_file_path
-            )
-        else:
-            # 若是資料夾則取出`args.NER_result`路徑下和`args.source`名稱相同的
-            # NER分析結果
-            result_file_name = args.filename.split('.')[0] + '.pickle'
-            result_file_path = os.path.join(
-                'data', args.NER_result, result_file_name
-            )
-            result = PREPROCESS_FUNCTION[args.function](
-                dataset=dataset,
-                tag_dict=args.NER_format,
-                result_path=result_file_path
-            )
-    elif args.function == 'NER_dataset':
-        NER_result = PREPROCESS_FUNCTION[args.function](dataset=dataset)
-        if args.source.split('.')[-1] == 'db':
-            # 如果輸入的`args.source`為db檔，則直接保存成名稱為`args.save_path`的
-            # pickle檔
-            target_path = os.path.join('data', args.save_path)
-            pickle.dump(NER_result, open(target_path, 'wb'))
-        else:
-            # 如果輸入的`args.source`為資料夾，則將NER結果保存到資料夾中
+        except Exception as err:
+            print(f'Failed to get number of records in {db_path}: {err}')
 
-            # 初始化目標資料夾路徑
-            target_path = os.path.join('data', args.save_path)
-
-            # 檢查目標資料夾是否存在，如果不存在則建立資料夾
-            if not (os.path.exists(target_path) or os.path.isfile(target_path)):
-                os.makedirs(target_path)
-
-            # 初始化保存的檔案名稱
-            filename = args.filename.split('.')[0] + '.pickle'
-
-            # 保存成pickle檔
-            pickle.dump(
-                NER_result,
-                open(os.path.join(target_path, f'{filename}'), 'wb'),
-            )
-        # NER結果由於已經保存為pickle檔所以不需回傳
-        return None
-    else:
-        # 不需額外處理的function則直接執行
-        result = PREPROCESS_FUNCTION[args.function](dataset=dataset)
-    return result
-
-
-def main():
-    args = parse_argument()
-
-    # 檢查輸入的`args.source`是資料夾還是db檔
-    if args.source.split('.')[-1] == 'db':
-        # 如果是db檔則直接保存到`data/preprocess`資料夾下
-
-        # 取得來源資料庫的資料
-        dataset = news.parse.db.read.AllRecords(db_name=args.source)
-
-        # 取得前處理完的結果
-        result = preprocess(dataset=dataset, args=args)
-
-        # 如果result是`None`就跳過
-        if result is not None:
-            # 取得寫入資料庫的連線
-            tgt_conn = news.preprocess.db.util.get_conn(db_name=args.save_path)
-
-            # 在目標資料庫建立table
-            news.preprocess.db.create.create_table(cur=tgt_conn.cursor())
-
-            # 寫入目標資料庫
-            news.preprocess.db.write.write_new_records(
-                cur=tgt_conn.cursor(), news_list=result
-            )
-
-            # Commit and close.
-            tgt_conn.commit()
-            tgt_conn.close()
-    else:
-        # 如果是資料夾則在`data/preprocess`建立名為`args.save_path`的資料夾，並
-        # 將結果保存在此資料夾下
-
-        for filename in os.listdir(os.path.join('data', 'parsed', args.source)):
-            # Add filename in `args`.
-            args.filename = filename
-
-            # Initial source file path and tgt file path.
-            src_file_path = os.path.join(args.source, filename)
-            tgt_file_path = os.path.join(args.save_path, filename)
-
-            # 取得來源資料庫的資料
-            dataset = news.parse.db.read.AllRecords(db_name=src_file_path)
-            result = preprocess(dataset=dataset, args=args)
-
-            # 如果result是`None`就跳過
-            if result is not None:
-                # Get target database connection.
-                tgt_conn = news.preprocess.db.util.get_conn(
-                    db_name=tgt_file_path
+        # Preprocess `ParsedNews` by batch.
+        for offset in trange(
+                0,
+                num_of_records,
+                args.batch_size,
+                desc=f'Preprocessing {db_path}',
+                dynamic_ncols=True,
+        ):
+            try:
+                parsed_news_list = news.parse.db.read.read_some_records(
+                    db_name=db_path,
+                    offset=offset,
+                    limit=args.batch_size,
+                )
+                preprocessed_news = preprocess(
+                    dataset=parsed_news_list,
+                    func_list=func_list,
+                    args=args,
+                )
+                news.parse.db.write.write_new_records(
+                    cur=save_cur,
+                    news_list=preprocessed_news,
                 )
 
-                # Create table.
-                news.preprocess.db.create.create_table(cur=tgt_conn.cursor())
+                save_conn.commit()
 
-                # Write in database.
-                news.preprocess.db.write.write_new_records(
-                    cur=tgt_conn.cursor(), news_list=result
-                )
+                # Avoid using too many memories.
+                del parsed_news_list
+                del preprocessed_news
+                gc.collect()
+            except Exception:
+                print(f'Failed to write records at id {offset} of {db_path}.')
 
-                # Commit and close.
-                tgt_conn.commit()
-                tgt_conn.close()
+    save_conn.close()
 
 
 if __name__ == '__main__':
-    main()
+    main(argv=sys.argv[1:])
