@@ -2,7 +2,7 @@ import argparse
 import gc
 import sys
 import textwrap
-from typing import Callable, Dict, List
+from typing import Callable, List
 
 from tqdm import trange
 
@@ -17,7 +17,9 @@ from news.preprocess.filter import (
     NFKC, brackets_filter, curly_brackets_filter, emoji_filter, length_filter,
     lenticular_brackets_filter, non_CJK_filter, parentheses_filter, url_filter
 )
-from news.preprocess.ner_preprocessor import NER_CLASSES, ner_arg_post_process, ner_entity_replacer
+from news.preprocess.ner_preprocessor import (
+    NER_CLASSES, ner_arg_post_process, ner_entity_replacer
+)
 from news.preprocess.replacer import (
     english_replacer, guillemet_replacer, number_replacer
 )

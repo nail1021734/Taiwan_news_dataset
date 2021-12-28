@@ -11,7 +11,6 @@ import news.parse.db.read
 import news.parse.db.schema
 import news.parse.util.normalize
 from news.preprocess.factory import delimiter_filter_factory
-from news.preprocess.ner_preprocessor import NER_CLASSES
 
 NUMBER_PATTERN = re.compile(r'\d+')
 
@@ -24,17 +23,14 @@ def number_replacer(
     """
     # Get function arguments.
     debug = args.debug
-    ner_tag = [
-        args.__dict__[f'use_{ner_class}']
-        or args.__dict__[f'use_{ner_class}_with_id']
-        for ner_class in NER_CLASSES
-        if args.__dict__[f'use_{ner_class}']
-        or args.__dict__[f'use_{ner_class}_with_id'] is not None
-    ]
+    ner_tag = (
+        ner_tag['ner_tag'] for ner_tag in args.ner_tag_lookup_table.values()
+    )
+
     # Create tag table.
     tag_table = tuple(ner_tag)
 
-    def replace_number_with_text(text: str):
+    def replace_number_with_text(text: str) -> str:
         rp_text = ''
         last_index = 0
         for match in NUMBER_PATTERN.finditer(text):
@@ -66,7 +62,7 @@ def english_replacer(
     # Get function arguments.
     debug = args.debug
 
-    def replace_en_with_text(text: str):
+    def replace_en_with_text(text: str) -> str:
         rp_text = ''
         last_index = 0
         for match in ENGLISH_PATTERN.finditer(text):
