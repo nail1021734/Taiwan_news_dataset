@@ -17,7 +17,7 @@ from news.preprocess.filter import (
     NFKC, brackets_filter, curly_brackets_filter, emoji_filter, length_filter,
     lenticular_brackets_filter, non_CJK_filter, parentheses_filter, url_filter
 )
-from news.preprocess.ner_preprocessor import NER_CLASSES, ner_entity_replacer
+from news.preprocess.ner_preprocessor import NER_CLASSES, ner_arg_post_process, ner_entity_replacer
 from news.preprocess.replacer import (
     english_replacer, guillemet_replacer, number_replacer
 )
@@ -45,8 +45,10 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         --use_lenticular_brackets_filter   \
         --use_not_cjk_filter               \
         --use_emoji_filter                 \
-        --ner_class ORG PERSON LOC         \
-        --ner_need_id_class ORG PERSON LOC \
+        --use_ORG_with_id org              \
+        --use_PERSON_with_id per           \
+        --use_LOC_with_id loc              \
+        --use_GPE_with_id loc              \
         --use_date_replacer                \
         --use_english_replacer             \
         --use_guillemet_replacer           \
@@ -423,7 +425,7 @@ def get_func_list(args: argparse.Namespace,) -> List[Callable]:
         func_list.append(length_filter)
 
     # 以下前處理方法會將部份文字替換成 tag.
-    if args.use_date_replacer and args.tag_option:
+    if args.use_date_replacer or args.ner_tag_lookup_table:
         func_list.append(ner_entity_replacer)
     if args.use_english_replacer:
         func_list.append(english_replacer)
@@ -433,47 +435,6 @@ def get_func_list(args: argparse.Namespace,) -> List[Callable]:
         func_list.append(number_replacer)
 
     return func_list
-
-
-def build_tag_attr_table(args: argparse.Namespace,) -> Dict:
-    args = args.__dict__
-    # 建立 `tag_table`, `tag_table` 是一個字典, key 為 tag 樣式, value 為此 tag
-    # 對應到的 NER 類別名稱(tag 可以一次對應多個 NER 類別), 以及此 tag 需不需要 id.
-    tag_attr_table = {}
-    for ner_class in NER_CLASSES:
-        use_ner_class = args[f'use_{ner_class}'] or args[
-            f'use_{ner_class}_with_id']
-        need_id = bool(args[f'use_{ner_class}_with_id'])
-        # 若 `args[f'use_{ner_class}']` 以及 `args[f'use_{ner_class}_with_id']`
-        # 皆為 None 則直接跳過後續處理.
-        if not use_ner_class:
-            continue
-        # 初始化此 `use_ner_class` tag 的保存欄位.
-        if use_ner_class not in tag_attr_table:
-            tag_attr_table[use_ner_class] = {
-                'NER_class': [],
-                'need_id': need_id
-            }
-        # 將此 NER 類別加入此 tag 的 `NER_class` 欄位中.
-        tag_attr_table[use_ner_class]['NER_class'].append(ner_class)
-
-        # 檢查 `need_id` 是否有衝突(例如: 相同 tag 其中一類需要 id 另外一類不用).
-        if tag_attr_table[use_ner_class]['need_id'] != need_id:
-            raise ValueError(f'<{use_ner_class}> tag id conflict.')
-
-    return tag_attr_table
-
-
-def build_tag_option(tag_attr_table: Dict,) -> List[Dict]:
-    # 建立 `tag_option`.
-    tag_option = [
-        {
-            'ner_classes': tag_attr['NER_class'],
-            'tag': tag,
-            'need_id': tag_attr['need_id'],
-        } for tag, tag_attr in tag_attr_table.items()
-    ]
-    return tag_option
 
 
 def preprocess(
@@ -498,13 +459,10 @@ def main(argv: List[str]) -> None:
     if args.db_dir is None:
         args.db_dir = []
 
-    # 建立 `tag_attr_table` 以及 `tag_option`, 並加入到 `args` 中.
-    tag_attr_table = build_tag_attr_table(args=args)
-    tag_option = build_tag_option(tag_attr_table=tag_attr_table)
+    # 建立 `ner_tag_lookup_table` 並加入到 `args` 中.
     args = argparse.Namespace(
         **args.__dict__,
-        tag_attr_table=tag_attr_table,
-        tag_option=tag_option,
+        ner_tag_lookup_table=ner_arg_post_process(args=args),
     )
 
     # Map relative paths to absolute paths under `PROJECT_ROOT/data/parse`.

@@ -22,8 +22,10 @@ python -m news.preprocess.main       \
   --use_lenticular_brackets_filter   \
   --use_not_cjk_filter               \
   --use_emoji_filter                 \
-  --ner_class ORG PERSON LOC         \
-  --ner_need_id_class ORG PERSON LOC \
+  --use_ORG_with_id org              \
+  --use_PERSON_with_id per           \
+  --use_LOC_with_id loc              \
+  --use_GPE_with_id loc              \
   --use_date_replacer                \
   --use_english_replacer             \
   --use_guillemet_replacer           \
@@ -51,18 +53,22 @@ python -m news.preprocess.main       \
 - `use_guillemet_replacer`: 將書名號內的詞換為 `<unk>`, 並且留下書名號本身.
 - `use_number_replacer`: 將阿拉伯數字換為 `<num>` tag.
 
-### NER 類別
+## NER 類別
 
-- 若選擇 GPE 會將此類別的 entity 替換為 `<gpe>`.
-- 若選擇 PERSON 會將此類別的 entity 替換為 `<per>`.
-- 若選擇 ORG 會將此類別的 entity 替換為 `<org>`.
-- 若選擇 NORP 會將此類別的 entity 替換為 `<nrp>`.
-- 若選擇 LOC 會將此類別的 entity 替換為 `<loc>`.
-- 若選擇 FAC 會將此類別的 entity 替換為 `<fac>`.
-- 若選擇 PRODUCT 會將此類別的 entity 替換為 `<prod>`.
-- 若選擇 WORK_OF_ART 會將此類別的 entity 替換為 `<woa>`.
-- 若選擇 EVENT 會將此類別的 entity 替換為 `<evt>`.
-- 若選擇 LAW 會將此類別的 entity 替換為 `<law>`.
+使用 `use_{NER類別名稱}` 後加上欲替換的 tag 樣式即可將此 NER 類別的所有實體換成指定的 tag (如需加上各自的 id 請使用 `use_{NER類別名稱}_with_id`)目前可使用的類別如下
+
+- GPE
+- PERSON
+- ORG
+- NORP
+- LOC
+- FAC
+- PRODUCT
+- WORK_OF_ART
+- EVENT
+- LAW
+
+範例: `--use_ORG org` 會將 ORG 類別換成 `<org>`,而 `--use_ORG_with_id org` 會換成 `<org0>`
 
 ## 資料格式
 
