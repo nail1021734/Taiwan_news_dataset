@@ -23,9 +23,7 @@ def number_replacer(
     """
     # Get function arguments.
     debug = args.debug
-    ner_tag = (
-        ner_tag['ner_tag'] for ner_tag in args.ner_tag_lookup_table.values()
-    )
+    ner_tag = (_d['ner_tag'] for _d in args.ner_tag_lookup_table.values())
 
     # Create tag table.
     tag_table = tuple(ner_tag)
