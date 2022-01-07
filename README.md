@@ -1,77 +1,67 @@
-# Crawler Scripts
+# Taiwan News Data project
 
-## Chinatimes
+蒐集台灣新聞網站與文字處理工具, 主要應用於產生大量具有結構的繁體中文文本.
 
-- Using more than `3` process will get `429`.
+## Tools' Links
+
+- [crawlers](news/crawlers)
+  - 爬蟲腳本, 用於蒐集新聞內容原始資訊 (XML)
+  - 新聞網站列表請見 [crawlers](news/crawlers/README.md)
+- [merge](news/merge/README.md)
+- [migration](news/migration/README.md)
+- [parse](news/parse/README.md)
+- [preprocess](news/preprocess/README.md)
+- [split](news/split/README.md)
+
+## Project Directory
 
 ```sh
-python run_crawler.py --crawler_name chinatimes --db_name chinatimes.db --debug True --past_datetime=2010-01-01T00:00:00Z
+news
+|- crawlers
+|- parse
+|    |- README.md
+|    |- company.py
+|    |- main.py
+|    |- db
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- schema.py
+|    |    |- util.py
+|- split
+|    |- README.md
+|    |- split.py
+|    |- main.py
+|    |- db
+|    |    |- create.py
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- util.py
+|- preprocess
+|    |- README.md
+|    |- company.py
+|    |- main.py
+|    |- db
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- schema.py
+|    |    |- util.py
+|- merge
+|    |- README.md
+|    |- merge.py
+|    |- main.py
+|    |- db
+|    |    |- read.py
+|    |    |- write.py
+|    |    |- schema.py
+|    |    |- util.py
 ```
 
-## CNA
-
-- Will not get banned for certain number of process.
+## Testing
 
 ```sh
-python run_crawler.py --crawler_name cna --db_name cna.db --debug True --past_datetime=2014-01-01T00:00:00Z
-```
+# 執行測試.
+pipenv run test
 
-## Epochtimes
-
-- Will not get banned for certain number of process.
-
-```sh
-python run_crawler.py --crawler_name epochtimes --db_name epochtimes.db --debug True --past_datetime=2001-01-01T00:00:00Z
-```
-
-## ETtoday
-
-```sh
-python run_crawler.py --crawler_name ettoday --db_name ettoday.db --debug True --first_idx=1
-```
-
-## FTV
-
-- Will not get banned for certain number of process.
-
-```sh
-python run_crawler.py --crawler_name ftv --db_name ftv.db --debug True --past_datetime=2017-09-17T00:00:00Z
-```
-
-## NTDTV
-
-- Will not get banned for certain number of process.
-
-```sh
-python run_crawler.py --crawler_name ntdtv --db_name ntdtv.db --debug True --past_datetime=2002-01-01T00:00:00Z
-```
-
-## SETN
-
-```sh
-python run_crawler.py --crawler_name setn --db_name setn.db --debug True --first_idx 1
-```
-
-## STORM
-
-- The first available index is `21016`.
-- Will not get banned for certain number of process.
-
-```sh
-# The first available index of storm is 21016.
-python run_crawler.py --crawler_name storm --db_name storm.db --debug True --first_idx 21016
-```
-
-## TVBS
-
-- Using more than `4` process will get `403`.
-
-```sh
-python run_crawler.py --crawler_name tvbs --db_name tvbs.db --debug True --first_idx 1
-```
-
-## UDN
-
-```sh
-python run_crawler.py --crawler_name udn --db_name udn.db --debug True --past_datetime=2014-01-01T00:00:00Z
+# 觀看測試覆蓋範圍.
+pipenv run test-coverage
 ```

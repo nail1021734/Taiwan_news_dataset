@@ -1,55 +1,80 @@
 from collections import Counter
-from typing import List
+from typing import Dict, List, Optional
 
-import requests
-from tqdm import tqdm
+from tqdm import trange
 
-import news.crawlers
-from news.db.schema import News
+import news.crawlers.db.create
+import news.crawlers.db.util
+import news.crawlers.db.write
+import news.crawlers.util.normalize
+import news.crawlers.util.request_url
+import news.crawlers.util.status_code
+import news.db
+from news.crawlers.db.schema import RawNews
 
-RECORD_PER_COMMIT = 1000
+COMPANY_ID: int = news.crawlers.util.normalize.get_company_id(company='東森',)
+COMPANY_URL: str = news.crawlers.util.normalize.get_company_url(
+    company_id=COMPANY_ID,
+)
 
 
 def get_news_list(
     first_idx: int,
     latest_idx: int,
     *,
-    debug: bool = True,
-) -> List[News]:
-    news_list: List[News] = []
+    continue_fail_count: Optional[int] = 500,
+    debug: Optional[bool] = False,
+    **kwargs: Optional[Dict],
+) -> List[RawNews]:
+    news_list: List[RawNews] = []
     logger = Counter()
+    fail_count = 0
 
-    iter_range = range(first_idx, latest_idx + 1)
-    if debug:
-        iter_range = tqdm(iter_range)
-
-    for idx in iter_range:
-        url = f'https://star.ettoday.net/news/{idx}'
-
+    # Only show progress bar in debug mode.
+    for news_idx in trange(
+            first_idx,
+            latest_idx,
+            desc='Crawling',
+            disable=not debug,
+            dynamic_ncols=True,
+    ):
+        url = f'{COMPANY_URL}{news_idx}'
         try:
-            response = requests.get(
-                url,
-                timeout=news.crawlers.util.REQUEST_TIMEOUT,
-            )
-            response.close()
+            response = news.crawlers.util.request_url.get(url=url)
 
             # Raise exception if status code is not 200.
-            news.crawlers.util.check_status_code(
-                company='ettoday',
-                response=response
+            news.crawlers.util.status_code.check_status_code(
+                company_id=COMPANY_ID,
+                status_code=response.status_code,
+                url=url,
             )
 
-            parsed_news = news.preprocess.ettoday.parse(ori_news=News(
-                raw_xml=response.text,
-                url=url,
-            ))
+            news_list.append(
+                RawNews(
+                    company_id=COMPANY_ID,
+                    raw_xml=news.crawlers.util.normalize.compress_raw_xml(
+                        raw_xml=response.text,
+                    ),
+                    url_pattern=news.crawlers.util.normalize.compress_url(
+                        url=url,
+                        company_id=COMPANY_ID,
+                    ),
+                )
+            )
 
-            news_list.append(parsed_news)
+            # Reset `fail_count` if no error occurred.
+            fail_count = 0
         except Exception as err:
+            fail_count += 1
+
             if err.args:
                 logger.update([err.args[0]])
 
-    # Only show error stats in debug mode.
+        # No more news to crawl.
+        if fail_count >= continue_fail_count:
+            break
+
+    # Only show error statistics in debug mode.
     if debug:
         for k, v in logger.items():
             print(f'{k}: {v}')
@@ -62,38 +87,58 @@ def main(
     first_idx: int,
     latest_idx: int,
     *,
-    debug: bool = False,
-):
-    if first_idx > latest_idx and latest_idx != -1:
-        raise ValueError(
-            'Must have `first_idx <= latest_idx` or `latest_idx == -1`'
-        )
+    records_per_commit: Optional[int] = 1000,
+    **kwargs: Optional[Dict],
+) -> None:
+    # Value check.
+    if first_idx <= 0:
+        raise ValueError('Must have `first_idx > 0`.')
+
+    # `latest_id` 為 -1 表示抓到沒有新聞為止.
+    if latest_idx != -1:
+        if latest_idx <= 0:
+            raise ValueError(
+                'Must have `latest_idx > 0` or `latest_idx == -1`.'
+            )
+        if first_idx > latest_idx:
+            raise ValueError(
+                'Must have `first_idx <= latest_idx` or `latest_idx == -1`.'
+            )
 
     # Get database connection.
-    conn = news.db.util.get_conn(db_name=f'raw/{db_name}')
+    db_path = news.crawlers.db.util.get_db_path(db_name=db_name)
+    conn = news.db.get_conn(db_path=db_path)
     cur = conn.cursor()
-    news.db.create.create_table(cur=cur)
 
-    while first_idx <= latest_idx or latest_idx == -1:
-        cur_latest_idx = first_idx + RECORD_PER_COMMIT
+    # Ensure news table exists.
+    news.crawlers.db.create.create_table(cur=cur)
+
+    cur_first_idx = first_idx
+    # `latest_id` 為 -1 表示抓到沒有新聞為止.
+    while cur_first_idx <= latest_idx or latest_idx == -1:
+        cur_latest_idx = cur_first_idx + records_per_commit
+
+        # `cur_latest_idx` is bounded above by `latest_idx`.  Use
+        # `latest_idx + 1` to make range inclusive.
         if latest_idx != -1:
-            cur_latest_idx = min(cur_latest_idx, latest_idx)
+            cur_latest_idx = min(cur_latest_idx, latest_idx + 1)
 
         news_list = get_news_list(
-            debug=debug,
-            first_idx=first_idx,
+            first_idx=cur_first_idx,
             latest_idx=cur_latest_idx,
+            **kwargs,
         )
 
-        if not news_list:
-            # No more news to crawl.
+        # No more news to crawl.
+        if not news_list and latest_idx == -1:
             break
 
-        news.db.write.write_new_records(cur=cur, news_list=news_list)
-
+        # Write news records to database.
+        news.crawlers.db.write.write_new_records(cur=cur, news_list=news_list)
         conn.commit()
 
-        first_idx += RECORD_PER_COMMIT
+        # Increase crawling index.
+        cur_first_idx += records_per_commit
 
     # Close database connection.
     conn.close()
